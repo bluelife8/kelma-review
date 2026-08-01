@@ -1,0 +1,39 @@
+CREATE TABLE browse_index_state (
+    singleton_id INTEGER NOT NULL PRIMARY KEY CHECK (singleton_id = 1),
+    dirty INTEGER NOT NULL DEFAULT 1 CHECK (dirty IN (0, 1))
+);
+
+INSERT INTO browse_index_state(singleton_id, dirty) VALUES (1, 1);
+
+CREATE TABLE browse_card_index (
+    card_id INTEGER NOT NULL PRIMARY KEY,
+    note_guid TEXT NOT NULL,
+    card_ord INTEGER NOT NULL,
+    question_sort TEXT NOT NULL,
+    answer_sort TEXT NOT NULL,
+    deck_name TEXT NOT NULL,
+    deck_sort TEXT NOT NULL,
+    notetype_sort TEXT NOT NULL,
+    tags_sort TEXT NOT NULL,
+    search_text TEXT NOT NULL,
+    study_state TEXT NOT NULL CHECK (study_state IN ('active', 'suspended')),
+    is_local INTEGER NOT NULL CHECK (is_local IN (0, 1)),
+    remote_due_at_ms INTEGER NOT NULL,
+    remote_due_modified_at_ms INTEGER NOT NULL
+);
+
+CREATE TABLE browse_card_tags (
+    card_id INTEGER NOT NULL,
+    tag TEXT NOT NULL,
+    normalized_tag TEXT NOT NULL,
+    PRIMARY KEY (card_id, normalized_tag)
+);
+
+CREATE INDEX browse_card_tags_normalized_idx ON browse_card_tags(normalized_tag, card_id);
+
+CREATE TABLE browse_query_terms (
+    query_id TEXT NOT NULL,
+    kind TEXT NOT NULL,
+    value TEXT NOT NULL,
+    PRIMARY KEY (query_id, kind, value)
+);

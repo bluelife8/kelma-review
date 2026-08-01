@@ -1,0 +1,7 @@
+ALTER TABLE local_review_events ADD COLUMN was_new INTEGER NOT NULL DEFAULT 0;
+
+CREATE TABLE local_deck_options (
+    deck_name TEXT NOT NULL COLLATE NOCASE PRIMARY KEY,
+    options_json TEXT NOT NULL,
+    modified_at_ms INTEGER NOT NULL
+);

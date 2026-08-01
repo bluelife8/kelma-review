@@ -1,0 +1,3 @@
+ALTER TABLE sync_media ADD COLUMN size_bytes INTEGER NOT NULL DEFAULT 0;
+
+UPDATE sync_media SET size_bytes = length(bytes);

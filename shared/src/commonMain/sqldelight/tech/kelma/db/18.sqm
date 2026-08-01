@@ -1,0 +1,6 @@
+CREATE TABLE local_notetypes (
+    notetype_id INTEGER NOT NULL PRIMARY KEY,
+    name TEXT NOT NULL,
+    definition_json TEXT NOT NULL,
+    created_at_ms INTEGER NOT NULL
+);

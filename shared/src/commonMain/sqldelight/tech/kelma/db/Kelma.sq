@@ -1,0 +1,1742 @@
+CREATE TABLE sync_auth (
+    singleton_id INTEGER NOT NULL PRIMARY KEY CHECK (singleton_id = 1),
+    client_id TEXT NOT NULL,
+    endpoint TEXT NOT NULL,
+    username TEXT NOT NULL
+);
+
+CREATE TABLE sync_state (
+    singleton_id INTEGER NOT NULL PRIMARY KEY CHECK (singleton_id = 1),
+    server_time TEXT
+);
+
+CREATE TABLE sync_notes (
+    guid TEXT NOT NULL PRIMARY KEY,
+    notetype_id INTEGER NOT NULL,
+    fields_json TEXT NOT NULL,
+    tags_json TEXT NOT NULL,
+    checksum TEXT NOT NULL,
+    modified_at TEXT NOT NULL,
+    client_modified_at TEXT NOT NULL
+);
+
+CREATE TABLE sync_cards (
+    card_id INTEGER NOT NULL PRIMARY KEY,
+    note_guid TEXT NOT NULL,
+    deck_name TEXT NOT NULL,
+    ord INTEGER NOT NULL,
+    scheduling_json TEXT NOT NULL,
+    study_state TEXT NOT NULL DEFAULT 'active',
+    study_state_modified_at TEXT NOT NULL DEFAULT '',
+    study_state_client_modified_at TEXT NOT NULL DEFAULT '',
+    schedule_reset_through_review_id INTEGER NOT NULL DEFAULT 0,
+    schedule_reset_modified_at TEXT NOT NULL DEFAULT '',
+    schedule_reset_client_modified_at TEXT NOT NULL DEFAULT '',
+    due_date_override_ms INTEGER NOT NULL DEFAULT 0,
+    due_date_override_modified_at TEXT NOT NULL DEFAULT '',
+    due_date_override_client_modified_at TEXT NOT NULL DEFAULT '',
+    modified_at TEXT NOT NULL,
+    client_modified_at TEXT NOT NULL
+);
+
+CREATE TABLE sync_reviews (
+    review_id INTEGER NOT NULL PRIMARY KEY,
+    source_card_id INTEGER NOT NULL,
+    note_guid TEXT NOT NULL,
+    card_ord INTEGER NOT NULL,
+    deck_name TEXT NOT NULL,
+    ease INTEGER NOT NULL,
+    interval_value INTEGER NOT NULL,
+    last_interval INTEGER NOT NULL,
+    factor INTEGER NOT NULL,
+    taken_millis INTEGER NOT NULL,
+    review_kind INTEGER NOT NULL,
+    checksum TEXT NOT NULL,
+    modified_at TEXT NOT NULL
+);
+
+CREATE TABLE sync_study_days (
+    day INTEGER NOT NULL,
+    deck_name TEXT NOT NULL,
+    new_studied INTEGER NOT NULL,
+    review_studied INTEGER NOT NULL,
+    learning_studied INTEGER NOT NULL,
+    milliseconds_studied INTEGER NOT NULL,
+    modified_at TEXT NOT NULL,
+    PRIMARY KEY (day, deck_name)
+);
+
+CREATE TABLE sync_notetypes (
+    notetype_id INTEGER NOT NULL PRIMARY KEY,
+    name TEXT NOT NULL,
+    definition_json TEXT NOT NULL,
+    checksum TEXT NOT NULL,
+    modified_at TEXT NOT NULL,
+    client_modified_at TEXT NOT NULL
+);
+
+CREATE TABLE sync_decks (
+    name TEXT NOT NULL PRIMARY KEY,
+    config_json TEXT NOT NULL,
+    checksum TEXT NOT NULL,
+    modified_at TEXT NOT NULL,
+    client_modified_at TEXT NOT NULL
+);
+
+CREATE TABLE sync_deck_names (
+    name TEXT NOT NULL PRIMARY KEY
+);
+
+CREATE TABLE sync_media (
+    filename TEXT NOT NULL PRIMARY KEY,
+    modified_at TEXT NOT NULL,
+    bytes BLOB NOT NULL,
+    size_bytes INTEGER NOT NULL
+);
+
+CREATE TABLE local_card_schedules (
+    card_id INTEGER NOT NULL PRIMARY KEY,
+    phase TEXT NOT NULL,
+    due_at_ms INTEGER NOT NULL,
+    stability REAL NOT NULL,
+    difficulty REAL NOT NULL,
+    scheduled_days INTEGER NOT NULL,
+    repetitions INTEGER NOT NULL,
+    lapses INTEGER NOT NULL,
+    last_review_at_ms INTEGER NOT NULL,
+    step INTEGER
+);
+
+CREATE TABLE local_card_flags (
+    card_id INTEGER NOT NULL PRIMARY KEY,
+    flag INTEGER NOT NULL CHECK (flag BETWEEN 1 AND 7)
+);
+
+CREATE TABLE local_card_buries (
+    card_id INTEGER NOT NULL PRIMARY KEY,
+    buried_on_day INTEGER NOT NULL
+);
+
+CREATE INDEX local_card_buries_day_idx ON local_card_buries(buried_on_day);
+
+CREATE TABLE local_note_buries (
+    note_guid TEXT NOT NULL PRIMARY KEY,
+    buried_on_day INTEGER NOT NULL
+);
+
+CREATE INDEX local_note_buries_day_idx ON local_note_buries(buried_on_day);
+
+CREATE TABLE local_card_due_overrides (
+    note_guid TEXT NOT NULL,
+    card_ord INTEGER NOT NULL,
+    card_id INTEGER NOT NULL,
+    due_at_ms INTEGER NOT NULL,
+    client_modified_at_ms INTEGER NOT NULL,
+    upload_state TEXT NOT NULL DEFAULT 'pending',
+    PRIMARY KEY (note_guid, card_ord)
+);
+
+CREATE INDEX local_card_due_overrides_upload_idx
+ON local_card_due_overrides(upload_state);
+
+CREATE TABLE local_card_resets (
+    note_guid TEXT NOT NULL,
+    card_ord INTEGER NOT NULL,
+    card_id INTEGER NOT NULL,
+    reset_through_review_id INTEGER NOT NULL,
+    client_modified_at_ms INTEGER NOT NULL,
+    upload_state TEXT NOT NULL DEFAULT 'pending',
+    PRIMARY KEY (note_guid, card_ord)
+);
+
+CREATE INDEX local_card_resets_upload_idx ON local_card_resets(upload_state);
+
+CREATE TABLE local_card_study_states (
+    note_guid TEXT NOT NULL,
+    card_ord INTEGER NOT NULL,
+    card_id INTEGER NOT NULL,
+    study_state TEXT NOT NULL CHECK (study_state IN ('active', 'suspended')),
+    client_modified_at_ms INTEGER NOT NULL,
+    upload_state TEXT NOT NULL DEFAULT 'pending',
+    PRIMARY KEY (note_guid, card_ord)
+);
+
+CREATE INDEX local_card_study_states_upload_idx
+ON local_card_study_states(upload_state);
+
+CREATE TABLE local_review_events (
+    event_id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    card_id INTEGER NOT NULL,
+    note_guid TEXT NOT NULL,
+    card_ord INTEGER NOT NULL,
+    deck_name TEXT NOT NULL,
+    rating TEXT NOT NULL,
+    reviewed_at_ms INTEGER NOT NULL,
+    study_day INTEGER NOT NULL,
+    duration_ms INTEGER NOT NULL,
+    before_json TEXT,
+    after_json TEXT NOT NULL,
+    was_new INTEGER NOT NULL,
+    consumed_review_limit INTEGER NOT NULL DEFAULT 0,
+    review_id INTEGER NOT NULL,
+    upload_state TEXT NOT NULL DEFAULT 'pending'
+);
+
+CREATE INDEX local_review_events_day_idx
+ON local_review_events(study_day);
+
+CREATE INDEX local_review_events_note_card_idx
+ON local_review_events(note_guid, card_ord);
+
+CREATE TABLE local_notes (
+    guid TEXT NOT NULL PRIMARY KEY,
+    notetype_id INTEGER NOT NULL,
+    fields_json TEXT NOT NULL,
+    tags_json TEXT NOT NULL,
+    created_at_ms INTEGER NOT NULL
+);
+
+CREATE TABLE local_notetypes (
+    notetype_id INTEGER NOT NULL PRIMARY KEY,
+    name TEXT NOT NULL,
+    definition_json TEXT NOT NULL,
+    created_at_ms INTEGER NOT NULL
+);
+
+CREATE TABLE local_cards (
+    card_id INTEGER NOT NULL PRIMARY KEY,
+    note_guid TEXT NOT NULL,
+    deck_name TEXT NOT NULL,
+    ord INTEGER NOT NULL,
+    created_at_ms INTEGER NOT NULL
+);
+
+CREATE INDEX local_cards_note_guid ON local_cards(note_guid);
+
+CREATE TABLE local_note_overrides (
+    note_guid TEXT NOT NULL PRIMARY KEY,
+    fields_json TEXT NOT NULL,
+    tags_json TEXT NOT NULL,
+    modified_at_ms INTEGER NOT NULL
+);
+
+CREATE TABLE local_decks (
+    name TEXT NOT NULL COLLATE NOCASE PRIMARY KEY,
+    created_at_ms INTEGER NOT NULL
+);
+
+CREATE TABLE local_deck_options (
+    deck_name TEXT NOT NULL COLLATE NOCASE PRIMARY KEY,
+    options_json TEXT NOT NULL,
+    modified_at_ms INTEGER NOT NULL
+);
+
+CREATE TABLE local_deck_option_presets (
+    preset_id TEXT NOT NULL PRIMARY KEY,
+    name TEXT NOT NULL COLLATE NOCASE UNIQUE,
+    options_json TEXT NOT NULL,
+    created_at_ms INTEGER NOT NULL,
+    modified_at_ms INTEGER NOT NULL
+);
+
+CREATE TABLE local_deck_preset_assignments (
+    deck_name TEXT NOT NULL COLLATE NOCASE PRIMARY KEY,
+    preset_id TEXT NOT NULL,
+    modified_at_ms INTEGER NOT NULL,
+    FOREIGN KEY (preset_id) REFERENCES local_deck_option_presets(preset_id) ON DELETE CASCADE
+);
+
+CREATE INDEX local_deck_preset_assignments_preset_idx
+ON local_deck_preset_assignments(preset_id);
+
+CREATE TABLE local_deck_overrides (
+    source_name TEXT NOT NULL COLLATE NOCASE PRIMARY KEY,
+    replacement_name TEXT COLLATE NOCASE,
+    modified_at_ms INTEGER NOT NULL
+);
+
+CREATE TABLE local_media_outbox (
+    filename TEXT NOT NULL PRIMARY KEY,
+    mime_type TEXT NOT NULL,
+    checksum TEXT NOT NULL,
+    bytes BLOB NOT NULL,
+    modified_at_ms INTEGER NOT NULL,
+    state TEXT NOT NULL DEFAULT 'pending'
+);
+
+CREATE INDEX local_media_outbox_state_idx ON local_media_outbox(state);
+
+CREATE TABLE local_note_sync_outbox (
+    note_guid TEXT NOT NULL PRIMARY KEY,
+    operation TEXT NOT NULL,
+    base_checksum TEXT NOT NULL,
+    modified_at_ms INTEGER NOT NULL,
+    state TEXT NOT NULL DEFAULT 'pending',
+    force_override INTEGER NOT NULL DEFAULT 0,
+    conflict_json TEXT
+);
+
+CREATE TABLE local_deck_sync_outbox (
+    source_name TEXT NOT NULL COLLATE NOCASE PRIMARY KEY,
+    operation TEXT NOT NULL,
+    target_name TEXT COLLATE NOCASE,
+    base_checksum TEXT NOT NULL,
+    modified_at_ms INTEGER NOT NULL,
+    state TEXT NOT NULL DEFAULT 'pending',
+    force_override INTEGER NOT NULL DEFAULT 0,
+    conflict_json TEXT
+);
+
+CREATE TABLE local_scheduler_profile_versions (
+    local_version INTEGER NOT NULL PRIMARY KEY,
+    settings_json TEXT NOT NULL,
+    created_at_ms INTEGER NOT NULL
+);
+
+CREATE TABLE scheduler_profile_state (
+    singleton_id INTEGER NOT NULL PRIMARY KEY CHECK (singleton_id = 1),
+    active_local_version INTEGER,
+    cloud_profile_json TEXT,
+    projection_summary_json TEXT,
+    pulled_at_ms INTEGER
+);
+
+CREATE TABLE scheduler_profile_outbox (
+    singleton_id INTEGER NOT NULL PRIMARY KEY CHECK (singleton_id = 1),
+    local_profile_version INTEGER NOT NULL,
+    base_profile_version INTEGER NOT NULL,
+    idempotency_key TEXT NOT NULL,
+    candidate_json TEXT NOT NULL,
+    state TEXT NOT NULL,
+    acknowledged_profile_json TEXT,
+    conflict_json TEXT,
+    created_at_ms INTEGER NOT NULL
+);
+
+CREATE TABLE study_day_policy_state (
+    singleton_id INTEGER NOT NULL PRIMARY KEY CHECK (singleton_id = 1),
+    policy_json TEXT NOT NULL,
+    pulled_at_ms INTEGER NOT NULL
+);
+
+CREATE TABLE scheduler_optimizer_jobs (
+    job_id TEXT NOT NULL PRIMARY KEY,
+    status TEXT NOT NULL,
+    timezone_id TEXT NOT NULL,
+    day_start_hour INTEGER NOT NULL,
+    total_epochs INTEGER NOT NULL,
+    completed_epochs INTEGER NOT NULL DEFAULT 0,
+    raw_review_count INTEGER NOT NULL DEFAULT 0,
+    qualifying_review_count INTEGER NOT NULL DEFAULT 0,
+    qualifying_card_count INTEGER NOT NULL DEFAULT 0,
+    history_sha256 TEXT,
+    dataset_sha256 TEXT,
+    through_review_id INTEGER,
+    reason_code TEXT,
+    cancel_requested INTEGER NOT NULL DEFAULT 0,
+    created_at_ms INTEGER NOT NULL,
+    updated_at_ms INTEGER NOT NULL,
+    completed_at_ms INTEGER
+);
+
+CREATE INDEX scheduler_optimizer_jobs_created_idx
+ON scheduler_optimizer_jobs(created_at_ms DESC);
+
+CREATE TABLE scheduler_optimizer_candidates (
+    candidate_id TEXT NOT NULL PRIMARY KEY,
+    job_id TEXT NOT NULL UNIQUE,
+    candidate_json TEXT NOT NULL,
+    state TEXT NOT NULL,
+    created_at_ms INTEGER NOT NULL,
+    resolved_at_ms INTEGER
+);
+
+CREATE INDEX scheduler_optimizer_candidates_created_idx
+ON scheduler_optimizer_candidates(created_at_ms DESC);
+
+CREATE TABLE plugin_installations (
+    plugin_id TEXT NOT NULL PRIMARY KEY,
+    manifest_json TEXT NOT NULL,
+    enabled INTEGER NOT NULL DEFAULT 1,
+    status TEXT NOT NULL DEFAULT 'installed',
+    error_message TEXT,
+    installed_at_ms INTEGER NOT NULL,
+    updated_at_ms INTEGER NOT NULL
+);
+
+CREATE TABLE plugin_settings (
+    plugin_id TEXT NOT NULL,
+    setting_key TEXT NOT NULL,
+    value_json TEXT NOT NULL,
+    modified_at_ms INTEGER NOT NULL,
+    PRIMARY KEY (plugin_id, setting_key),
+    FOREIGN KEY (plugin_id) REFERENCES plugin_installations(plugin_id) ON DELETE CASCADE
+);
+
+CREATE TABLE plugin_files (
+    plugin_id TEXT NOT NULL,
+    file_path TEXT NOT NULL,
+    content BLOB NOT NULL,
+    PRIMARY KEY (plugin_id, file_path),
+    FOREIGN KEY (plugin_id) REFERENCES plugin_installations(plugin_id) ON DELETE CASCADE
+);
+
+CREATE TABLE plugin_logs (
+    log_id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    plugin_id TEXT NOT NULL,
+    occurred_at_ms INTEGER NOT NULL,
+    level TEXT NOT NULL,
+    message TEXT NOT NULL,
+    FOREIGN KEY (plugin_id) REFERENCES plugin_installations(plugin_id) ON DELETE CASCADE
+);
+
+CREATE INDEX plugin_logs_plugin_time_idx ON plugin_logs(plugin_id, occurred_at_ms DESC);
+
+CREATE TABLE plugin_host_state (
+    singleton_id INTEGER NOT NULL PRIMARY KEY CHECK (singleton_id = 1),
+    safe_mode INTEGER NOT NULL DEFAULT 0
+);
+
+CREATE TABLE plugin_renderer_assignments (
+    scope_type TEXT NOT NULL,
+    target_id TEXT NOT NULL,
+    renderer_id TEXT NOT NULL,
+    PRIMARY KEY (scope_type, target_id),
+    CHECK (scope_type IN ('deck', 'notetype'))
+);
+
+CREATE TABLE sync_log_entries (
+    entry_id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    occurred_at_ms INTEGER NOT NULL,
+    level TEXT NOT NULL,
+    phase TEXT NOT NULL,
+    message TEXT NOT NULL
+);
+
+CREATE TABLE browse_index_state (
+    singleton_id INTEGER NOT NULL PRIMARY KEY CHECK (singleton_id = 1),
+    dirty INTEGER NOT NULL DEFAULT 1 CHECK (dirty IN (0, 1))
+);
+
+INSERT INTO browse_index_state(singleton_id, dirty) VALUES (1, 1);
+
+CREATE TABLE browse_card_index (
+    card_id INTEGER NOT NULL PRIMARY KEY,
+    note_guid TEXT NOT NULL,
+    card_ord INTEGER NOT NULL,
+    question_sort TEXT NOT NULL,
+    answer_sort TEXT NOT NULL,
+    deck_name TEXT NOT NULL,
+    deck_sort TEXT NOT NULL,
+    notetype_sort TEXT NOT NULL,
+    tags_sort TEXT NOT NULL,
+    search_text TEXT NOT NULL,
+    study_state TEXT NOT NULL CHECK (study_state IN ('active', 'suspended')),
+    is_local INTEGER NOT NULL CHECK (is_local IN (0, 1)),
+    remote_due_at_ms INTEGER NOT NULL,
+    remote_due_modified_at_ms INTEGER NOT NULL
+);
+
+CREATE TABLE browse_card_tags (
+    card_id INTEGER NOT NULL,
+    tag TEXT NOT NULL,
+    normalized_tag TEXT NOT NULL,
+    PRIMARY KEY (card_id, normalized_tag)
+);
+
+CREATE INDEX browse_card_tags_normalized_idx ON browse_card_tags(normalized_tag, card_id);
+
+CREATE TABLE browse_query_terms (
+    query_id TEXT NOT NULL,
+    kind TEXT NOT NULL,
+    value TEXT NOT NULL,
+    PRIMARY KEY (query_id, kind, value)
+);
+
+selectAuth:
+SELECT client_id, endpoint, username
+FROM sync_auth
+WHERE singleton_id = 1;
+
+upsertAuth:
+INSERT OR REPLACE INTO sync_auth(singleton_id, client_id, endpoint, username)
+VALUES (1, ?, ?, ?);
+
+clearAuth:
+DELETE FROM sync_auth;
+
+selectServerTime:
+SELECT server_time FROM sync_state WHERE singleton_id = 1;
+
+upsertServerTime:
+INSERT OR REPLACE INTO sync_state(singleton_id, server_time) VALUES (1, ?);
+
+selectNotes:
+SELECT guid, notetype_id, fields_json, tags_json, checksum, modified_at, client_modified_at
+FROM sync_notes;
+
+insertNote:
+INSERT OR REPLACE INTO sync_notes(
+    guid, notetype_id, fields_json, tags_json, checksum, modified_at, client_modified_at
+) VALUES (?, ?, ?, ?, ?, ?, ?);
+
+deleteSyncNote:
+DELETE FROM sync_notes WHERE guid = ?;
+
+selectCards:
+SELECT card_id, note_guid, deck_name, ord, scheduling_json, study_state,
+       study_state_modified_at, study_state_client_modified_at,
+       schedule_reset_through_review_id, schedule_reset_modified_at,
+       schedule_reset_client_modified_at, due_date_override_ms,
+       due_date_override_modified_at, due_date_override_client_modified_at,
+       modified_at, client_modified_at
+FROM sync_cards;
+
+insertCard:
+INSERT OR REPLACE INTO sync_cards(
+    card_id, note_guid, deck_name, ord, scheduling_json, study_state,
+    study_state_modified_at, study_state_client_modified_at,
+    schedule_reset_through_review_id, schedule_reset_modified_at,
+    schedule_reset_client_modified_at, due_date_override_ms,
+    due_date_override_modified_at, due_date_override_client_modified_at,
+    modified_at, client_modified_at
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+deleteSyncCard:
+DELETE FROM sync_cards WHERE card_id = ?;
+
+selectReviews:
+SELECT review_id, source_card_id, note_guid, card_ord, deck_name, ease,
+       interval_value, last_interval, factor, taken_millis, review_kind,
+       checksum, modified_at
+FROM sync_reviews;
+
+insertReview:
+INSERT OR REPLACE INTO sync_reviews(
+    review_id, source_card_id, note_guid, card_ord, deck_name, ease,
+    interval_value, last_interval, factor, taken_millis, review_kind,
+    checksum, modified_at
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+deleteSyncReview:
+DELETE FROM sync_reviews WHERE review_id = ?;
+
+selectMaximumServerReviewId:
+SELECT max(review_id) FROM sync_reviews;
+
+selectStudyDays:
+SELECT day, deck_name, new_studied, review_studied, learning_studied,
+       milliseconds_studied, modified_at
+FROM sync_study_days;
+
+insertStudyDay:
+INSERT OR REPLACE INTO sync_study_days(
+    day, deck_name, new_studied, review_studied, learning_studied,
+    milliseconds_studied, modified_at
+) VALUES (?, ?, ?, ?, ?, ?, ?);
+
+deleteSyncStudyDay:
+DELETE FROM sync_study_days WHERE day = ? AND deck_name = ?;
+
+selectNotetypes:
+SELECT notetype_id, name, definition_json, checksum, modified_at, client_modified_at
+FROM sync_notetypes;
+
+insertNotetype:
+INSERT OR REPLACE INTO sync_notetypes(
+    notetype_id, name, definition_json, checksum, modified_at, client_modified_at
+) VALUES (?, ?, ?, ?, ?, ?);
+
+deleteSyncNotetype:
+DELETE FROM sync_notetypes WHERE notetype_id = ?;
+
+selectDecks:
+SELECT name, config_json, checksum, modified_at, client_modified_at
+FROM sync_decks;
+
+selectSyncDeckChecksum:
+SELECT checksum FROM sync_decks WHERE name = ? COLLATE NOCASE;
+
+insertDeck:
+INSERT OR REPLACE INTO sync_decks(
+    name, config_json, checksum, modified_at, client_modified_at
+) VALUES (?, ?, ?, ?, ?);
+
+deleteSyncDeck:
+DELETE FROM sync_decks WHERE name = ?;
+
+selectDeckNames:
+SELECT name FROM sync_deck_names;
+
+insertDeckName:
+INSERT OR REPLACE INTO sync_deck_names(name) VALUES (?);
+
+deleteSyncDeckName:
+DELETE FROM sync_deck_names WHERE name = ?;
+
+selectMedia:
+SELECT filename, modified_at, bytes, size_bytes FROM sync_media;
+
+selectMediaMetadata:
+SELECT filename, modified_at, size_bytes FROM sync_media;
+
+selectMediaByFilename:
+SELECT filename, modified_at, bytes, size_bytes FROM sync_media WHERE filename = ?;
+
+selectLegacyMediaFilenames:
+SELECT filename FROM sync_media WHERE length(bytes) > 0;
+
+insertMedia:
+INSERT OR REPLACE INTO sync_media(filename, modified_at, bytes, size_bytes) VALUES (?, ?, ?, ?);
+
+deleteSyncMedia:
+DELETE FROM sync_media WHERE filename = ?;
+
+selectLocalDecks:
+SELECT name FROM local_decks ORDER BY name COLLATE NOCASE;
+
+selectDownloadedDeckNames:
+SELECT name FROM sync_deck_names
+UNION SELECT name FROM sync_decks
+UNION SELECT deck_name AS name FROM sync_cards;
+
+countDeckName:
+SELECT count(*) FROM (
+    SELECT name FROM local_decks
+    UNION SELECT name FROM sync_deck_names
+    UNION SELECT name FROM sync_decks
+    UNION SELECT deck_name AS name FROM sync_cards
+    UNION SELECT deck_name AS name FROM local_cards
+) WHERE name = :name COLLATE NOCASE;
+
+insertLocalDeck:
+INSERT OR IGNORE INTO local_decks(name, created_at_ms) VALUES (?, ?);
+
+deleteLocalDeck:
+DELETE FROM local_decks WHERE name = ? COLLATE NOCASE;
+
+clearLocalDecks:
+DELETE FROM local_decks;
+
+selectLocalDeckOptions:
+SELECT deck_name, options_json FROM local_deck_options;
+
+selectLocalDeckOptionsForDeck:
+SELECT options_json FROM local_deck_options WHERE deck_name = ? COLLATE NOCASE;
+
+upsertLocalDeckOptions:
+INSERT OR REPLACE INTO local_deck_options(deck_name, options_json, modified_at_ms)
+VALUES (?, ?, ?);
+
+updateLocalDeckOptionsName:
+UPDATE local_deck_options SET deck_name = :newName, modified_at_ms = :modifiedAt
+WHERE deck_name = :oldName COLLATE NOCASE;
+
+deleteLocalDeckOptions:
+DELETE FROM local_deck_options WHERE deck_name = ? COLLATE NOCASE;
+
+selectLocalMedia:
+SELECT filename, mime_type, checksum, bytes, modified_at_ms, state FROM local_media_outbox;
+
+selectPendingLocalMedia:
+SELECT filename, mime_type, checksum, bytes, modified_at_ms
+FROM local_media_outbox WHERE state = 'pending' ORDER BY filename;
+
+upsertLocalMedia:
+INSERT OR REPLACE INTO local_media_outbox(filename, mime_type, checksum, bytes, modified_at_ms, state)
+VALUES (:filename, :mimeType, :checksum, :bytes, :modifiedAt, 'pending');
+
+markLocalMediaUploaded:
+UPDATE local_media_outbox SET state = 'uploaded' WHERE filename = ?;
+
+retryUploadedLocalMedia:
+UPDATE local_media_outbox SET state = 'pending' WHERE filename = ? AND state = 'uploaded';
+
+deleteLocalMedia:
+DELETE FROM local_media_outbox WHERE filename = ?;
+
+clearLocalMedia:
+DELETE FROM local_media_outbox;
+
+clearLocalDeckOptions:
+DELETE FROM local_deck_options;
+
+selectDeckOptionPresets:
+SELECT preset_id, name, options_json, created_at_ms, modified_at_ms
+FROM local_deck_option_presets ORDER BY name COLLATE NOCASE;
+
+selectDeckOptionPreset:
+SELECT preset_id, name, options_json, created_at_ms, modified_at_ms
+FROM local_deck_option_presets WHERE preset_id = ?;
+
+insertDeckOptionPreset:
+INSERT INTO local_deck_option_presets(preset_id, name, options_json, created_at_ms, modified_at_ms)
+VALUES (:presetId, :name, :optionsJson, :createdAt, :modifiedAt);
+
+updateDeckOptionPreset:
+UPDATE local_deck_option_presets
+SET options_json = :optionsJson, modified_at_ms = :modifiedAt
+WHERE preset_id = :presetId;
+
+renameDeckOptionPreset:
+UPDATE local_deck_option_presets
+SET name = :name, modified_at_ms = :modifiedAt
+WHERE preset_id = :presetId;
+
+deleteDeckOptionPreset:
+DELETE FROM local_deck_option_presets WHERE preset_id = ?;
+
+clearDeckOptionPresets:
+DELETE FROM local_deck_option_presets;
+
+selectDeckPresetAssignments:
+SELECT deck_name, preset_id FROM local_deck_preset_assignments;
+
+selectDeckPresetAssignment:
+SELECT preset_id FROM local_deck_preset_assignments WHERE deck_name = ? COLLATE NOCASE;
+
+selectDeckPresetAssignmentsForPreset:
+SELECT deck_name FROM local_deck_preset_assignments WHERE preset_id = ?;
+
+upsertDeckPresetAssignment:
+INSERT OR REPLACE INTO local_deck_preset_assignments(deck_name, preset_id, modified_at_ms)
+VALUES (:deckName, :presetId, :modifiedAt);
+
+updateDeckPresetAssignmentName:
+UPDATE local_deck_preset_assignments SET deck_name = :newName, modified_at_ms = :modifiedAt
+WHERE deck_name = :oldName COLLATE NOCASE;
+
+deleteDeckPresetAssignment:
+DELETE FROM local_deck_preset_assignments WHERE deck_name = ? COLLATE NOCASE;
+
+clearDeckPresetAssignments:
+DELETE FROM local_deck_preset_assignments;
+
+selectLocalDeckOverrides:
+SELECT source_name, replacement_name FROM local_deck_overrides;
+
+upsertLocalDeckOverride:
+INSERT OR REPLACE INTO local_deck_overrides(source_name, replacement_name, modified_at_ms)
+VALUES (?, ?, ?);
+
+deleteLocalDeckOverride:
+DELETE FROM local_deck_overrides WHERE source_name = ? COLLATE NOCASE;
+
+clearLocalDeckOverrides:
+DELETE FROM local_deck_overrides;
+
+selectLocalNotetypes:
+SELECT notetype_id, name, definition_json, created_at_ms
+FROM local_notetypes;
+
+insertLocalNotetype:
+INSERT OR REPLACE INTO local_notetypes(notetype_id, name, definition_json, created_at_ms)
+VALUES (?, ?, ?, ?);
+
+clearLocalNotetypes:
+DELETE FROM local_notetypes;
+
+selectLocalNotes:
+SELECT guid, notetype_id, fields_json, tags_json, created_at_ms
+FROM local_notes;
+
+countLocalNote:
+SELECT count(*) FROM local_notes WHERE guid = ?;
+
+countSyncNote:
+SELECT count(*) FROM sync_notes WHERE guid = ?;
+
+selectSyncNoteChecksum:
+SELECT checksum FROM sync_notes WHERE guid = ?;
+
+selectLocalNoteOverrides:
+SELECT note_guid, fields_json, tags_json FROM local_note_overrides;
+
+upsertLocalNoteOverride:
+INSERT OR REPLACE INTO local_note_overrides(note_guid, fields_json, tags_json, modified_at_ms)
+VALUES (?, ?, ?, ?);
+
+pruneLocalNoteOverrides:
+DELETE FROM local_note_overrides WHERE note_guid NOT IN (SELECT guid FROM sync_notes);
+
+deleteLocalNoteOverride:
+DELETE FROM local_note_overrides WHERE note_guid = ?;
+
+clearLocalNoteOverrides:
+DELETE FROM local_note_overrides;
+
+insertLocalNote:
+INSERT INTO local_notes(guid, notetype_id, fields_json, tags_json, created_at_ms)
+VALUES (?, ?, ?, ?, ?);
+
+selectLocalCards:
+SELECT card_id, note_guid, deck_name, ord, created_at_ms
+FROM local_cards;
+
+countLocalCardById:
+SELECT count(*) FROM local_cards WHERE card_id = ?;
+
+insertLocalCard:
+INSERT INTO local_cards(card_id, note_guid, deck_name, ord, created_at_ms)
+VALUES (?, ?, ?, ?, ?);
+
+updateLocalNote:
+UPDATE local_notes SET fields_json = :fieldsJson, tags_json = :tagsJson WHERE guid = :guid;
+
+updateLocalCardDeck:
+UPDATE local_cards SET deck_name = :deckName WHERE note_guid = :guid;
+
+updateLocalCardsInDeck:
+UPDATE local_cards SET deck_name = :newName WHERE deck_name = :oldName COLLATE NOCASE;
+
+deleteLocalCard:
+DELETE FROM local_cards WHERE card_id = ?;
+
+countLocalCardsForNote:
+SELECT count(*) FROM local_cards WHERE note_guid = ?;
+
+selectLocalCardIdsForNote:
+SELECT card_id FROM local_cards WHERE note_guid = :guid;
+
+deleteLocalCardsForNote:
+DELETE FROM local_cards WHERE note_guid = :guid;
+
+deleteLocalNote:
+DELETE FROM local_notes WHERE guid = :guid;
+
+deleteLocalReviewEventsForCard:
+DELETE FROM local_review_events WHERE card_id = ?;
+
+updateLocalReviewEventsInDeck:
+UPDATE local_review_events SET deck_name = :newName WHERE deck_name = :oldName COLLATE NOCASE;
+
+clearLocalNotes:
+DELETE FROM local_notes;
+
+clearLocalCards:
+DELETE FROM local_cards;
+
+selectLocalSchedules:
+SELECT card_id, phase, due_at_ms, stability, difficulty, scheduled_days,
+       repetitions, lapses, last_review_at_ms, step
+FROM local_card_schedules;
+
+selectLocalSchedule:
+SELECT card_id, phase, due_at_ms, stability, difficulty, scheduled_days,
+       repetitions, lapses, last_review_at_ms, step
+FROM local_card_schedules
+WHERE card_id = ?;
+
+upsertLocalSchedule:
+INSERT OR REPLACE INTO local_card_schedules(
+    card_id, phase, due_at_ms, stability, difficulty, scheduled_days,
+    repetitions, lapses, last_review_at_ms, step
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+deleteLocalSchedule:
+DELETE FROM local_card_schedules WHERE card_id = ?;
+
+insertLocalReviewEvent:
+INSERT INTO local_review_events(
+    card_id, note_guid, card_ord, deck_name, rating, reviewed_at_ms, study_day, duration_ms,
+    before_json, after_json, was_new, consumed_review_limit, review_id, upload_state
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending');
+
+selectLatestLocalReviewEvent:
+SELECT event_id, card_id, before_json
+FROM local_review_events
+WHERE deck_name = ? AND upload_state = 'pending'
+ORDER BY event_id DESC
+LIMIT 1;
+
+selectPendingLocalReviewEvents:
+SELECT event_id, card_id, note_guid, card_ord, deck_name, rating, reviewed_at_ms, study_day,
+       duration_ms, before_json, after_json, was_new, review_id
+FROM local_review_events
+WHERE upload_state = 'pending'
+ORDER BY event_id;
+
+selectAllLocalReviewEvents:
+SELECT event_id, card_id, note_guid, card_ord, deck_name, rating, reviewed_at_ms, study_day,
+       duration_ms, before_json, after_json, was_new, review_id, upload_state,
+       consumed_review_limit
+FROM local_review_events
+ORDER BY review_id, event_id;
+
+backfillLocalReviewPortableIdentities:
+UPDATE local_review_events
+SET note_guid = COALESCE(
+        (SELECT note_guid FROM sync_cards WHERE sync_cards.card_id = local_review_events.card_id),
+        (SELECT note_guid FROM local_cards WHERE local_cards.card_id = local_review_events.card_id),
+        note_guid
+    ),
+    card_ord = COALESCE(
+        (SELECT ord FROM sync_cards WHERE sync_cards.card_id = local_review_events.card_id),
+        (SELECT ord FROM local_cards WHERE local_cards.card_id = local_review_events.card_id),
+        card_ord
+    )
+WHERE note_guid = '';
+
+selectMaximumLocalReviewId:
+SELECT max(review_id) FROM local_review_events;
+
+selectMaximumReviewMutationId:
+SELECT max(value) FROM (
+    SELECT max(review_id) AS value FROM local_review_events
+    UNION ALL SELECT max(review_id) FROM sync_reviews
+    UNION ALL SELECT max(reset_through_review_id) FROM local_card_resets
+    UNION ALL SELECT max(schedule_reset_through_review_id) FROM sync_cards
+);
+
+updateLocalReviewId:
+UPDATE local_review_events SET review_id = :reviewId WHERE event_id = :eventId;
+
+markLocalReviewUploaded:
+UPDATE local_review_events SET upload_state = 'uploaded' WHERE review_id = ?;
+
+markLocalReviewConflict:
+UPDATE local_review_events SET upload_state = 'conflict' WHERE review_id = ?;
+
+selectLocalReviewConflicts:
+SELECT review_id FROM local_review_events WHERE upload_state = 'conflict';
+
+deleteLocalReviewConflict:
+DELETE FROM local_review_events WHERE review_id = ? AND upload_state = 'conflict';
+
+reconcileUploadedLocalReviews:
+DELETE FROM local_review_events
+WHERE upload_state = 'uploaded'
+  AND review_id IN (SELECT review_id FROM sync_reviews);
+
+retryUnconfirmedLocalReviews:
+UPDATE local_review_events SET upload_state = 'pending'
+WHERE upload_state = 'uploaded'
+  AND review_id NOT IN (SELECT review_id FROM sync_reviews);
+
+deleteLocalReviewEvent:
+DELETE FROM local_review_events WHERE event_id = ?;
+
+selectLatestLocalReviewDeck:
+SELECT deck_name FROM local_review_events
+WHERE upload_state = 'pending'
+ORDER BY event_id DESC LIMIT 1;
+
+selectLatestLocalReviewDuration:
+SELECT duration_ms FROM local_review_events ORDER BY event_id DESC LIMIT 1;
+
+selectOptimizerCardIdentities:
+SELECT note_guid, ord FROM sync_cards
+UNION
+SELECT note_guid, ord FROM local_cards;
+
+selectOptimizerSyncedNoteGuids:
+SELECT guid FROM sync_notes;
+
+selectOptimizerConfirmedReviews:
+SELECT review_id, note_guid, card_ord, ease, taken_millis, review_kind, checksum
+FROM sync_reviews
+WHERE ease BETWEEN 1 AND 4 AND note_guid != ''
+ORDER BY review_id, note_guid, card_ord;
+
+selectOptimizerLocalReviews:
+SELECT card_id, note_guid, card_ord, rating, reviewed_at_ms, duration_ms,
+       before_json, after_json, was_new, review_id, upload_state
+FROM local_review_events
+WHERE review_id > 0
+ORDER BY review_id, event_id;
+
+clearLocalSchedules:
+DELETE FROM local_card_schedules;
+
+selectLocalCardFlags:
+SELECT card_id, flag FROM local_card_flags;
+
+upsertLocalCardFlag:
+INSERT OR REPLACE INTO local_card_flags(card_id, flag) VALUES (?, ?);
+
+deleteLocalCardFlag:
+DELETE FROM local_card_flags WHERE card_id = ?;
+
+clearLocalCardFlags:
+DELETE FROM local_card_flags;
+
+selectLocalCardBuriesForDay:
+SELECT card_id FROM local_card_buries WHERE buried_on_day = ?;
+
+upsertLocalCardBury:
+INSERT OR REPLACE INTO local_card_buries(card_id, buried_on_day) VALUES (?, ?);
+
+deleteLocalCardBury:
+DELETE FROM local_card_buries WHERE card_id = ?;
+
+clearLocalCardBuries:
+DELETE FROM local_card_buries;
+
+selectLocalNoteBuriesForDay:
+SELECT note_guid FROM local_note_buries WHERE buried_on_day = ?;
+
+upsertLocalNoteBury:
+INSERT OR REPLACE INTO local_note_buries(note_guid, buried_on_day) VALUES (?, ?);
+
+deleteLocalNoteBury:
+DELETE FROM local_note_buries WHERE note_guid = ?;
+
+clearLocalNoteBuries:
+DELETE FROM local_note_buries;
+
+pruneLocalNoteBuries:
+DELETE FROM local_note_buries
+WHERE note_guid NOT IN (SELECT guid FROM sync_notes UNION SELECT guid FROM local_notes);
+
+selectSyncCardDueOverrides:
+SELECT card_id, due_date_override_ms, due_date_override_client_modified_at
+FROM sync_cards;
+
+selectLocalCardDueOverrides:
+SELECT note_guid, card_ord, card_id, due_at_ms, client_modified_at_ms, upload_state
+FROM local_card_due_overrides;
+
+selectEffectiveLocalCardDueOverrides:
+SELECT COALESCE(sync_cards.card_id, local_cards.card_id, overrides.card_id) AS card_id,
+       overrides.due_at_ms, overrides.client_modified_at_ms
+FROM local_card_due_overrides AS overrides
+LEFT JOIN sync_cards
+  ON sync_cards.note_guid = overrides.note_guid AND sync_cards.ord = overrides.card_ord
+LEFT JOIN local_cards
+  ON local_cards.note_guid = overrides.note_guid AND local_cards.ord = overrides.card_ord;
+
+selectPendingLocalCardDueOverrides:
+SELECT note_guid, card_ord, card_id, due_at_ms, client_modified_at_ms, upload_state
+FROM local_card_due_overrides WHERE upload_state = 'pending';
+
+selectLocalCardDueOverride:
+SELECT note_guid, card_ord, card_id, due_at_ms, client_modified_at_ms, upload_state
+FROM local_card_due_overrides WHERE note_guid = :noteGuid AND card_ord = :cardOrd;
+
+upsertLocalCardDueOverride:
+INSERT OR REPLACE INTO local_card_due_overrides(
+    note_guid, card_ord, card_id, due_at_ms, client_modified_at_ms, upload_state
+) VALUES (:noteGuid, :cardOrd, :cardId, :dueAtMillis, :clientModifiedAt, 'pending');
+
+markLocalCardDueOverrideUploaded:
+UPDATE local_card_due_overrides SET upload_state = 'uploaded'
+WHERE note_guid = :noteGuid AND card_ord = :cardOrd;
+
+retryLocalCardDueOverride:
+UPDATE local_card_due_overrides SET upload_state = 'pending'
+WHERE note_guid = :noteGuid AND card_ord = :cardOrd;
+
+deleteLocalCardDueOverride:
+DELETE FROM local_card_due_overrides WHERE note_guid = :noteGuid AND card_ord = :cardOrd;
+
+deleteLocalCardDueOverrideForCard:
+DELETE FROM local_card_due_overrides WHERE card_id = ?;
+
+deleteLocalCardDueOverridesForNote:
+DELETE FROM local_card_due_overrides WHERE note_guid = ?;
+
+clearLocalCardDueOverrides:
+DELETE FROM local_card_due_overrides;
+
+pruneLocalCardDueOverrides:
+DELETE FROM local_card_due_overrides
+WHERE note_guid || ':' || card_ord NOT IN (
+    SELECT note_guid || ':' || ord FROM sync_cards
+    UNION SELECT note_guid || ':' || ord FROM local_cards
+);
+
+selectMaximumLocalCardResetReviewId:
+SELECT max(reset_through_review_id) FROM local_card_resets;
+
+selectMaximumSyncCardResetReviewId:
+SELECT max(schedule_reset_through_review_id) FROM sync_cards;
+
+selectLocalCardResets:
+SELECT note_guid, card_ord, card_id, reset_through_review_id, client_modified_at_ms, upload_state
+FROM local_card_resets;
+
+selectPendingLocalCardResets:
+SELECT note_guid, card_ord, card_id, reset_through_review_id, client_modified_at_ms, upload_state
+FROM local_card_resets WHERE upload_state = 'pending';
+
+upsertLocalCardReset:
+INSERT OR REPLACE INTO local_card_resets(
+    note_guid, card_ord, card_id, reset_through_review_id, client_modified_at_ms, upload_state
+) VALUES (?, ?, ?, ?, ?, 'pending');
+
+markLocalCardResetUploaded:
+UPDATE local_card_resets SET upload_state = 'uploaded'
+WHERE note_guid = ? AND card_ord = ? AND upload_state = 'pending';
+
+deleteUploadedLocalCardReset:
+DELETE FROM local_card_resets
+WHERE note_guid = ? AND card_ord = ? AND upload_state = 'uploaded';
+
+retryLocalCardReset:
+UPDATE local_card_resets SET upload_state = 'pending'
+WHERE note_guid = ? AND card_ord = ? AND upload_state = 'uploaded';
+
+deleteLocalCardResetsForNote:
+DELETE FROM local_card_resets WHERE note_guid = ?;
+
+clearLocalCardResets:
+DELETE FROM local_card_resets;
+
+selectLocalCardStudyStates:
+SELECT note_guid, card_ord, card_id, study_state, client_modified_at_ms, upload_state
+FROM local_card_study_states;
+
+selectPendingLocalCardStudyStates:
+SELECT note_guid, card_ord, card_id, study_state, client_modified_at_ms, upload_state
+FROM local_card_study_states WHERE upload_state = 'pending';
+
+upsertLocalCardStudyState:
+INSERT OR REPLACE INTO local_card_study_states(
+    note_guid, card_ord, card_id, study_state, client_modified_at_ms, upload_state
+) VALUES (:noteGuid, :cardOrd, :cardId, :studyState, :clientModifiedAt, 'pending');
+
+markLocalCardStudyStateUploaded:
+UPDATE local_card_study_states SET upload_state = 'uploaded'
+WHERE note_guid = :noteGuid AND card_ord = :cardOrd;
+
+retryLocalCardStudyState:
+UPDATE local_card_study_states SET upload_state = 'pending'
+WHERE note_guid = :noteGuid AND card_ord = :cardOrd;
+
+deleteLocalCardStudyState:
+DELETE FROM local_card_study_states WHERE note_guid = :noteGuid AND card_ord = :cardOrd;
+
+deleteLocalCardStudyStatesForNote:
+DELETE FROM local_card_study_states WHERE note_guid = ?;
+
+clearLocalCardStudyStates:
+DELETE FROM local_card_study_states;
+
+pruneLocalCardStudyStates:
+DELETE FROM local_card_study_states
+WHERE NOT EXISTS (
+    SELECT 1 FROM sync_cards
+    WHERE sync_cards.note_guid = local_card_study_states.note_guid
+      AND sync_cards.ord = local_card_study_states.card_ord
+) AND NOT EXISTS (
+    SELECT 1 FROM local_cards
+    WHERE local_cards.note_guid = local_card_study_states.note_guid
+      AND local_cards.ord = local_card_study_states.card_ord
+);
+
+clearLocalReviewEvents:
+DELETE FROM local_review_events;
+
+upsertLocalNoteSync:
+INSERT OR REPLACE INTO local_note_sync_outbox(
+    note_guid, operation, base_checksum, modified_at_ms, state, force_override, conflict_json
+) VALUES (:noteGuid, :operation, :baseChecksum, :modifiedAt, 'pending', 0, NULL);
+
+selectPendingLocalNoteSync:
+SELECT note_guid, operation, base_checksum, modified_at_ms, force_override
+FROM local_note_sync_outbox
+WHERE state = 'pending'
+ORDER BY modified_at_ms, note_guid;
+
+selectAllLocalNoteSyncGuids:
+SELECT note_guid FROM local_note_sync_outbox;
+
+selectDeletedLocalNoteSyncGuids:
+SELECT note_guid FROM local_note_sync_outbox WHERE operation = 'delete';
+
+markLocalNoteSyncUploaded:
+UPDATE local_note_sync_outbox SET state = 'uploaded', conflict_json = NULL
+WHERE note_guid = ?;
+
+reconcileUploadedLocalNoteCards:
+DELETE FROM local_cards
+WHERE note_guid IN (
+    SELECT outbox.note_guid FROM local_note_sync_outbox AS outbox
+    WHERE outbox.state = 'uploaded' AND outbox.operation = 'upsert'
+      AND EXISTS (SELECT 1 FROM sync_notes WHERE sync_notes.guid = outbox.note_guid)
+);
+
+reconcileUploadedLocalNotes:
+DELETE FROM local_notes
+WHERE guid IN (
+    SELECT outbox.note_guid FROM local_note_sync_outbox AS outbox
+    WHERE outbox.state = 'uploaded' AND outbox.operation = 'upsert'
+      AND EXISTS (SELECT 1 FROM sync_notes WHERE sync_notes.guid = outbox.note_guid)
+);
+
+reconcileUploadedLocalNoteOverrides:
+DELETE FROM local_note_overrides
+WHERE note_guid IN (
+    SELECT outbox.note_guid FROM local_note_sync_outbox AS outbox
+    WHERE outbox.state = 'uploaded' AND outbox.operation = 'upsert'
+      AND EXISTS (SELECT 1 FROM sync_notes WHERE sync_notes.guid = outbox.note_guid)
+);
+
+reconcileUploadedLocalNoteSync:
+DELETE FROM local_note_sync_outbox
+WHERE state = 'uploaded' AND (
+    (operation = 'upsert' AND EXISTS (
+        SELECT 1 FROM sync_notes WHERE sync_notes.guid = local_note_sync_outbox.note_guid
+    )) OR
+    (operation = 'delete' AND NOT EXISTS (
+        SELECT 1 FROM sync_notes WHERE sync_notes.guid = local_note_sync_outbox.note_guid
+    ))
+);
+
+retryUnconfirmedLocalNoteSync:
+UPDATE local_note_sync_outbox SET state = 'pending' WHERE state = 'uploaded';
+
+markLocalNoteSyncConflict:
+UPDATE local_note_sync_outbox SET state = 'conflict', conflict_json = :conflictJson
+WHERE note_guid = :noteGuid;
+
+selectLocalNoteSyncConflicts:
+SELECT note_guid, conflict_json FROM local_note_sync_outbox WHERE state = 'conflict';
+
+retryLocalNoteSyncWithForce:
+UPDATE local_note_sync_outbox
+SET state = 'pending', force_override = 1, conflict_json = NULL
+WHERE note_guid = ?;
+
+deleteLocalNoteSync:
+DELETE FROM local_note_sync_outbox WHERE note_guid = ?;
+
+clearLocalNoteSync:
+DELETE FROM local_note_sync_outbox;
+
+upsertLocalDeckSync:
+INSERT OR REPLACE INTO local_deck_sync_outbox(
+    source_name, operation, target_name, base_checksum, modified_at_ms, state, force_override, conflict_json
+) VALUES (:sourceName, :operation, :targetName, :baseChecksum, :modifiedAt, 'pending', 0, NULL);
+
+selectLocalDeckSyncForSource:
+SELECT operation, target_name, base_checksum FROM local_deck_sync_outbox
+WHERE source_name = ? COLLATE NOCASE;
+
+selectLocalDeckSyncSources:
+SELECT source_name FROM local_deck_sync_outbox;
+
+selectPendingLocalDeckSync:
+SELECT source_name, operation, target_name, base_checksum, modified_at_ms, force_override
+FROM local_deck_sync_outbox
+WHERE state = 'pending'
+ORDER BY modified_at_ms, source_name COLLATE NOCASE;
+
+selectUploadedLocalDeckSync:
+SELECT source_name, operation, target_name
+FROM local_deck_sync_outbox WHERE state = 'uploaded';
+
+markLocalDeckSyncUploaded:
+UPDATE local_deck_sync_outbox SET state = 'uploaded', conflict_json = NULL
+WHERE source_name = ? COLLATE NOCASE;
+
+retryUploadedLocalDeckSync:
+UPDATE local_deck_sync_outbox SET state = 'pending'
+WHERE source_name = ? COLLATE NOCASE AND state = 'uploaded';
+
+markLocalDeckSyncConflict:
+UPDATE local_deck_sync_outbox SET state = 'conflict', conflict_json = :conflictJson
+WHERE source_name = :sourceName COLLATE NOCASE;
+
+selectLocalDeckSyncConflicts:
+SELECT source_name, conflict_json FROM local_deck_sync_outbox WHERE state = 'conflict';
+
+retryLocalDeckSyncWithForce:
+UPDATE local_deck_sync_outbox
+SET state = 'pending', force_override = 1, conflict_json = NULL
+WHERE source_name = ? COLLATE NOCASE;
+
+deleteLocalDeckSync:
+DELETE FROM local_deck_sync_outbox WHERE source_name = ? COLLATE NOCASE;
+
+clearLocalDeckSync:
+DELETE FROM local_deck_sync_outbox;
+
+insertLocalSchedulerProfile:
+INSERT INTO local_scheduler_profile_versions(settings_json, created_at_ms)
+VALUES (?, ?);
+
+selectLatestLocalSchedulerProfileVersion:
+SELECT max(local_version) FROM local_scheduler_profile_versions;
+
+ensureSchedulerProfileState:
+INSERT OR IGNORE INTO scheduler_profile_state(singleton_id) VALUES (1);
+
+activateLocalSchedulerProfile:
+UPDATE scheduler_profile_state SET active_local_version = ? WHERE singleton_id = 1;
+
+selectActiveLocalSchedulerProfile:
+SELECT p.local_version, p.settings_json, p.created_at_ms
+FROM scheduler_profile_state s
+JOIN local_scheduler_profile_versions p ON p.local_version = s.active_local_version
+WHERE s.singleton_id = 1;
+
+upsertCloudSchedulerProfile:
+INSERT OR REPLACE INTO scheduler_profile_state(
+    singleton_id, active_local_version, cloud_profile_json, projection_summary_json, pulled_at_ms
+) VALUES (
+    1,
+    (SELECT active_local_version FROM scheduler_profile_state WHERE singleton_id = 1),
+    :cloudProfileJson,
+    :projectionSummaryJson,
+    :pulledAt
+);
+
+selectCloudSchedulerProfile:
+SELECT cloud_profile_json, projection_summary_json
+FROM scheduler_profile_state WHERE singleton_id = 1;
+
+upsertSchedulerProfileOutbox:
+INSERT OR REPLACE INTO scheduler_profile_outbox(
+    singleton_id, local_profile_version, base_profile_version, idempotency_key,
+    candidate_json, state, acknowledged_profile_json, conflict_json, created_at_ms
+) VALUES (
+    1, :localProfileVersion, :baseProfileVersion, :idempotencyKey,
+    :candidateJson, 'pending', NULL, NULL, :createdAt
+);
+
+selectSchedulerProfileOutbox:
+SELECT local_profile_version, base_profile_version, idempotency_key,
+       candidate_json, state, acknowledged_profile_json, conflict_json, created_at_ms
+FROM scheduler_profile_outbox WHERE singleton_id = 1;
+
+selectStudyDayPolicyState:
+SELECT policy_json, pulled_at_ms
+FROM study_day_policy_state WHERE singleton_id = 1;
+
+upsertStudyDayPolicyState:
+INSERT OR REPLACE INTO study_day_policy_state(singleton_id, policy_json, pulled_at_ms)
+VALUES (1, ?, ?);
+
+clearStudyDayPolicyState:
+DELETE FROM study_day_policy_state;
+
+markSchedulerProfileOutboxUploaded:
+UPDATE scheduler_profile_outbox
+SET state = 'uploaded', acknowledged_profile_json = :acknowledgedProfileJson,
+    conflict_json = NULL
+WHERE singleton_id = 1 AND idempotency_key = :idempotencyKey;
+
+markSchedulerProfileOutboxConflict:
+UPDATE scheduler_profile_outbox
+SET state = 'conflict', conflict_json = :conflictJson
+WHERE singleton_id = 1;
+
+retrySchedulerProfileOutbox:
+UPDATE scheduler_profile_outbox
+SET local_profile_version = :localProfileVersion,
+    base_profile_version = :baseProfileVersion,
+    idempotency_key = :idempotencyKey,
+    candidate_json = :candidateJson,
+    state = 'pending', acknowledged_profile_json = NULL, conflict_json = NULL,
+    created_at_ms = :createdAt
+WHERE singleton_id = 1;
+
+deleteSchedulerProfileOutbox:
+DELETE FROM scheduler_profile_outbox WHERE singleton_id = 1;
+
+clearLocalSchedulerProfileVersions:
+DELETE FROM local_scheduler_profile_versions;
+
+clearSchedulerProfileState:
+DELETE FROM scheduler_profile_state;
+
+clearSchedulerProfileOutbox:
+DELETE FROM scheduler_profile_outbox;
+
+insertSchedulerOptimizerJob:
+INSERT INTO scheduler_optimizer_jobs(
+    job_id, status, timezone_id, day_start_hour, total_epochs, completed_epochs,
+    raw_review_count, qualifying_review_count, qualifying_card_count,
+    cancel_requested, created_at_ms, updated_at_ms
+) VALUES (
+    :jobId, 'running', :timezoneId, :dayStartHour, :totalEpochs, 0,
+    0, 0, 0, 0, :createdAt, :createdAt
+);
+
+updateSchedulerOptimizerProgress:
+UPDATE scheduler_optimizer_jobs
+SET completed_epochs = :completedEpochs,
+    qualifying_review_count = :qualifyingReviews,
+    updated_at_ms = :updatedAt
+WHERE job_id = :jobId AND status = 'running';
+
+completeSchedulerOptimizerJob:
+UPDATE scheduler_optimizer_jobs
+SET status = :status,
+    completed_epochs = :completedEpochs,
+    raw_review_count = :rawReviews,
+    qualifying_review_count = :qualifyingReviews,
+    qualifying_card_count = :qualifyingCards,
+    history_sha256 = :historySha256,
+    dataset_sha256 = :datasetSha256,
+    through_review_id = :throughReviewId,
+    reason_code = :reasonCode,
+    updated_at_ms = :completedAt,
+    completed_at_ms = :completedAt
+WHERE job_id = :jobId AND status = 'running';
+
+requestSchedulerOptimizerCancellation:
+UPDATE scheduler_optimizer_jobs
+SET cancel_requested = 1, updated_at_ms = :updatedAt
+WHERE job_id = :jobId AND status = 'running';
+
+selectSchedulerOptimizerCancellation:
+SELECT cancel_requested FROM scheduler_optimizer_jobs WHERE job_id = ?;
+
+selectSchedulerOptimizerJob:
+SELECT job_id, status, timezone_id, day_start_hour, total_epochs,
+       completed_epochs, raw_review_count, qualifying_review_count,
+       qualifying_card_count, history_sha256, dataset_sha256,
+       through_review_id, reason_code, cancel_requested, created_at_ms,
+       updated_at_ms, completed_at_ms
+FROM scheduler_optimizer_jobs WHERE job_id = ?;
+
+selectLatestSchedulerOptimizerJob:
+SELECT job_id, status, timezone_id, day_start_hour, total_epochs,
+       completed_epochs, raw_review_count, qualifying_review_count,
+       qualifying_card_count, history_sha256, dataset_sha256,
+       through_review_id, reason_code, cancel_requested, created_at_ms,
+       updated_at_ms, completed_at_ms
+FROM scheduler_optimizer_jobs
+ORDER BY created_at_ms DESC LIMIT 1;
+
+recoverInterruptedSchedulerOptimizerJobs:
+UPDATE scheduler_optimizer_jobs
+SET status = 'interrupted', reason_code = 'process_interrupted', cancel_requested = 1,
+    updated_at_ms = :recoveredAt, completed_at_ms = :recoveredAt
+WHERE status = 'running';
+
+interruptSchedulerOptimizerJob:
+UPDATE scheduler_optimizer_jobs
+SET status = 'interrupted', reason_code = 'app_backgrounded', cancel_requested = 1,
+    updated_at_ms = :interruptedAt, completed_at_ms = :interruptedAt
+WHERE job_id = :jobId AND status = 'running';
+
+insertSchedulerOptimizerCandidate:
+INSERT INTO scheduler_optimizer_candidates(
+    candidate_id, job_id, candidate_json, state, created_at_ms
+) VALUES (:candidateId, :jobId, :candidateJson, 'pending', :createdAt);
+
+selectLatestSchedulerOptimizerCandidate:
+SELECT candidate_id, job_id, candidate_json, state, created_at_ms, resolved_at_ms
+FROM scheduler_optimizer_candidates
+ORDER BY created_at_ms DESC LIMIT 1;
+
+selectSchedulerOptimizerCandidate:
+SELECT candidate_id, job_id, candidate_json, state, created_at_ms, resolved_at_ms
+FROM scheduler_optimizer_candidates WHERE candidate_id = ?;
+
+resolveSchedulerOptimizerCandidate:
+UPDATE scheduler_optimizer_candidates
+SET state = :state, resolved_at_ms = :resolvedAt
+WHERE candidate_id = :candidateId AND state = 'pending';
+
+stalePendingSchedulerOptimizerCandidates:
+UPDATE scheduler_optimizer_candidates
+SET state = 'stale', resolved_at_ms = :resolvedAt
+WHERE state = 'pending';
+
+clearSchedulerOptimizerCandidates:
+DELETE FROM scheduler_optimizer_candidates;
+
+clearSchedulerOptimizerJobs:
+DELETE FROM scheduler_optimizer_jobs;
+
+selectPluginInstallations:
+SELECT plugin_id, manifest_json, enabled, status, error_message, installed_at_ms, updated_at_ms
+FROM plugin_installations ORDER BY plugin_id;
+
+insertPluginInstallation:
+INSERT INTO plugin_installations(
+    plugin_id, manifest_json, enabled, status, error_message, installed_at_ms, updated_at_ms
+) VALUES (:pluginId, :manifestJson, :enabled, :status, :errorMessage, :installedAt, :updatedAt);
+
+updatePluginInstallation:
+UPDATE plugin_installations SET manifest_json = :manifestJson, enabled = :enabled,
+    status = :status, error_message = :errorMessage, updated_at_ms = :updatedAt
+WHERE plugin_id = :pluginId;
+
+setPluginEnabled:
+UPDATE plugin_installations SET enabled = :enabled, status = :status,
+    error_message = NULL, updated_at_ms = :updatedAt
+WHERE plugin_id = :pluginId;
+
+setPluginStatus:
+UPDATE plugin_installations SET status = :status, error_message = :errorMessage, updated_at_ms = :updatedAt
+WHERE plugin_id = :pluginId;
+
+deletePluginInstallation:
+DELETE FROM plugin_installations WHERE plugin_id = ?;
+
+selectPluginSetting:
+SELECT value_json FROM plugin_settings WHERE plugin_id = :pluginId AND setting_key = :settingKey;
+
+upsertPluginSetting:
+INSERT OR REPLACE INTO plugin_settings(plugin_id, setting_key, value_json, modified_at_ms)
+VALUES (:pluginId, :settingKey, :valueJson, :modifiedAt);
+
+clearPluginSettings:
+DELETE FROM plugin_settings WHERE plugin_id = ?;
+
+selectPluginFiles:
+SELECT file_path, content FROM plugin_files WHERE plugin_id = :pluginId ORDER BY file_path;
+
+insertPluginFile:
+INSERT INTO plugin_files(plugin_id, file_path, content) VALUES (:pluginId, :filePath, :content);
+
+clearPluginFiles:
+DELETE FROM plugin_files WHERE plugin_id = ?;
+
+insertPluginLog:
+INSERT INTO plugin_logs(plugin_id, occurred_at_ms, level, message) VALUES (?, ?, ?, ?);
+
+selectPluginLogs:
+SELECT log_id, plugin_id, occurred_at_ms, level, message
+FROM plugin_logs WHERE plugin_id = :pluginId ORDER BY log_id DESC LIMIT :limit;
+
+prunePluginLogs:
+DELETE FROM plugin_logs
+WHERE plugin_id = :pluginId AND log_id NOT IN (
+    SELECT log_id FROM plugin_logs WHERE plugin_id = :pluginId ORDER BY log_id DESC LIMIT :limit
+);
+
+clearPluginLogs:
+DELETE FROM plugin_logs WHERE plugin_id = ?;
+
+selectPluginSafeMode:
+SELECT safe_mode FROM plugin_host_state WHERE singleton_id = 1;
+
+setPluginSafeMode:
+INSERT OR REPLACE INTO plugin_host_state(singleton_id, safe_mode) VALUES (1, :safeMode);
+
+selectPluginRendererAssignments:
+SELECT scope_type, target_id, renderer_id
+FROM plugin_renderer_assignments ORDER BY scope_type, target_id;
+
+upsertPluginRendererAssignment:
+INSERT OR REPLACE INTO plugin_renderer_assignments(scope_type, target_id, renderer_id)
+VALUES (:scopeType, :targetId, :rendererId);
+
+deletePluginRendererAssignment:
+DELETE FROM plugin_renderer_assignments WHERE scope_type = :scopeType AND target_id = :targetId;
+
+clearPluginRendererAssignments:
+DELETE FROM plugin_renderer_assignments;
+
+insertSyncLogEntry:
+INSERT INTO sync_log_entries(occurred_at_ms, level, phase, message)
+VALUES (?, ?, ?, ?);
+
+updateLatestSyncLogEntry:
+UPDATE sync_log_entries
+SET occurred_at_ms = :occurredAt, level = :level, message = :message
+WHERE entry_id = (
+    SELECT entry_id FROM sync_log_entries WHERE phase = :phase ORDER BY entry_id DESC LIMIT 1
+);
+
+selectSyncLogEntries:
+SELECT entry_id, occurred_at_ms, level, phase, message
+FROM sync_log_entries ORDER BY occurred_at_ms DESC, entry_id DESC LIMIT ?;
+
+clearSyncLogEntries:
+DELETE FROM sync_log_entries;
+
+selectBrowseIndexDirty:
+SELECT dirty FROM browse_index_state WHERE singleton_id = 1;
+
+markBrowseIndexClean:
+UPDATE browse_index_state SET dirty = 0 WHERE singleton_id = 1;
+
+markBrowseIndexDirty:
+UPDATE browse_index_state SET dirty = 1 WHERE singleton_id = 1;
+
+clearBrowseIndexTags:
+DELETE FROM browse_card_tags;
+
+clearBrowseIndexCards:
+DELETE FROM browse_card_index;
+
+insertBrowseIndexCard:
+INSERT INTO browse_card_index(
+    card_id, note_guid, card_ord, question_sort, answer_sort, deck_name, deck_sort,
+    notetype_sort, tags_sort, search_text, study_state, is_local,
+    remote_due_at_ms, remote_due_modified_at_ms
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+insertBrowseIndexTag:
+INSERT OR REPLACE INTO browse_card_tags(card_id, tag, normalized_tag) VALUES (?, ?, ?);
+
+clearBrowseQueryTerms:
+DELETE FROM browse_query_terms;
+
+insertBrowseQueryTerm:
+INSERT OR REPLACE INTO browse_query_terms(query_id, kind, value) VALUES (?, ?, ?);
+
+selectBrowseResultRows:
+WITH browse_rows AS (
+    SELECT
+        i.*,
+        s.phase AS schedule_phase,
+        COALESCE(
+            CASE
+                WHEN d.client_modified_at_ms IS NOT NULL
+                    AND d.client_modified_at_ms >= i.remote_due_modified_at_ms
+                    THEN CASE WHEN d.due_at_ms > 0 THEN d.due_at_ms END
+                ELSE CASE WHEN i.remote_due_at_ms > 0 THEN i.remote_due_at_ms END
+            END,
+            s.due_at_ms
+        ) AS effective_due
+    FROM browse_card_index i
+    LEFT JOIN local_card_schedules s ON s.card_id = i.card_id
+    LEFT JOIN local_card_due_overrides d ON d.note_guid = i.note_guid AND d.card_ord = i.card_ord
+)
+SELECT
+    i.card_id,
+    CASE
+        WHEN i.study_state = 'suspended' THEN 'Suspended'
+        WHEN i.schedule_phase IN ('Learning', 'Relearning') THEN 'Learning'
+        WHEN i.schedule_phase = 'Review' THEN 'Review'
+        ELSE 'New'
+    END AS browse_state,
+    i.effective_due AS due_millis
+FROM browse_rows i
+WHERE NOT EXISTS (
+    SELECT 1 FROM browse_query_terms t
+    WHERE t.query_id = :queryId AND (
+        (t.kind = 'text' AND instr(i.search_text, t.value) = 0)
+        OR (t.kind = 'deck' AND instr(i.deck_sort, t.value) = 0)
+        OR (t.kind = 'notetype' AND instr(i.notetype_sort, t.value) = 0)
+        OR (t.kind = 'tag' AND NOT EXISTS (
+            SELECT 1 FROM browse_card_tags bt
+            WHERE bt.card_id = i.card_id AND bt.normalized_tag = t.value
+        ))
+        OR (t.kind = 'local' AND i.is_local = 0)
+        OR (t.kind = 'due' AND (
+            i.study_state = 'suspended'
+            OR (i.effective_due IS NOT NULL AND i.effective_due > :nowMillis)
+        ))
+        OR (t.kind = 'state' AND (
+            (t.value = 'new' AND (i.study_state = 'suspended' OR i.schedule_phase IS NOT NULL))
+            OR (t.value = 'learning' AND (
+                i.study_state = 'suspended' OR i.schedule_phase IS NULL
+                OR i.schedule_phase NOT IN ('Learning', 'Relearning')
+            ))
+            OR (t.value = 'review' AND (
+                i.study_state = 'suspended' OR i.schedule_phase IS NULL OR i.schedule_phase != 'Review'
+            ))
+            OR (t.value = 'suspended' AND i.study_state != 'suspended')
+        ))
+    )
+)
+ORDER BY
+    CASE WHEN :sortField = 'Question' AND :ascending != 0 THEN i.question_sort END ASC,
+    CASE WHEN :sortField = 'Question' AND :ascending = 0 THEN i.question_sort END DESC,
+    CASE WHEN :sortField = 'Answer' AND :ascending != 0 THEN i.answer_sort END ASC,
+    CASE WHEN :sortField = 'Answer' AND :ascending = 0 THEN i.answer_sort END DESC,
+    CASE WHEN :sortField = 'Deck' AND :ascending != 0 THEN i.deck_sort END ASC,
+    CASE WHEN :sortField = 'Deck' AND :ascending = 0 THEN i.deck_sort END DESC,
+    CASE WHEN :sortField = 'Deck' AND :ascending != 0 THEN i.question_sort END ASC,
+    CASE WHEN :sortField = 'Deck' AND :ascending = 0 THEN i.question_sort END DESC,
+    CASE WHEN :sortField = 'State' AND :ascending != 0 THEN
+        CASE
+            WHEN i.study_state = 'suspended' THEN 3
+            WHEN i.schedule_phase IN ('Learning', 'Relearning') THEN 1
+            WHEN i.schedule_phase = 'Review' THEN 2
+            ELSE 0
+        END
+    END ASC,
+    CASE WHEN :sortField = 'State' AND :ascending = 0 THEN
+        CASE
+            WHEN i.study_state = 'suspended' THEN 3
+            WHEN i.schedule_phase IN ('Learning', 'Relearning') THEN 1
+            WHEN i.schedule_phase = 'Review' THEN 2
+            ELSE 0
+        END
+    END DESC,
+    CASE WHEN :sortField = 'State' AND :ascending != 0 THEN i.question_sort END ASC,
+    CASE WHEN :sortField = 'State' AND :ascending = 0 THEN i.question_sort END DESC,
+    CASE WHEN :sortField = 'Due' AND :ascending != 0 THEN
+        COALESCE(i.effective_due, 9223372036854775807)
+    END ASC,
+    CASE WHEN :sortField = 'Due' AND :ascending = 0 THEN
+        COALESCE(i.effective_due, 9223372036854775807)
+    END DESC,
+    CASE WHEN :sortField = 'Due' AND :ascending != 0 THEN i.question_sort END ASC,
+    CASE WHEN :sortField = 'Due' AND :ascending = 0 THEN i.question_sort END DESC,
+    CASE WHEN :sortField = 'Tags' AND :ascending != 0 THEN i.tags_sort END ASC,
+    CASE WHEN :sortField = 'Tags' AND :ascending = 0 THEN i.tags_sort END DESC,
+    CASE WHEN :sortField = 'Tags' AND :ascending != 0 THEN i.question_sort END ASC,
+    CASE WHEN :sortField = 'Tags' AND :ascending = 0 THEN i.question_sort END DESC,
+    CASE WHEN :ascending != 0 THEN i.card_id END ASC,
+    CASE WHEN :ascending = 0 THEN i.card_id END DESC;
+
+selectBrowseDeckFacets:
+SELECT deck_name, count(*) AS card_count
+FROM browse_card_index
+GROUP BY deck_name
+ORDER BY deck_sort;
+
+selectBrowseTagFacets:
+SELECT tag, count(*) AS card_count
+FROM browse_card_tags
+GROUP BY normalized_tag
+ORDER BY card_count DESC, normalized_tag
+LIMIT 12;
+
+countUploadedSyncRows:
+SELECT count(*) FROM (
+    SELECT review_id AS resource_id FROM local_review_events WHERE upload_state = 'uploaded'
+    UNION ALL
+    SELECT note_guid FROM local_note_sync_outbox WHERE state = 'uploaded'
+    UNION ALL
+    SELECT source_name FROM local_deck_sync_outbox WHERE state = 'uploaded'
+    UNION ALL
+    SELECT filename FROM local_media_outbox WHERE state = 'uploaded'
+    UNION ALL
+    SELECT note_guid || ':' || card_ord FROM local_card_study_states WHERE upload_state = 'uploaded'
+    UNION ALL
+    SELECT note_guid || ':' || card_ord FROM local_card_resets WHERE upload_state = 'uploaded'
+    UNION ALL
+    SELECT note_guid || ':' || card_ord FROM local_card_due_overrides WHERE upload_state = 'uploaded'
+);
+
+pruneSyncLogEntries:
+DELETE FROM sync_log_entries
+WHERE entry_id NOT IN (SELECT entry_id FROM sync_log_entries ORDER BY entry_id DESC LIMIT ?);
+
+pruneLocalReviewEvents:
+DELETE FROM local_review_events
+WHERE CASE
+    WHEN note_guid != '' THEN note_guid NOT IN (SELECT guid FROM sync_notes)
+                         AND note_guid NOT IN (SELECT guid FROM local_notes)
+    ELSE card_id NOT IN (SELECT card_id FROM sync_cards)
+     AND card_id NOT IN (SELECT card_id FROM local_cards)
+END;
+
+clearSyncState:
+DELETE FROM sync_state;
+
+clearNotes:
+DELETE FROM sync_notes;
+
+clearCards:
+DELETE FROM sync_cards;
+
+clearReviews:
+DELETE FROM sync_reviews;
+
+clearStudyDays:
+DELETE FROM sync_study_days;
+
+clearNotetypes:
+DELETE FROM sync_notetypes;
+
+clearDecks:
+DELETE FROM sync_decks;
+
+clearDeckNames:
+DELETE FROM sync_deck_names;
+
+clearMedia:
+DELETE FROM sync_media;

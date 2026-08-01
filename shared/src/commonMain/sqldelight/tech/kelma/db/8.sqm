@@ -1,0 +1,22 @@
+ALTER TABLE local_review_events ADD COLUMN review_id INTEGER NOT NULL DEFAULT 0;
+
+CREATE TABLE local_note_sync_outbox (
+    note_guid TEXT NOT NULL PRIMARY KEY,
+    operation TEXT NOT NULL,
+    base_checksum TEXT NOT NULL,
+    modified_at_ms INTEGER NOT NULL,
+    state TEXT NOT NULL DEFAULT 'pending',
+    force_override INTEGER NOT NULL DEFAULT 0,
+    conflict_json TEXT
+);
+
+CREATE TABLE local_deck_sync_outbox (
+    source_name TEXT NOT NULL COLLATE NOCASE PRIMARY KEY,
+    operation TEXT NOT NULL,
+    target_name TEXT COLLATE NOCASE,
+    base_checksum TEXT NOT NULL,
+    modified_at_ms INTEGER NOT NULL,
+    state TEXT NOT NULL DEFAULT 'pending',
+    force_override INTEGER NOT NULL DEFAULT 0,
+    conflict_json TEXT
+);

@@ -1,0 +1,16 @@
+ALTER TABLE sync_cards ADD COLUMN due_date_override_ms INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE sync_cards ADD COLUMN due_date_override_modified_at TEXT NOT NULL DEFAULT '';
+ALTER TABLE sync_cards ADD COLUMN due_date_override_client_modified_at TEXT NOT NULL DEFAULT '';
+
+CREATE TABLE local_card_due_overrides (
+    note_guid TEXT NOT NULL,
+    card_ord INTEGER NOT NULL,
+    card_id INTEGER NOT NULL,
+    due_at_ms INTEGER NOT NULL,
+    client_modified_at_ms INTEGER NOT NULL,
+    upload_state TEXT NOT NULL DEFAULT 'pending',
+    PRIMARY KEY (note_guid, card_ord)
+);
+
+CREATE INDEX local_card_due_overrides_upload_idx
+ON local_card_due_overrides(upload_state);

@@ -1,0 +1,18 @@
+-- Allow a note to generate more than one card (e.g. Basic and reversed) by
+-- dropping the UNIQUE constraint on local_cards.note_guid.
+ALTER TABLE local_cards RENAME TO local_cards_old;
+
+CREATE TABLE local_cards (
+    card_id INTEGER NOT NULL PRIMARY KEY,
+    note_guid TEXT NOT NULL,
+    deck_name TEXT NOT NULL,
+    ord INTEGER NOT NULL,
+    created_at_ms INTEGER NOT NULL
+);
+
+INSERT INTO local_cards(card_id, note_guid, deck_name, ord, created_at_ms)
+SELECT card_id, note_guid, deck_name, ord, created_at_ms FROM local_cards_old;
+
+DROP TABLE local_cards_old;
+
+CREATE INDEX local_cards_note_guid ON local_cards(note_guid);

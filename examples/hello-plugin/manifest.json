@@ -1,0 +1,10 @@
+{
+  "id": "tech.kelma.example.hello",
+  "name": "Kelma Hello",
+  "version": "1.0.0",
+  "apiVersion": 1,
+  "entrypoint": "plugin/hello.lua",
+  "runtime": "lua54",
+  "capabilities": ["Commands", "Events", "Ui"],
+  "dependencies": []
+}

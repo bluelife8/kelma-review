@@ -1,0 +1,2 @@
+# Preserve Lua.org's source bytes, including its intentional extra EOF lines.
+native/lua/src/** whitespace=-blank-at-eof

@@ -1,0 +1,7 @@
+CREATE TABLE sync_log_entries (
+    entry_id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    occurred_at_ms INTEGER NOT NULL,
+    level TEXT NOT NULL,
+    phase TEXT NOT NULL,
+    message TEXT NOT NULL
+);

@@ -1,0 +1,12 @@
+CREATE TABLE sync_auth_secure (
+    singleton_id INTEGER NOT NULL PRIMARY KEY CHECK (singleton_id = 1),
+    client_id TEXT NOT NULL,
+    endpoint TEXT NOT NULL,
+    username TEXT NOT NULL
+);
+
+INSERT INTO sync_auth_secure(singleton_id, client_id, endpoint, username)
+SELECT singleton_id, client_id, endpoint, username FROM sync_auth;
+
+DROP TABLE sync_auth;
+ALTER TABLE sync_auth_secure RENAME TO sync_auth;

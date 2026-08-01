@@ -1,0 +1,3 @@
+-- Remove obsolete per-note sync diagnostics. New sync activity uses aggregate,
+-- in-place progress rows and never persists note GUIDs or card IDs.
+DELETE FROM sync_log_entries WHERE phase IN ('NOTE', 'CARD');

@@ -1,0 +1,17 @@
+CREATE TABLE local_deck_option_presets (
+    preset_id TEXT NOT NULL PRIMARY KEY,
+    name TEXT NOT NULL COLLATE NOCASE UNIQUE,
+    options_json TEXT NOT NULL,
+    created_at_ms INTEGER NOT NULL,
+    modified_at_ms INTEGER NOT NULL
+);
+
+CREATE TABLE local_deck_preset_assignments (
+    deck_name TEXT NOT NULL COLLATE NOCASE PRIMARY KEY,
+    preset_id TEXT NOT NULL,
+    modified_at_ms INTEGER NOT NULL,
+    FOREIGN KEY (preset_id) REFERENCES local_deck_option_presets(preset_id) ON DELETE CASCADE
+);
+
+CREATE INDEX local_deck_preset_assignments_preset_idx
+ON local_deck_preset_assignments(preset_id);

@@ -1,0 +1,6 @@
+CREATE TABLE local_card_buries (
+    card_id INTEGER NOT NULL PRIMARY KEY,
+    buried_on_day INTEGER NOT NULL
+);
+
+CREATE INDEX local_card_buries_day_idx ON local_card_buries(buried_on_day);

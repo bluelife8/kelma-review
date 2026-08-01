@@ -1,0 +1,7 @@
+-- Persist field/tag edits to downloaded notes separately from authoritative sync rows.
+CREATE TABLE local_note_overrides (
+    note_guid TEXT NOT NULL PRIMARY KEY,
+    fields_json TEXT NOT NULL,
+    tags_json TEXT NOT NULL,
+    modified_at_ms INTEGER NOT NULL
+);

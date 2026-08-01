@@ -1,0 +1,7 @@
+CREATE TABLE local_decks (
+    name TEXT NOT NULL COLLATE NOCASE PRIMARY KEY,
+    created_at_ms INTEGER NOT NULL
+);
+
+INSERT OR IGNORE INTO local_decks(name, created_at_ms)
+SELECT deck_name, 0 FROM local_cards;

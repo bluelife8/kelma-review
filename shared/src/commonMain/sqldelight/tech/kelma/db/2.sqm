@@ -1,0 +1,15 @@
+CREATE TABLE local_notes (
+    guid TEXT NOT NULL PRIMARY KEY,
+    notetype_id INTEGER NOT NULL,
+    fields_json TEXT NOT NULL,
+    tags_json TEXT NOT NULL,
+    created_at_ms INTEGER NOT NULL
+);
+
+CREATE TABLE local_cards (
+    card_id INTEGER NOT NULL PRIMARY KEY,
+    note_guid TEXT NOT NULL UNIQUE,
+    deck_name TEXT NOT NULL,
+    ord INTEGER NOT NULL,
+    created_at_ms INTEGER NOT NULL
+);

@@ -1,0 +1,4 @@
+CREATE TABLE local_card_flags (
+    card_id INTEGER NOT NULL PRIMARY KEY,
+    flag INTEGER NOT NULL CHECK (flag BETWEEN 1 AND 7)
+);

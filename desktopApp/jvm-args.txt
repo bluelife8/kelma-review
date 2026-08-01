@@ -1,0 +1,54 @@
+# JVM arguments for the Kelma desktop application.
+#
+# This file is the single source of truth. Both the packaged distribution
+# (desktopApp/build.gradle.kts) and the development launcher
+# (scripts/run-desktop-dev.sh) read it, so the two can never drift.
+#
+# Format: one argument per line. Blank lines and lines starting with "#" are
+# ignored. A single argument may contain spaces, but two arguments must never
+# share a line.
+#
+# scripts/check_desktop_jvm_args.py enforces the format and the parity between
+# this file, the build script, and a packaged application image.
+
+# --- Rendering -------------------------------------------------------------
+# The packaged app otherwise ran with a different JVM configuration than the
+# development build that renders cards correctly.
+-Dsun.awt.noerasebackground=true
+-Dcompose.application.configure.swing.globals=true
+-Dfile.encoding=UTF-8
+# AWT builds the macOS application menu ("About …", "Hide …", "Quit …") from
+# this property. Without it the menu shows the packageName, "KelmaReview".
+-Dapple.awt.application.name=Kelma Review
+
+# --- Heap ------------------------------------------------------------------
+# Measured live set after a full GC is roughly 100 MB. Left at its defaults the
+# JVM sizes the heap from physical RAM: on a 24 GB host that is a 6 GB maximum
+# and a 384 MB initial heap, and G1 then keeps ~270 MB committed forever
+# because it has no reason to shrink. Start small, keep a generous ceiling for
+# large collection imports, and let the free-ratio bounds track the live set.
+-Xms128m
+-Xmx2g
+-XX:MinHeapFreeRatio=15
+-XX:MaxHeapFreeRatio=40
+# Give committed-but-unused regions back to the OS while the user is idle
+# between reviews (JEP 346). The load threshold is disabled so an otherwise
+# busy machine does not suppress the uncommit.
+-XX:G1PeriodicGCInterval=30000
+-XX:G1PeriodicGCSystemLoadThreshold=0
+
+# --- Threads ---------------------------------------------------------------
+# GC and JIT worker counts default to functions of the CPU count, which gives a
+# 12-core machine 10 parallel GC threads, 3 concurrent GC threads, and 4
+# compiler slots. A flashcard UI allocates far too little to need them, and the
+# thread count is user-visible in Activity Monitor and Task Manager.
+-XX:ParallelGCThreads=2
+-XX:ConcGCThreads=1
+-XX:CICompilerCount=2
+
+# --- Metaspace and code cache ----------------------------------------------
+# The app loads ~10k classes (~56 MB of metaspace) and compiles ~28 MB of code.
+# The default reservations are 1 GB of compressed class space and 240 MB of
+# code cache; the unused remainder still costs address space and page tables.
+-XX:MaxMetaspaceSize=256m
+-XX:ReservedCodeCacheSize=128m

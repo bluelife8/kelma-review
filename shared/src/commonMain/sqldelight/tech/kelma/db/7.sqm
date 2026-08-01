@@ -1,0 +1,5 @@
+CREATE TABLE local_deck_overrides (
+    source_name TEXT NOT NULL COLLATE NOCASE PRIMARY KEY,
+    replacement_name TEXT COLLATE NOCASE,
+    modified_at_ms INTEGER NOT NULL
+);

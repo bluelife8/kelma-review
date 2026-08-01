@@ -1,0 +1,5039 @@
+{
+  "bomFormat": "CycloneDX",
+  "components": [
+    {
+      "group": "androidx.activity",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "activity",
+      "purl": "pkg:maven/androidx.activity/activity@1.13.0",
+      "type": "library",
+      "version": "1.13.0"
+    },
+    {
+      "group": "androidx.activity",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "activity-compose",
+      "purl": "pkg:maven/androidx.activity/activity-compose@1.13.0",
+      "type": "library",
+      "version": "1.13.0"
+    },
+    {
+      "group": "androidx.activity",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "activity-ktx",
+      "purl": "pkg:maven/androidx.activity/activity-ktx@1.13.0",
+      "type": "library",
+      "version": "1.13.0"
+    },
+    {
+      "group": "androidx.annotation",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "annotation",
+      "purl": "pkg:maven/androidx.annotation/annotation@1.9.1",
+      "type": "library",
+      "version": "1.9.1"
+    },
+    {
+      "group": "androidx.annotation",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "annotation-experimental",
+      "purl": "pkg:maven/androidx.annotation/annotation-experimental@1.4.1",
+      "type": "library",
+      "version": "1.4.1"
+    },
+    {
+      "group": "androidx.annotation",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "annotation-iossimulatorarm64",
+      "purl": "pkg:maven/androidx.annotation/annotation-iossimulatorarm64@1.9.1",
+      "type": "library",
+      "version": "1.9.1"
+    },
+    {
+      "group": "androidx.annotation",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "annotation-jvm",
+      "purl": "pkg:maven/androidx.annotation/annotation-jvm@1.9.1",
+      "type": "library",
+      "version": "1.9.1"
+    },
+    {
+      "group": "androidx.arch.core",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "core-common",
+      "purl": "pkg:maven/androidx.arch.core/core-common@2.2.0",
+      "type": "library",
+      "version": "2.2.0"
+    },
+    {
+      "group": "androidx.arch.core",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "core-runtime",
+      "purl": "pkg:maven/androidx.arch.core/core-runtime@2.2.0",
+      "type": "library",
+      "version": "2.2.0"
+    },
+    {
+      "group": "androidx.autofill",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "autofill",
+      "purl": "pkg:maven/androidx.autofill/autofill@1.0.0",
+      "type": "library",
+      "version": "1.0.0"
+    },
+    {
+      "group": "androidx.collection",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "collection",
+      "purl": "pkg:maven/androidx.collection/collection@1.5.0",
+      "type": "library",
+      "version": "1.5.0"
+    },
+    {
+      "group": "androidx.collection",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "collection-iossimulatorarm64",
+      "purl": "pkg:maven/androidx.collection/collection-iossimulatorarm64@1.5.0",
+      "type": "library",
+      "version": "1.5.0"
+    },
+    {
+      "group": "androidx.collection",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "collection-jvm",
+      "purl": "pkg:maven/androidx.collection/collection-jvm@1.5.0",
+      "type": "library",
+      "version": "1.5.0"
+    },
+    {
+      "group": "androidx.collection",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "collection-ktx",
+      "purl": "pkg:maven/androidx.collection/collection-ktx@1.5.0",
+      "type": "library",
+      "version": "1.5.0"
+    },
+    {
+      "group": "androidx.compose.animation",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "animation",
+      "purl": "pkg:maven/androidx.compose.animation/animation@1.11.2",
+      "type": "library",
+      "version": "1.11.2"
+    },
+    {
+      "group": "androidx.compose.animation",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "animation-android",
+      "purl": "pkg:maven/androidx.compose.animation/animation-android@1.11.2",
+      "type": "library",
+      "version": "1.11.2"
+    },
+    {
+      "group": "androidx.compose.animation",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "animation-core",
+      "purl": "pkg:maven/androidx.compose.animation/animation-core@1.11.2",
+      "type": "library",
+      "version": "1.11.2"
+    },
+    {
+      "group": "androidx.compose.animation",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "animation-core-android",
+      "purl": "pkg:maven/androidx.compose.animation/animation-core-android@1.11.2",
+      "type": "library",
+      "version": "1.11.2"
+    },
+    {
+      "group": "androidx.compose.foundation",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "foundation",
+      "purl": "pkg:maven/androidx.compose.foundation/foundation@1.11.2",
+      "type": "library",
+      "version": "1.11.2"
+    },
+    {
+      "group": "androidx.compose.foundation",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "foundation-android",
+      "purl": "pkg:maven/androidx.compose.foundation/foundation-android@1.11.2",
+      "type": "library",
+      "version": "1.11.2"
+    },
+    {
+      "group": "androidx.compose.foundation",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "foundation-layout",
+      "purl": "pkg:maven/androidx.compose.foundation/foundation-layout@1.11.2",
+      "type": "library",
+      "version": "1.11.2"
+    },
+    {
+      "group": "androidx.compose.foundation",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "foundation-layout-android",
+      "purl": "pkg:maven/androidx.compose.foundation/foundation-layout-android@1.11.2",
+      "type": "library",
+      "version": "1.11.2"
+    },
+    {
+      "group": "androidx.compose.material",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "material-icons-core",
+      "purl": "pkg:maven/androidx.compose.material/material-icons-core@1.7.6",
+      "type": "library",
+      "version": "1.7.6"
+    },
+    {
+      "group": "androidx.compose.material",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "material-icons-core-android",
+      "purl": "pkg:maven/androidx.compose.material/material-icons-core-android@1.7.6",
+      "type": "library",
+      "version": "1.7.6"
+    },
+    {
+      "group": "androidx.compose.material",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "material-icons-extended",
+      "purl": "pkg:maven/androidx.compose.material/material-icons-extended@1.7.6",
+      "type": "library",
+      "version": "1.7.6"
+    },
+    {
+      "group": "androidx.compose.material",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "material-icons-extended-android",
+      "purl": "pkg:maven/androidx.compose.material/material-icons-extended-android@1.7.6",
+      "type": "library",
+      "version": "1.7.6"
+    },
+    {
+      "group": "androidx.compose.material",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "material-ripple",
+      "purl": "pkg:maven/androidx.compose.material/material-ripple@1.11.0-rc01",
+      "type": "library",
+      "version": "1.11.0-rc01"
+    },
+    {
+      "group": "androidx.compose.material",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "material-ripple-android",
+      "purl": "pkg:maven/androidx.compose.material/material-ripple-android@1.11.0-rc01",
+      "type": "library",
+      "version": "1.11.0-rc01"
+    },
+    {
+      "group": "androidx.compose.material3",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "material3",
+      "purl": "pkg:maven/androidx.compose.material3/material3@1.5.0-alpha17",
+      "type": "library",
+      "version": "1.5.0-alpha17"
+    },
+    {
+      "group": "androidx.compose.material3",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "material3-android",
+      "purl": "pkg:maven/androidx.compose.material3/material3-android@1.5.0-alpha17",
+      "type": "library",
+      "version": "1.5.0-alpha17"
+    },
+    {
+      "group": "androidx.compose.runtime",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "runtime",
+      "purl": "pkg:maven/androidx.compose.runtime/runtime@1.11.2",
+      "type": "library",
+      "version": "1.11.2"
+    },
+    {
+      "group": "androidx.compose.runtime",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "runtime-android",
+      "purl": "pkg:maven/androidx.compose.runtime/runtime-android@1.11.2",
+      "type": "library",
+      "version": "1.11.2"
+    },
+    {
+      "group": "androidx.compose.runtime",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "runtime-annotation",
+      "purl": "pkg:maven/androidx.compose.runtime/runtime-annotation@1.11.2",
+      "type": "library",
+      "version": "1.11.2"
+    },
+    {
+      "group": "androidx.compose.runtime",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "runtime-annotation-android",
+      "purl": "pkg:maven/androidx.compose.runtime/runtime-annotation-android@1.11.2",
+      "type": "library",
+      "version": "1.11.2"
+    },
+    {
+      "group": "androidx.compose.runtime",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "runtime-annotation-iossimulatorarm64",
+      "purl": "pkg:maven/androidx.compose.runtime/runtime-annotation-iossimulatorarm64@1.11.2",
+      "type": "library",
+      "version": "1.11.2"
+    },
+    {
+      "group": "androidx.compose.runtime",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "runtime-annotation-jvm",
+      "purl": "pkg:maven/androidx.compose.runtime/runtime-annotation-jvm@1.11.2",
+      "type": "library",
+      "version": "1.11.2"
+    },
+    {
+      "group": "androidx.compose.runtime",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "runtime-desktop",
+      "purl": "pkg:maven/androidx.compose.runtime/runtime-desktop@1.11.2",
+      "type": "library",
+      "version": "1.11.2"
+    },
+    {
+      "group": "androidx.compose.runtime",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "runtime-iossimulatorarm64",
+      "purl": "pkg:maven/androidx.compose.runtime/runtime-iossimulatorarm64@1.11.2",
+      "type": "library",
+      "version": "1.11.2"
+    },
+    {
+      "group": "androidx.compose.runtime",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "runtime-retain",
+      "purl": "pkg:maven/androidx.compose.runtime/runtime-retain@1.11.2",
+      "type": "library",
+      "version": "1.11.2"
+    },
+    {
+      "group": "androidx.compose.runtime",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "runtime-retain-android",
+      "purl": "pkg:maven/androidx.compose.runtime/runtime-retain-android@1.11.2",
+      "type": "library",
+      "version": "1.11.2"
+    },
+    {
+      "group": "androidx.compose.runtime",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "runtime-retain-desktop",
+      "purl": "pkg:maven/androidx.compose.runtime/runtime-retain-desktop@1.11.2",
+      "type": "library",
+      "version": "1.11.2"
+    },
+    {
+      "group": "androidx.compose.runtime",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "runtime-retain-iossimulatorarm64",
+      "purl": "pkg:maven/androidx.compose.runtime/runtime-retain-iossimulatorarm64@1.11.2",
+      "type": "library",
+      "version": "1.11.2"
+    },
+    {
+      "group": "androidx.compose.runtime",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "runtime-saveable",
+      "purl": "pkg:maven/androidx.compose.runtime/runtime-saveable@1.11.2",
+      "type": "library",
+      "version": "1.11.2"
+    },
+    {
+      "group": "androidx.compose.runtime",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "runtime-saveable-android",
+      "purl": "pkg:maven/androidx.compose.runtime/runtime-saveable-android@1.11.2",
+      "type": "library",
+      "version": "1.11.2"
+    },
+    {
+      "group": "androidx.compose.runtime",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "runtime-saveable-desktop",
+      "purl": "pkg:maven/androidx.compose.runtime/runtime-saveable-desktop@1.11.2",
+      "type": "library",
+      "version": "1.11.2"
+    },
+    {
+      "group": "androidx.compose.runtime",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "runtime-saveable-iossimulatorarm64",
+      "purl": "pkg:maven/androidx.compose.runtime/runtime-saveable-iossimulatorarm64@1.11.2",
+      "type": "library",
+      "version": "1.11.2"
+    },
+    {
+      "group": "androidx.compose.ui",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "ui",
+      "purl": "pkg:maven/androidx.compose.ui/ui@1.11.2",
+      "type": "library",
+      "version": "1.11.2"
+    },
+    {
+      "group": "androidx.compose.ui",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "ui-android",
+      "purl": "pkg:maven/androidx.compose.ui/ui-android@1.11.2",
+      "type": "library",
+      "version": "1.11.2"
+    },
+    {
+      "group": "androidx.compose.ui",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "ui-geometry",
+      "purl": "pkg:maven/androidx.compose.ui/ui-geometry@1.11.2",
+      "type": "library",
+      "version": "1.11.2"
+    },
+    {
+      "group": "androidx.compose.ui",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "ui-geometry-android",
+      "purl": "pkg:maven/androidx.compose.ui/ui-geometry-android@1.11.2",
+      "type": "library",
+      "version": "1.11.2"
+    },
+    {
+      "group": "androidx.compose.ui",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "ui-graphics",
+      "purl": "pkg:maven/androidx.compose.ui/ui-graphics@1.11.2",
+      "type": "library",
+      "version": "1.11.2"
+    },
+    {
+      "group": "androidx.compose.ui",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "ui-graphics-android",
+      "purl": "pkg:maven/androidx.compose.ui/ui-graphics-android@1.11.2",
+      "type": "library",
+      "version": "1.11.2"
+    },
+    {
+      "group": "androidx.compose.ui",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "ui-text",
+      "purl": "pkg:maven/androidx.compose.ui/ui-text@1.11.2",
+      "type": "library",
+      "version": "1.11.2"
+    },
+    {
+      "group": "androidx.compose.ui",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "ui-text-android",
+      "purl": "pkg:maven/androidx.compose.ui/ui-text-android@1.11.2",
+      "type": "library",
+      "version": "1.11.2"
+    },
+    {
+      "group": "androidx.compose.ui",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "ui-tooling",
+      "purl": "pkg:maven/androidx.compose.ui/ui-tooling@1.11.2",
+      "type": "library",
+      "version": "1.11.2"
+    },
+    {
+      "group": "androidx.compose.ui",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "ui-tooling-android",
+      "purl": "pkg:maven/androidx.compose.ui/ui-tooling-android@1.11.2",
+      "type": "library",
+      "version": "1.11.2"
+    },
+    {
+      "group": "androidx.compose.ui",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "ui-tooling-data",
+      "purl": "pkg:maven/androidx.compose.ui/ui-tooling-data@1.11.2",
+      "type": "library",
+      "version": "1.11.2"
+    },
+    {
+      "group": "androidx.compose.ui",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "ui-tooling-data-android",
+      "purl": "pkg:maven/androidx.compose.ui/ui-tooling-data-android@1.11.2",
+      "type": "library",
+      "version": "1.11.2"
+    },
+    {
+      "group": "androidx.compose.ui",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "ui-tooling-preview",
+      "purl": "pkg:maven/androidx.compose.ui/ui-tooling-preview@1.11.2",
+      "type": "library",
+      "version": "1.11.2"
+    },
+    {
+      "group": "androidx.compose.ui",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "ui-tooling-preview-android",
+      "purl": "pkg:maven/androidx.compose.ui/ui-tooling-preview-android@1.11.2",
+      "type": "library",
+      "version": "1.11.2"
+    },
+    {
+      "group": "androidx.compose.ui",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "ui-unit",
+      "purl": "pkg:maven/androidx.compose.ui/ui-unit@1.11.2",
+      "type": "library",
+      "version": "1.11.2"
+    },
+    {
+      "group": "androidx.compose.ui",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "ui-unit-android",
+      "purl": "pkg:maven/androidx.compose.ui/ui-unit-android@1.11.2",
+      "type": "library",
+      "version": "1.11.2"
+    },
+    {
+      "group": "androidx.compose.ui",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "ui-util",
+      "purl": "pkg:maven/androidx.compose.ui/ui-util@1.11.2",
+      "type": "library",
+      "version": "1.11.2"
+    },
+    {
+      "group": "androidx.compose.ui",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "ui-util-android",
+      "purl": "pkg:maven/androidx.compose.ui/ui-util-android@1.11.2",
+      "type": "library",
+      "version": "1.11.2"
+    },
+    {
+      "group": "androidx.concurrent",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "concurrent-futures",
+      "purl": "pkg:maven/androidx.concurrent/concurrent-futures@1.1.0",
+      "type": "library",
+      "version": "1.1.0"
+    },
+    {
+      "group": "androidx.core",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "core",
+      "purl": "pkg:maven/androidx.core/core@1.18.0",
+      "type": "library",
+      "version": "1.18.0"
+    },
+    {
+      "group": "androidx.core",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "core-ktx",
+      "purl": "pkg:maven/androidx.core/core-ktx@1.18.0",
+      "type": "library",
+      "version": "1.18.0"
+    },
+    {
+      "group": "androidx.core",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "core-viewtree",
+      "purl": "pkg:maven/androidx.core/core-viewtree@1.0.0",
+      "type": "library",
+      "version": "1.0.0"
+    },
+    {
+      "group": "androidx.customview",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "customview-poolingcontainer",
+      "purl": "pkg:maven/androidx.customview/customview-poolingcontainer@1.0.0",
+      "type": "library",
+      "version": "1.0.0"
+    },
+    {
+      "group": "androidx.documentfile",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "documentfile",
+      "purl": "pkg:maven/androidx.documentfile/documentfile@1.0.0",
+      "type": "library",
+      "version": "1.0.0"
+    },
+    {
+      "group": "androidx.dynamicanimation",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "dynamicanimation",
+      "purl": "pkg:maven/androidx.dynamicanimation/dynamicanimation@1.0.0",
+      "type": "library",
+      "version": "1.0.0"
+    },
+    {
+      "group": "androidx.emoji2",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "emoji2",
+      "purl": "pkg:maven/androidx.emoji2/emoji2@1.4.0",
+      "type": "library",
+      "version": "1.4.0"
+    },
+    {
+      "group": "androidx.graphics",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "graphics-path",
+      "purl": "pkg:maven/androidx.graphics/graphics-path@1.0.1",
+      "type": "library",
+      "version": "1.0.1"
+    },
+    {
+      "group": "androidx.graphics",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "graphics-shapes",
+      "purl": "pkg:maven/androidx.graphics/graphics-shapes@1.1.0",
+      "type": "library",
+      "version": "1.1.0"
+    },
+    {
+      "group": "androidx.graphics",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "graphics-shapes-android",
+      "purl": "pkg:maven/androidx.graphics/graphics-shapes-android@1.1.0",
+      "type": "library",
+      "version": "1.1.0"
+    },
+    {
+      "group": "androidx.graphics",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "graphics-shapes-desktop",
+      "purl": "pkg:maven/androidx.graphics/graphics-shapes-desktop@1.1.0",
+      "type": "library",
+      "version": "1.1.0"
+    },
+    {
+      "group": "androidx.graphics",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "graphics-shapes-iossimulatorarm64",
+      "purl": "pkg:maven/androidx.graphics/graphics-shapes-iossimulatorarm64@1.1.0",
+      "type": "library",
+      "version": "1.1.0"
+    },
+    {
+      "group": "androidx.interpolator",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "interpolator",
+      "purl": "pkg:maven/androidx.interpolator/interpolator@1.0.0",
+      "type": "library",
+      "version": "1.0.0"
+    },
+    {
+      "group": "androidx.legacy",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "legacy-support-core-utils",
+      "purl": "pkg:maven/androidx.legacy/legacy-support-core-utils@1.0.0",
+      "type": "library",
+      "version": "1.0.0"
+    },
+    {
+      "group": "androidx.lifecycle",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "lifecycle-common",
+      "purl": "pkg:maven/androidx.lifecycle/lifecycle-common@2.11.0-beta01",
+      "type": "library",
+      "version": "2.11.0-beta01"
+    },
+    {
+      "group": "androidx.lifecycle",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "lifecycle-common-iossimulatorarm64",
+      "purl": "pkg:maven/androidx.lifecycle/lifecycle-common-iossimulatorarm64@2.11.0-beta01",
+      "type": "library",
+      "version": "2.11.0-beta01"
+    },
+    {
+      "group": "androidx.lifecycle",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "lifecycle-common-java8",
+      "purl": "pkg:maven/androidx.lifecycle/lifecycle-common-java8@2.11.0-beta01",
+      "type": "library",
+      "version": "2.11.0-beta01"
+    },
+    {
+      "group": "androidx.lifecycle",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "lifecycle-common-jvm",
+      "purl": "pkg:maven/androidx.lifecycle/lifecycle-common-jvm@2.11.0-beta01",
+      "type": "library",
+      "version": "2.11.0-beta01"
+    },
+    {
+      "group": "androidx.lifecycle",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "lifecycle-livedata",
+      "purl": "pkg:maven/androidx.lifecycle/lifecycle-livedata@2.11.0-beta01",
+      "type": "library",
+      "version": "2.11.0-beta01"
+    },
+    {
+      "group": "androidx.lifecycle",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "lifecycle-livedata-core",
+      "purl": "pkg:maven/androidx.lifecycle/lifecycle-livedata-core@2.11.0-beta01",
+      "type": "library",
+      "version": "2.11.0-beta01"
+    },
+    {
+      "group": "androidx.lifecycle",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "lifecycle-livedata-core-ktx",
+      "purl": "pkg:maven/androidx.lifecycle/lifecycle-livedata-core-ktx@2.11.0-beta01",
+      "type": "library",
+      "version": "2.11.0-beta01"
+    },
+    {
+      "group": "androidx.lifecycle",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "lifecycle-process",
+      "purl": "pkg:maven/androidx.lifecycle/lifecycle-process@2.11.0-beta01",
+      "type": "library",
+      "version": "2.11.0-beta01"
+    },
+    {
+      "group": "androidx.lifecycle",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "lifecycle-runtime",
+      "purl": "pkg:maven/androidx.lifecycle/lifecycle-runtime@2.11.0-beta01",
+      "type": "library",
+      "version": "2.11.0-beta01"
+    },
+    {
+      "group": "androidx.lifecycle",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "lifecycle-runtime-android",
+      "purl": "pkg:maven/androidx.lifecycle/lifecycle-runtime-android@2.11.0-beta01",
+      "type": "library",
+      "version": "2.11.0-beta01"
+    },
+    {
+      "group": "androidx.lifecycle",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "lifecycle-runtime-compose",
+      "purl": "pkg:maven/androidx.lifecycle/lifecycle-runtime-compose@2.11.0-beta01",
+      "type": "library",
+      "version": "2.11.0-beta01"
+    },
+    {
+      "group": "androidx.lifecycle",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "lifecycle-runtime-compose-android",
+      "purl": "pkg:maven/androidx.lifecycle/lifecycle-runtime-compose-android@2.11.0-beta01",
+      "type": "library",
+      "version": "2.11.0-beta01"
+    },
+    {
+      "group": "androidx.lifecycle",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "lifecycle-runtime-compose-desktop",
+      "purl": "pkg:maven/androidx.lifecycle/lifecycle-runtime-compose-desktop@2.11.0-beta01",
+      "type": "library",
+      "version": "2.11.0-beta01"
+    },
+    {
+      "group": "androidx.lifecycle",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "lifecycle-runtime-compose-iossimulatorarm64",
+      "purl": "pkg:maven/androidx.lifecycle/lifecycle-runtime-compose-iossimulatorarm64@2.11.0-beta01",
+      "type": "library",
+      "version": "2.11.0-beta01"
+    },
+    {
+      "group": "androidx.lifecycle",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "lifecycle-runtime-desktop",
+      "purl": "pkg:maven/androidx.lifecycle/lifecycle-runtime-desktop@2.11.0-beta01",
+      "type": "library",
+      "version": "2.11.0-beta01"
+    },
+    {
+      "group": "androidx.lifecycle",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "lifecycle-runtime-iossimulatorarm64",
+      "purl": "pkg:maven/androidx.lifecycle/lifecycle-runtime-iossimulatorarm64@2.11.0-beta01",
+      "type": "library",
+      "version": "2.11.0-beta01"
+    },
+    {
+      "group": "androidx.lifecycle",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "lifecycle-runtime-ktx",
+      "purl": "pkg:maven/androidx.lifecycle/lifecycle-runtime-ktx@2.11.0-beta01",
+      "type": "library",
+      "version": "2.11.0-beta01"
+    },
+    {
+      "group": "androidx.lifecycle",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "lifecycle-runtime-ktx-android",
+      "purl": "pkg:maven/androidx.lifecycle/lifecycle-runtime-ktx-android@2.11.0-beta01",
+      "type": "library",
+      "version": "2.11.0-beta01"
+    },
+    {
+      "group": "androidx.lifecycle",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "lifecycle-viewmodel",
+      "purl": "pkg:maven/androidx.lifecycle/lifecycle-viewmodel@2.11.0-beta01",
+      "type": "library",
+      "version": "2.11.0-beta01"
+    },
+    {
+      "group": "androidx.lifecycle",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "lifecycle-viewmodel-android",
+      "purl": "pkg:maven/androidx.lifecycle/lifecycle-viewmodel-android@2.11.0-beta01",
+      "type": "library",
+      "version": "2.11.0-beta01"
+    },
+    {
+      "group": "androidx.lifecycle",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "lifecycle-viewmodel-compose",
+      "purl": "pkg:maven/androidx.lifecycle/lifecycle-viewmodel-compose@2.11.0-beta01",
+      "type": "library",
+      "version": "2.11.0-beta01"
+    },
+    {
+      "group": "androidx.lifecycle",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "lifecycle-viewmodel-compose-android",
+      "purl": "pkg:maven/androidx.lifecycle/lifecycle-viewmodel-compose-android@2.11.0-beta01",
+      "type": "library",
+      "version": "2.11.0-beta01"
+    },
+    {
+      "group": "androidx.lifecycle",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "lifecycle-viewmodel-compose-desktop",
+      "purl": "pkg:maven/androidx.lifecycle/lifecycle-viewmodel-compose-desktop@2.11.0-beta01",
+      "type": "library",
+      "version": "2.11.0-beta01"
+    },
+    {
+      "group": "androidx.lifecycle",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "lifecycle-viewmodel-compose-iossimulatorarm64",
+      "purl": "pkg:maven/androidx.lifecycle/lifecycle-viewmodel-compose-iossimulatorarm64@2.11.0-beta01",
+      "type": "library",
+      "version": "2.11.0-beta01"
+    },
+    {
+      "group": "androidx.lifecycle",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "lifecycle-viewmodel-desktop",
+      "purl": "pkg:maven/androidx.lifecycle/lifecycle-viewmodel-desktop@2.11.0-beta01",
+      "type": "library",
+      "version": "2.11.0-beta01"
+    },
+    {
+      "group": "androidx.lifecycle",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "lifecycle-viewmodel-iossimulatorarm64",
+      "purl": "pkg:maven/androidx.lifecycle/lifecycle-viewmodel-iossimulatorarm64@2.11.0-beta01",
+      "type": "library",
+      "version": "2.11.0-beta01"
+    },
+    {
+      "group": "androidx.lifecycle",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "lifecycle-viewmodel-ktx",
+      "purl": "pkg:maven/androidx.lifecycle/lifecycle-viewmodel-ktx@2.11.0-beta01",
+      "type": "library",
+      "version": "2.11.0-beta01"
+    },
+    {
+      "group": "androidx.lifecycle",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "lifecycle-viewmodel-savedstate",
+      "purl": "pkg:maven/androidx.lifecycle/lifecycle-viewmodel-savedstate@2.11.0-beta01",
+      "type": "library",
+      "version": "2.11.0-beta01"
+    },
+    {
+      "group": "androidx.lifecycle",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "lifecycle-viewmodel-savedstate-android",
+      "purl": "pkg:maven/androidx.lifecycle/lifecycle-viewmodel-savedstate-android@2.11.0-beta01",
+      "type": "library",
+      "version": "2.11.0-beta01"
+    },
+    {
+      "group": "androidx.lifecycle",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "lifecycle-viewmodel-savedstate-desktop",
+      "purl": "pkg:maven/androidx.lifecycle/lifecycle-viewmodel-savedstate-desktop@2.11.0-beta01",
+      "type": "library",
+      "version": "2.11.0-beta01"
+    },
+    {
+      "group": "androidx.lifecycle",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "lifecycle-viewmodel-savedstate-iossimulatorarm64",
+      "purl": "pkg:maven/androidx.lifecycle/lifecycle-viewmodel-savedstate-iossimulatorarm64@2.11.0-beta01",
+      "type": "library",
+      "version": "2.11.0-beta01"
+    },
+    {
+      "group": "androidx.loader",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "loader",
+      "purl": "pkg:maven/androidx.loader/loader@1.0.0",
+      "type": "library",
+      "version": "1.0.0"
+    },
+    {
+      "group": "androidx.localbroadcastmanager",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "localbroadcastmanager",
+      "purl": "pkg:maven/androidx.localbroadcastmanager/localbroadcastmanager@1.0.0",
+      "type": "library",
+      "version": "1.0.0"
+    },
+    {
+      "group": "androidx.navigationevent",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "navigationevent",
+      "purl": "pkg:maven/androidx.navigationevent/navigationevent@1.0.0",
+      "type": "library",
+      "version": "1.0.0"
+    },
+    {
+      "group": "androidx.navigationevent",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "navigationevent",
+      "purl": "pkg:maven/androidx.navigationevent/navigationevent@1.0.1",
+      "type": "library",
+      "version": "1.0.1"
+    },
+    {
+      "group": "androidx.navigationevent",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "navigationevent-android",
+      "purl": "pkg:maven/androidx.navigationevent/navigationevent-android@1.0.0",
+      "type": "library",
+      "version": "1.0.0"
+    },
+    {
+      "group": "androidx.navigationevent",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "navigationevent-compose",
+      "purl": "pkg:maven/androidx.navigationevent/navigationevent-compose@1.0.0",
+      "type": "library",
+      "version": "1.0.0"
+    },
+    {
+      "group": "androidx.navigationevent",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "navigationevent-compose-android",
+      "purl": "pkg:maven/androidx.navigationevent/navigationevent-compose-android@1.0.0",
+      "type": "library",
+      "version": "1.0.0"
+    },
+    {
+      "group": "androidx.navigationevent",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "navigationevent-desktop",
+      "purl": "pkg:maven/androidx.navigationevent/navigationevent-desktop@1.0.1",
+      "type": "library",
+      "version": "1.0.1"
+    },
+    {
+      "group": "androidx.navigationevent",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "navigationevent-iossimulatorarm64",
+      "purl": "pkg:maven/androidx.navigationevent/navigationevent-iossimulatorarm64@1.0.1",
+      "type": "library",
+      "version": "1.0.1"
+    },
+    {
+      "group": "androidx.print",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "print",
+      "purl": "pkg:maven/androidx.print/print@1.0.0",
+      "type": "library",
+      "version": "1.0.0"
+    },
+    {
+      "group": "androidx.profileinstaller",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "profileinstaller",
+      "purl": "pkg:maven/androidx.profileinstaller/profileinstaller@1.4.0",
+      "type": "library",
+      "version": "1.4.0"
+    },
+    {
+      "group": "androidx.savedstate",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "savedstate",
+      "purl": "pkg:maven/androidx.savedstate/savedstate@1.4.0",
+      "type": "library",
+      "version": "1.4.0"
+    },
+    {
+      "group": "androidx.savedstate",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "savedstate-android",
+      "purl": "pkg:maven/androidx.savedstate/savedstate-android@1.4.0",
+      "type": "library",
+      "version": "1.4.0"
+    },
+    {
+      "group": "androidx.savedstate",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "savedstate-compose",
+      "purl": "pkg:maven/androidx.savedstate/savedstate-compose@1.4.0",
+      "type": "library",
+      "version": "1.4.0"
+    },
+    {
+      "group": "androidx.savedstate",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "savedstate-compose-android",
+      "purl": "pkg:maven/androidx.savedstate/savedstate-compose-android@1.4.0",
+      "type": "library",
+      "version": "1.4.0"
+    },
+    {
+      "group": "androidx.savedstate",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "savedstate-compose-desktop",
+      "purl": "pkg:maven/androidx.savedstate/savedstate-compose-desktop@1.4.0",
+      "type": "library",
+      "version": "1.4.0"
+    },
+    {
+      "group": "androidx.savedstate",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "savedstate-compose-iossimulatorarm64",
+      "purl": "pkg:maven/androidx.savedstate/savedstate-compose-iossimulatorarm64@1.4.0",
+      "type": "library",
+      "version": "1.4.0"
+    },
+    {
+      "group": "androidx.savedstate",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "savedstate-desktop",
+      "purl": "pkg:maven/androidx.savedstate/savedstate-desktop@1.4.0",
+      "type": "library",
+      "version": "1.4.0"
+    },
+    {
+      "group": "androidx.savedstate",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "savedstate-iossimulatorarm64",
+      "purl": "pkg:maven/androidx.savedstate/savedstate-iossimulatorarm64@1.4.0",
+      "type": "library",
+      "version": "1.4.0"
+    },
+    {
+      "group": "androidx.savedstate",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "savedstate-ktx",
+      "purl": "pkg:maven/androidx.savedstate/savedstate-ktx@1.4.0",
+      "type": "library",
+      "version": "1.4.0"
+    },
+    {
+      "group": "androidx.sqlite",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "sqlite",
+      "purl": "pkg:maven/androidx.sqlite/sqlite@2.6.2",
+      "type": "library",
+      "version": "2.6.2"
+    },
+    {
+      "group": "androidx.sqlite",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "sqlite-android",
+      "purl": "pkg:maven/androidx.sqlite/sqlite-android@2.6.2",
+      "type": "library",
+      "version": "2.6.2"
+    },
+    {
+      "group": "androidx.sqlite",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "sqlite-framework",
+      "purl": "pkg:maven/androidx.sqlite/sqlite-framework@2.6.2",
+      "type": "library",
+      "version": "2.6.2"
+    },
+    {
+      "group": "androidx.sqlite",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "sqlite-framework-android",
+      "purl": "pkg:maven/androidx.sqlite/sqlite-framework-android@2.6.2",
+      "type": "library",
+      "version": "2.6.2"
+    },
+    {
+      "group": "androidx.startup",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "startup-runtime",
+      "purl": "pkg:maven/androidx.startup/startup-runtime@1.2.0",
+      "type": "library",
+      "version": "1.2.0"
+    },
+    {
+      "group": "androidx.tracing",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "tracing",
+      "purl": "pkg:maven/androidx.tracing/tracing@1.2.0",
+      "type": "library",
+      "version": "1.2.0"
+    },
+    {
+      "group": "androidx.transition",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "transition",
+      "purl": "pkg:maven/androidx.transition/transition@1.6.0",
+      "type": "library",
+      "version": "1.6.0"
+    },
+    {
+      "group": "androidx.versionedparcelable",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "versionedparcelable",
+      "purl": "pkg:maven/androidx.versionedparcelable/versionedparcelable@1.1.1",
+      "type": "library",
+      "version": "1.1.1"
+    },
+    {
+      "group": "androidx.window",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "window",
+      "purl": "pkg:maven/androidx.window/window@1.5.0",
+      "type": "library",
+      "version": "1.5.0"
+    },
+    {
+      "group": "androidx.window",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "window-core",
+      "purl": "pkg:maven/androidx.window/window-core@1.5.0",
+      "type": "library",
+      "version": "1.5.0"
+    },
+    {
+      "group": "androidx.window",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "window-core-android",
+      "purl": "pkg:maven/androidx.window/window-core-android@1.5.0",
+      "type": "library",
+      "version": "1.5.0"
+    },
+    {
+      "group": "app.cash.sqldelight",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "android-driver",
+      "purl": "pkg:maven/app.cash.sqldelight/android-driver@2.3.2",
+      "type": "library",
+      "version": "2.3.2"
+    },
+    {
+      "group": "app.cash.sqldelight",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "jdbc-driver",
+      "purl": "pkg:maven/app.cash.sqldelight/jdbc-driver@2.3.2",
+      "type": "library",
+      "version": "2.3.2"
+    },
+    {
+      "group": "app.cash.sqldelight",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "native-driver",
+      "purl": "pkg:maven/app.cash.sqldelight/native-driver@2.3.2",
+      "type": "library",
+      "version": "2.3.2"
+    },
+    {
+      "group": "app.cash.sqldelight",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "native-driver-iossimulatorarm64",
+      "purl": "pkg:maven/app.cash.sqldelight/native-driver-iossimulatorarm64@2.3.2",
+      "type": "library",
+      "version": "2.3.2"
+    },
+    {
+      "group": "app.cash.sqldelight",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "runtime",
+      "purl": "pkg:maven/app.cash.sqldelight/runtime@2.3.2",
+      "type": "library",
+      "version": "2.3.2"
+    },
+    {
+      "group": "app.cash.sqldelight",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "runtime-iossimulatorarm64",
+      "purl": "pkg:maven/app.cash.sqldelight/runtime-iossimulatorarm64@2.3.2",
+      "type": "library",
+      "version": "2.3.2"
+    },
+    {
+      "group": "app.cash.sqldelight",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "runtime-jvm",
+      "purl": "pkg:maven/app.cash.sqldelight/runtime-jvm@2.3.2",
+      "type": "library",
+      "version": "2.3.2"
+    },
+    {
+      "group": "app.cash.sqldelight",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "sqlite-driver",
+      "purl": "pkg:maven/app.cash.sqldelight/sqlite-driver@2.3.2",
+      "type": "library",
+      "version": "2.3.2"
+    },
+    {
+      "group": "co.touchlab",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "sqliter-driver",
+      "purl": "pkg:maven/co.touchlab/sqliter-driver@1.3.3",
+      "type": "library",
+      "version": "1.3.3"
+    },
+    {
+      "group": "co.touchlab",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "sqliter-driver-iossimulatorarm64",
+      "purl": "pkg:maven/co.touchlab/sqliter-driver-iossimulatorarm64@1.3.3",
+      "type": "library",
+      "version": "1.3.3"
+    },
+    {
+      "group": "co.touchlab",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "stately-concurrency",
+      "purl": "pkg:maven/co.touchlab/stately-concurrency@2.1.0",
+      "type": "library",
+      "version": "2.1.0"
+    },
+    {
+      "group": "co.touchlab",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "stately-concurrency-iossimulatorarm64",
+      "purl": "pkg:maven/co.touchlab/stately-concurrency-iossimulatorarm64@2.1.0",
+      "type": "library",
+      "version": "2.1.0"
+    },
+    {
+      "group": "co.touchlab",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "stately-strict",
+      "purl": "pkg:maven/co.touchlab/stately-strict@2.1.0",
+      "type": "library",
+      "version": "2.1.0"
+    },
+    {
+      "group": "co.touchlab",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "stately-strict-iossimulatorarm64",
+      "purl": "pkg:maven/co.touchlab/stately-strict-iossimulatorarm64@2.1.0",
+      "type": "library",
+      "version": "2.1.0"
+    },
+    {
+      "group": "com.google.guava",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "listenablefuture",
+      "purl": "pkg:maven/com.google.guava/listenablefuture@1.0",
+      "type": "library",
+      "version": "1.0"
+    },
+    {
+      "group": "com.squareup.okhttp3",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "okhttp",
+      "purl": "pkg:maven/com.squareup.okhttp3/okhttp@5.2.1",
+      "type": "library",
+      "version": "5.2.1"
+    },
+    {
+      "group": "com.squareup.okhttp3",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "okhttp-android",
+      "purl": "pkg:maven/com.squareup.okhttp3/okhttp-android@5.2.1",
+      "type": "library",
+      "version": "5.2.1"
+    },
+    {
+      "group": "com.squareup.okio",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "okio",
+      "purl": "pkg:maven/com.squareup.okio/okio@3.16.2",
+      "type": "library",
+      "version": "3.16.2"
+    },
+    {
+      "group": "com.squareup.okio",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "okio-iossimulatorarm64",
+      "purl": "pkg:maven/com.squareup.okio/okio-iossimulatorarm64@3.16.2",
+      "type": "library",
+      "version": "3.16.2"
+    },
+    {
+      "group": "com.squareup.okio",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "okio-jvm",
+      "purl": "pkg:maven/com.squareup.okio/okio-jvm@3.16.2",
+      "type": "library",
+      "version": "3.16.2"
+    },
+    {
+      "group": "com.squareup.zstd",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "zstd-kmp",
+      "purl": "pkg:maven/com.squareup.zstd/zstd-kmp@0.4.0",
+      "type": "library",
+      "version": "0.4.0"
+    },
+    {
+      "group": "com.squareup.zstd",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "zstd-kmp-android",
+      "purl": "pkg:maven/com.squareup.zstd/zstd-kmp-android@0.4.0",
+      "type": "library",
+      "version": "0.4.0"
+    },
+    {
+      "group": "com.squareup.zstd",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "zstd-kmp-iossimulatorarm64",
+      "purl": "pkg:maven/com.squareup.zstd/zstd-kmp-iossimulatorarm64@0.4.0",
+      "type": "library",
+      "version": "0.4.0"
+    },
+    {
+      "group": "com.squareup.zstd",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "zstd-kmp-jvm",
+      "purl": "pkg:maven/com.squareup.zstd/zstd-kmp-jvm@0.4.0",
+      "type": "library",
+      "version": "0.4.0"
+    },
+    {
+      "group": "com.squareup.zstd",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "zstd-kmp-okio",
+      "purl": "pkg:maven/com.squareup.zstd/zstd-kmp-okio@0.4.0",
+      "type": "library",
+      "version": "0.4.0"
+    },
+    {
+      "group": "com.squareup.zstd",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "zstd-kmp-okio-android",
+      "purl": "pkg:maven/com.squareup.zstd/zstd-kmp-okio-android@0.4.0",
+      "type": "library",
+      "version": "0.4.0"
+    },
+    {
+      "group": "com.squareup.zstd",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "zstd-kmp-okio-iossimulatorarm64",
+      "purl": "pkg:maven/com.squareup.zstd/zstd-kmp-okio-iossimulatorarm64@0.4.0",
+      "type": "library",
+      "version": "0.4.0"
+    },
+    {
+      "group": "com.squareup.zstd",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "zstd-kmp-okio-jvm",
+      "purl": "pkg:maven/com.squareup.zstd/zstd-kmp-okio-jvm@0.4.0",
+      "type": "library",
+      "version": "0.4.0"
+    },
+    {
+      "group": "io.ktor",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "ktor-client-cio",
+      "purl": "pkg:maven/io.ktor/ktor-client-cio@3.3.3",
+      "type": "library",
+      "version": "3.3.3"
+    },
+    {
+      "group": "io.ktor",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "ktor-client-cio-jvm",
+      "purl": "pkg:maven/io.ktor/ktor-client-cio-jvm@3.3.3",
+      "type": "library",
+      "version": "3.3.3"
+    },
+    {
+      "group": "io.ktor",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "ktor-client-content-negotiation",
+      "purl": "pkg:maven/io.ktor/ktor-client-content-negotiation@3.3.3",
+      "type": "library",
+      "version": "3.3.3"
+    },
+    {
+      "group": "io.ktor",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "ktor-client-content-negotiation-iossimulatorarm64",
+      "purl": "pkg:maven/io.ktor/ktor-client-content-negotiation-iossimulatorarm64@3.3.3",
+      "type": "library",
+      "version": "3.3.3"
+    },
+    {
+      "group": "io.ktor",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "ktor-client-content-negotiation-jvm",
+      "purl": "pkg:maven/io.ktor/ktor-client-content-negotiation-jvm@3.3.3",
+      "type": "library",
+      "version": "3.3.3"
+    },
+    {
+      "group": "io.ktor",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "ktor-client-core",
+      "purl": "pkg:maven/io.ktor/ktor-client-core@3.3.3",
+      "type": "library",
+      "version": "3.3.3"
+    },
+    {
+      "group": "io.ktor",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "ktor-client-core-iossimulatorarm64",
+      "purl": "pkg:maven/io.ktor/ktor-client-core-iossimulatorarm64@3.3.3",
+      "type": "library",
+      "version": "3.3.3"
+    },
+    {
+      "group": "io.ktor",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "ktor-client-core-jvm",
+      "purl": "pkg:maven/io.ktor/ktor-client-core-jvm@3.3.3",
+      "type": "library",
+      "version": "3.3.3"
+    },
+    {
+      "group": "io.ktor",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "ktor-client-darwin",
+      "purl": "pkg:maven/io.ktor/ktor-client-darwin@3.3.3",
+      "type": "library",
+      "version": "3.3.3"
+    },
+    {
+      "group": "io.ktor",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "ktor-client-darwin-iossimulatorarm64",
+      "purl": "pkg:maven/io.ktor/ktor-client-darwin-iossimulatorarm64@3.3.3",
+      "type": "library",
+      "version": "3.3.3"
+    },
+    {
+      "group": "io.ktor",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "ktor-client-okhttp",
+      "purl": "pkg:maven/io.ktor/ktor-client-okhttp@3.3.3",
+      "type": "library",
+      "version": "3.3.3"
+    },
+    {
+      "group": "io.ktor",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "ktor-client-okhttp-jvm",
+      "purl": "pkg:maven/io.ktor/ktor-client-okhttp-jvm@3.3.3",
+      "type": "library",
+      "version": "3.3.3"
+    },
+    {
+      "group": "io.ktor",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "ktor-events",
+      "purl": "pkg:maven/io.ktor/ktor-events@3.3.3",
+      "type": "library",
+      "version": "3.3.3"
+    },
+    {
+      "group": "io.ktor",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "ktor-events-iossimulatorarm64",
+      "purl": "pkg:maven/io.ktor/ktor-events-iossimulatorarm64@3.3.3",
+      "type": "library",
+      "version": "3.3.3"
+    },
+    {
+      "group": "io.ktor",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "ktor-events-jvm",
+      "purl": "pkg:maven/io.ktor/ktor-events-jvm@3.3.3",
+      "type": "library",
+      "version": "3.3.3"
+    },
+    {
+      "group": "io.ktor",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "ktor-http",
+      "purl": "pkg:maven/io.ktor/ktor-http@3.3.3",
+      "type": "library",
+      "version": "3.3.3"
+    },
+    {
+      "group": "io.ktor",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "ktor-http-cio",
+      "purl": "pkg:maven/io.ktor/ktor-http-cio@3.3.3",
+      "type": "library",
+      "version": "3.3.3"
+    },
+    {
+      "group": "io.ktor",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "ktor-http-cio-iossimulatorarm64",
+      "purl": "pkg:maven/io.ktor/ktor-http-cio-iossimulatorarm64@3.3.3",
+      "type": "library",
+      "version": "3.3.3"
+    },
+    {
+      "group": "io.ktor",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "ktor-http-cio-jvm",
+      "purl": "pkg:maven/io.ktor/ktor-http-cio-jvm@3.3.3",
+      "type": "library",
+      "version": "3.3.3"
+    },
+    {
+      "group": "io.ktor",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "ktor-http-iossimulatorarm64",
+      "purl": "pkg:maven/io.ktor/ktor-http-iossimulatorarm64@3.3.3",
+      "type": "library",
+      "version": "3.3.3"
+    },
+    {
+      "group": "io.ktor",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "ktor-http-jvm",
+      "purl": "pkg:maven/io.ktor/ktor-http-jvm@3.3.3",
+      "type": "library",
+      "version": "3.3.3"
+    },
+    {
+      "group": "io.ktor",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "ktor-io",
+      "purl": "pkg:maven/io.ktor/ktor-io@3.3.3",
+      "type": "library",
+      "version": "3.3.3"
+    },
+    {
+      "group": "io.ktor",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "ktor-io-iossimulatorarm64",
+      "purl": "pkg:maven/io.ktor/ktor-io-iossimulatorarm64@3.3.3",
+      "type": "library",
+      "version": "3.3.3"
+    },
+    {
+      "group": "io.ktor",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "ktor-io-jvm",
+      "purl": "pkg:maven/io.ktor/ktor-io-jvm@3.3.3",
+      "type": "library",
+      "version": "3.3.3"
+    },
+    {
+      "group": "io.ktor",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "ktor-network",
+      "purl": "pkg:maven/io.ktor/ktor-network@3.3.3",
+      "type": "library",
+      "version": "3.3.3"
+    },
+    {
+      "group": "io.ktor",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "ktor-network-iossimulatorarm64",
+      "purl": "pkg:maven/io.ktor/ktor-network-iossimulatorarm64@3.3.3",
+      "type": "library",
+      "version": "3.3.3"
+    },
+    {
+      "group": "io.ktor",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "ktor-network-jvm",
+      "purl": "pkg:maven/io.ktor/ktor-network-jvm@3.3.3",
+      "type": "library",
+      "version": "3.3.3"
+    },
+    {
+      "group": "io.ktor",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "ktor-network-tls",
+      "purl": "pkg:maven/io.ktor/ktor-network-tls@3.3.3",
+      "type": "library",
+      "version": "3.3.3"
+    },
+    {
+      "group": "io.ktor",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "ktor-network-tls-iossimulatorarm64",
+      "purl": "pkg:maven/io.ktor/ktor-network-tls-iossimulatorarm64@3.3.3",
+      "type": "library",
+      "version": "3.3.3"
+    },
+    {
+      "group": "io.ktor",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "ktor-network-tls-jvm",
+      "purl": "pkg:maven/io.ktor/ktor-network-tls-jvm@3.3.3",
+      "type": "library",
+      "version": "3.3.3"
+    },
+    {
+      "group": "io.ktor",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "ktor-serialization",
+      "purl": "pkg:maven/io.ktor/ktor-serialization@3.3.3",
+      "type": "library",
+      "version": "3.3.3"
+    },
+    {
+      "group": "io.ktor",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "ktor-serialization-iossimulatorarm64",
+      "purl": "pkg:maven/io.ktor/ktor-serialization-iossimulatorarm64@3.3.3",
+      "type": "library",
+      "version": "3.3.3"
+    },
+    {
+      "group": "io.ktor",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "ktor-serialization-jvm",
+      "purl": "pkg:maven/io.ktor/ktor-serialization-jvm@3.3.3",
+      "type": "library",
+      "version": "3.3.3"
+    },
+    {
+      "group": "io.ktor",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "ktor-serialization-kotlinx",
+      "purl": "pkg:maven/io.ktor/ktor-serialization-kotlinx@3.3.3",
+      "type": "library",
+      "version": "3.3.3"
+    },
+    {
+      "group": "io.ktor",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "ktor-serialization-kotlinx-iossimulatorarm64",
+      "purl": "pkg:maven/io.ktor/ktor-serialization-kotlinx-iossimulatorarm64@3.3.3",
+      "type": "library",
+      "version": "3.3.3"
+    },
+    {
+      "group": "io.ktor",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "ktor-serialization-kotlinx-json",
+      "purl": "pkg:maven/io.ktor/ktor-serialization-kotlinx-json@3.3.3",
+      "type": "library",
+      "version": "3.3.3"
+    },
+    {
+      "group": "io.ktor",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "ktor-serialization-kotlinx-json-iossimulatorarm64",
+      "purl": "pkg:maven/io.ktor/ktor-serialization-kotlinx-json-iossimulatorarm64@3.3.3",
+      "type": "library",
+      "version": "3.3.3"
+    },
+    {
+      "group": "io.ktor",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "ktor-serialization-kotlinx-json-jvm",
+      "purl": "pkg:maven/io.ktor/ktor-serialization-kotlinx-json-jvm@3.3.3",
+      "type": "library",
+      "version": "3.3.3"
+    },
+    {
+      "group": "io.ktor",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "ktor-serialization-kotlinx-jvm",
+      "purl": "pkg:maven/io.ktor/ktor-serialization-kotlinx-jvm@3.3.3",
+      "type": "library",
+      "version": "3.3.3"
+    },
+    {
+      "group": "io.ktor",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "ktor-sse",
+      "purl": "pkg:maven/io.ktor/ktor-sse@3.3.3",
+      "type": "library",
+      "version": "3.3.3"
+    },
+    {
+      "group": "io.ktor",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "ktor-sse-iossimulatorarm64",
+      "purl": "pkg:maven/io.ktor/ktor-sse-iossimulatorarm64@3.3.3",
+      "type": "library",
+      "version": "3.3.3"
+    },
+    {
+      "group": "io.ktor",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "ktor-sse-jvm",
+      "purl": "pkg:maven/io.ktor/ktor-sse-jvm@3.3.3",
+      "type": "library",
+      "version": "3.3.3"
+    },
+    {
+      "group": "io.ktor",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "ktor-utils",
+      "purl": "pkg:maven/io.ktor/ktor-utils@3.3.3",
+      "type": "library",
+      "version": "3.3.3"
+    },
+    {
+      "group": "io.ktor",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "ktor-utils-iossimulatorarm64",
+      "purl": "pkg:maven/io.ktor/ktor-utils-iossimulatorarm64@3.3.3",
+      "type": "library",
+      "version": "3.3.3"
+    },
+    {
+      "group": "io.ktor",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "ktor-utils-jvm",
+      "purl": "pkg:maven/io.ktor/ktor-utils-jvm@3.3.3",
+      "type": "library",
+      "version": "3.3.3"
+    },
+    {
+      "group": "io.ktor",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "ktor-websocket-serialization",
+      "purl": "pkg:maven/io.ktor/ktor-websocket-serialization@3.3.3",
+      "type": "library",
+      "version": "3.3.3"
+    },
+    {
+      "group": "io.ktor",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "ktor-websocket-serialization-iossimulatorarm64",
+      "purl": "pkg:maven/io.ktor/ktor-websocket-serialization-iossimulatorarm64@3.3.3",
+      "type": "library",
+      "version": "3.3.3"
+    },
+    {
+      "group": "io.ktor",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "ktor-websocket-serialization-jvm",
+      "purl": "pkg:maven/io.ktor/ktor-websocket-serialization-jvm@3.3.3",
+      "type": "library",
+      "version": "3.3.3"
+    },
+    {
+      "group": "io.ktor",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "ktor-websockets",
+      "purl": "pkg:maven/io.ktor/ktor-websockets@3.3.3",
+      "type": "library",
+      "version": "3.3.3"
+    },
+    {
+      "group": "io.ktor",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "ktor-websockets-iossimulatorarm64",
+      "purl": "pkg:maven/io.ktor/ktor-websockets-iossimulatorarm64@3.3.3",
+      "type": "library",
+      "version": "3.3.3"
+    },
+    {
+      "group": "io.ktor",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "ktor-websockets-jvm",
+      "purl": "pkg:maven/io.ktor/ktor-websockets-jvm@3.3.3",
+      "type": "library",
+      "version": "3.3.3"
+    },
+    {
+      "group": "lua.org",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "name": "lua",
+      "purl": "pkg:generic/lua@5.4.8",
+      "type": "library",
+      "version": "5.4.8"
+    },
+    {
+      "group": "org.jetbrains",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "annotations",
+      "purl": "pkg:maven/org.jetbrains/annotations@23.0.0",
+      "type": "library",
+      "version": "23.0.0"
+    },
+    {
+      "group": "org.jetbrains.androidx.lifecycle",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "lifecycle-common",
+      "purl": "pkg:maven/org.jetbrains.androidx.lifecycle/lifecycle-common@2.11.0-beta01",
+      "type": "library",
+      "version": "2.11.0-beta01"
+    },
+    {
+      "group": "org.jetbrains.androidx.lifecycle",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "lifecycle-runtime",
+      "purl": "pkg:maven/org.jetbrains.androidx.lifecycle/lifecycle-runtime@2.11.0-beta01",
+      "type": "library",
+      "version": "2.11.0-beta01"
+    },
+    {
+      "group": "org.jetbrains.androidx.lifecycle",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "lifecycle-runtime-compose",
+      "purl": "pkg:maven/org.jetbrains.androidx.lifecycle/lifecycle-runtime-compose@2.11.0-beta01",
+      "type": "library",
+      "version": "2.11.0-beta01"
+    },
+    {
+      "group": "org.jetbrains.androidx.lifecycle",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "lifecycle-runtime-compose-desktop",
+      "purl": "pkg:maven/org.jetbrains.androidx.lifecycle/lifecycle-runtime-compose-desktop@2.11.0-beta01",
+      "type": "library",
+      "version": "2.11.0-beta01"
+    },
+    {
+      "group": "org.jetbrains.androidx.lifecycle",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "lifecycle-runtime-compose-iossimulatorarm64",
+      "purl": "pkg:maven/org.jetbrains.androidx.lifecycle/lifecycle-runtime-compose-iossimulatorarm64@2.11.0-beta01",
+      "type": "library",
+      "version": "2.11.0-beta01"
+    },
+    {
+      "group": "org.jetbrains.androidx.lifecycle",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "lifecycle-viewmodel",
+      "purl": "pkg:maven/org.jetbrains.androidx.lifecycle/lifecycle-viewmodel@2.11.0-beta01",
+      "type": "library",
+      "version": "2.11.0-beta01"
+    },
+    {
+      "group": "org.jetbrains.androidx.lifecycle",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "lifecycle-viewmodel-compose",
+      "purl": "pkg:maven/org.jetbrains.androidx.lifecycle/lifecycle-viewmodel-compose@2.11.0-beta01",
+      "type": "library",
+      "version": "2.11.0-beta01"
+    },
+    {
+      "group": "org.jetbrains.androidx.lifecycle",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "lifecycle-viewmodel-compose-desktop",
+      "purl": "pkg:maven/org.jetbrains.androidx.lifecycle/lifecycle-viewmodel-compose-desktop@2.11.0-beta01",
+      "type": "library",
+      "version": "2.11.0-beta01"
+    },
+    {
+      "group": "org.jetbrains.androidx.lifecycle",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "lifecycle-viewmodel-compose-iossimulatorarm64",
+      "purl": "pkg:maven/org.jetbrains.androidx.lifecycle/lifecycle-viewmodel-compose-iossimulatorarm64@2.11.0-beta01",
+      "type": "library",
+      "version": "2.11.0-beta01"
+    },
+    {
+      "group": "org.jetbrains.androidx.lifecycle",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "lifecycle-viewmodel-savedstate",
+      "purl": "pkg:maven/org.jetbrains.androidx.lifecycle/lifecycle-viewmodel-savedstate@2.11.0-beta01",
+      "type": "library",
+      "version": "2.11.0-beta01"
+    },
+    {
+      "group": "org.jetbrains.androidx.savedstate",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "savedstate",
+      "purl": "pkg:maven/org.jetbrains.androidx.savedstate/savedstate@1.3.6",
+      "type": "library",
+      "version": "1.3.6"
+    },
+    {
+      "group": "org.jetbrains.androidx.savedstate",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "savedstate-compose",
+      "purl": "pkg:maven/org.jetbrains.androidx.savedstate/savedstate-compose@1.3.6",
+      "type": "library",
+      "version": "1.3.6"
+    },
+    {
+      "group": "org.jetbrains.androidx.savedstate",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "savedstate-compose-desktop",
+      "purl": "pkg:maven/org.jetbrains.androidx.savedstate/savedstate-compose-desktop@1.3.6",
+      "type": "library",
+      "version": "1.3.6"
+    },
+    {
+      "group": "org.jetbrains.androidx.savedstate",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "savedstate-compose-uikitsimarm64",
+      "purl": "pkg:maven/org.jetbrains.androidx.savedstate/savedstate-compose-uikitsimarm64@1.3.6",
+      "type": "library",
+      "version": "1.3.6"
+    },
+    {
+      "group": "org.jetbrains.compose.animation",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "animation",
+      "purl": "pkg:maven/org.jetbrains.compose.animation/animation@1.11.1",
+      "type": "library",
+      "version": "1.11.1"
+    },
+    {
+      "group": "org.jetbrains.compose.animation",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "animation-core",
+      "purl": "pkg:maven/org.jetbrains.compose.animation/animation-core@1.11.1",
+      "type": "library",
+      "version": "1.11.1"
+    },
+    {
+      "group": "org.jetbrains.compose.animation",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "animation-core-desktop",
+      "purl": "pkg:maven/org.jetbrains.compose.animation/animation-core-desktop@1.11.1",
+      "type": "library",
+      "version": "1.11.1"
+    },
+    {
+      "group": "org.jetbrains.compose.animation",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "animation-core-iossimulatorarm64",
+      "purl": "pkg:maven/org.jetbrains.compose.animation/animation-core-iossimulatorarm64@1.11.1",
+      "type": "library",
+      "version": "1.11.1"
+    },
+    {
+      "group": "org.jetbrains.compose.animation",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "animation-desktop",
+      "purl": "pkg:maven/org.jetbrains.compose.animation/animation-desktop@1.11.1",
+      "type": "library",
+      "version": "1.11.1"
+    },
+    {
+      "group": "org.jetbrains.compose.animation",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "animation-iossimulatorarm64",
+      "purl": "pkg:maven/org.jetbrains.compose.animation/animation-iossimulatorarm64@1.11.1",
+      "type": "library",
+      "version": "1.11.1"
+    },
+    {
+      "group": "org.jetbrains.compose.annotation-internal",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "annotation",
+      "purl": "pkg:maven/org.jetbrains.compose.annotation-internal/annotation@1.10.0",
+      "type": "library",
+      "version": "1.10.0"
+    },
+    {
+      "group": "org.jetbrains.compose.collection-internal",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "collection",
+      "purl": "pkg:maven/org.jetbrains.compose.collection-internal/collection@1.10.0",
+      "type": "library",
+      "version": "1.10.0"
+    },
+    {
+      "group": "org.jetbrains.compose.components",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "components-resources",
+      "purl": "pkg:maven/org.jetbrains.compose.components/components-resources@1.11.1",
+      "type": "library",
+      "version": "1.11.1"
+    },
+    {
+      "group": "org.jetbrains.compose.components",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "components-resources-android",
+      "purl": "pkg:maven/org.jetbrains.compose.components/components-resources-android@1.11.1",
+      "type": "library",
+      "version": "1.11.1"
+    },
+    {
+      "group": "org.jetbrains.compose.components",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "components-resources-desktop",
+      "purl": "pkg:maven/org.jetbrains.compose.components/components-resources-desktop@1.11.1",
+      "type": "library",
+      "version": "1.11.1"
+    },
+    {
+      "group": "org.jetbrains.compose.components",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "components-resources-iosSimulatorArm64",
+      "purl": "pkg:maven/org.jetbrains.compose.components/components-resources-iosSimulatorArm64@1.11.1",
+      "type": "library",
+      "version": "1.11.1"
+    },
+    {
+      "group": "org.jetbrains.compose.desktop",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "desktop",
+      "purl": "pkg:maven/org.jetbrains.compose.desktop/desktop@1.11.1",
+      "type": "library",
+      "version": "1.11.1"
+    },
+    {
+      "group": "org.jetbrains.compose.desktop",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "desktop-jvm",
+      "purl": "pkg:maven/org.jetbrains.compose.desktop/desktop-jvm@1.11.1",
+      "type": "library",
+      "version": "1.11.1"
+    },
+    {
+      "group": "org.jetbrains.compose.desktop",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "desktop-jvm-linux-x64",
+      "purl": "pkg:maven/org.jetbrains.compose.desktop/desktop-jvm-linux-x64@1.11.1",
+      "type": "library",
+      "version": "1.11.1"
+    },
+    {
+      "group": "org.jetbrains.compose.desktop",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "desktop-jvm-macos-arm64",
+      "purl": "pkg:maven/org.jetbrains.compose.desktop/desktop-jvm-macos-arm64@1.11.1",
+      "type": "library",
+      "version": "1.11.1"
+    },
+    {
+      "group": "org.jetbrains.compose.desktop",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "desktop-jvm-windows-x64",
+      "purl": "pkg:maven/org.jetbrains.compose.desktop/desktop-jvm-windows-x64@1.11.1",
+      "type": "library",
+      "version": "1.11.1"
+    },
+    {
+      "group": "org.jetbrains.compose.foundation",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "foundation",
+      "purl": "pkg:maven/org.jetbrains.compose.foundation/foundation@1.11.1",
+      "type": "library",
+      "version": "1.11.1"
+    },
+    {
+      "group": "org.jetbrains.compose.foundation",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "foundation-desktop",
+      "purl": "pkg:maven/org.jetbrains.compose.foundation/foundation-desktop@1.11.1",
+      "type": "library",
+      "version": "1.11.1"
+    },
+    {
+      "group": "org.jetbrains.compose.foundation",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "foundation-iossimulatorarm64",
+      "purl": "pkg:maven/org.jetbrains.compose.foundation/foundation-iossimulatorarm64@1.11.1",
+      "type": "library",
+      "version": "1.11.1"
+    },
+    {
+      "group": "org.jetbrains.compose.foundation",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "foundation-layout",
+      "purl": "pkg:maven/org.jetbrains.compose.foundation/foundation-layout@1.11.1",
+      "type": "library",
+      "version": "1.11.1"
+    },
+    {
+      "group": "org.jetbrains.compose.foundation",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "foundation-layout-desktop",
+      "purl": "pkg:maven/org.jetbrains.compose.foundation/foundation-layout-desktop@1.11.1",
+      "type": "library",
+      "version": "1.11.1"
+    },
+    {
+      "group": "org.jetbrains.compose.foundation",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "foundation-layout-iossimulatorarm64",
+      "purl": "pkg:maven/org.jetbrains.compose.foundation/foundation-layout-iossimulatorarm64@1.11.1",
+      "type": "library",
+      "version": "1.11.1"
+    },
+    {
+      "group": "org.jetbrains.compose.material",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "material",
+      "purl": "pkg:maven/org.jetbrains.compose.material/material@1.11.1",
+      "type": "library",
+      "version": "1.11.1"
+    },
+    {
+      "group": "org.jetbrains.compose.material",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "material-desktop",
+      "purl": "pkg:maven/org.jetbrains.compose.material/material-desktop@1.11.1",
+      "type": "library",
+      "version": "1.11.1"
+    },
+    {
+      "group": "org.jetbrains.compose.material",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "material-icons-core",
+      "purl": "pkg:maven/org.jetbrains.compose.material/material-icons-core@1.7.3",
+      "type": "library",
+      "version": "1.7.3"
+    },
+    {
+      "group": "org.jetbrains.compose.material",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "material-icons-core-desktop",
+      "purl": "pkg:maven/org.jetbrains.compose.material/material-icons-core-desktop@1.7.3",
+      "type": "library",
+      "version": "1.7.3"
+    },
+    {
+      "group": "org.jetbrains.compose.material",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "material-icons-core-uikitsimarm64",
+      "purl": "pkg:maven/org.jetbrains.compose.material/material-icons-core-uikitsimarm64@1.7.3",
+      "type": "library",
+      "version": "1.7.3"
+    },
+    {
+      "group": "org.jetbrains.compose.material",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "material-icons-extended",
+      "purl": "pkg:maven/org.jetbrains.compose.material/material-icons-extended@1.7.3",
+      "type": "library",
+      "version": "1.7.3"
+    },
+    {
+      "group": "org.jetbrains.compose.material",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "material-icons-extended-desktop",
+      "purl": "pkg:maven/org.jetbrains.compose.material/material-icons-extended-desktop@1.7.3",
+      "type": "library",
+      "version": "1.7.3"
+    },
+    {
+      "group": "org.jetbrains.compose.material",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "material-icons-extended-uikitsimarm64",
+      "purl": "pkg:maven/org.jetbrains.compose.material/material-icons-extended-uikitsimarm64@1.7.3",
+      "type": "library",
+      "version": "1.7.3"
+    },
+    {
+      "group": "org.jetbrains.compose.material",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "material-ripple",
+      "purl": "pkg:maven/org.jetbrains.compose.material/material-ripple@1.11.0-beta03",
+      "type": "library",
+      "version": "1.11.0-beta03"
+    },
+    {
+      "group": "org.jetbrains.compose.material",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "material-ripple",
+      "purl": "pkg:maven/org.jetbrains.compose.material/material-ripple@1.11.1",
+      "type": "library",
+      "version": "1.11.1"
+    },
+    {
+      "group": "org.jetbrains.compose.material",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "material-ripple-desktop",
+      "purl": "pkg:maven/org.jetbrains.compose.material/material-ripple-desktop@1.11.1",
+      "type": "library",
+      "version": "1.11.1"
+    },
+    {
+      "group": "org.jetbrains.compose.material",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "material-ripple-iossimulatorarm64",
+      "purl": "pkg:maven/org.jetbrains.compose.material/material-ripple-iossimulatorarm64@1.11.0-beta03",
+      "type": "library",
+      "version": "1.11.0-beta03"
+    },
+    {
+      "group": "org.jetbrains.compose.material3",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "material3",
+      "purl": "pkg:maven/org.jetbrains.compose.material3/material3@1.11.0-alpha07",
+      "type": "library",
+      "version": "1.11.0-alpha07"
+    },
+    {
+      "group": "org.jetbrains.compose.material3",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "material3-desktop",
+      "purl": "pkg:maven/org.jetbrains.compose.material3/material3-desktop@1.11.0-alpha07",
+      "type": "library",
+      "version": "1.11.0-alpha07"
+    },
+    {
+      "group": "org.jetbrains.compose.material3",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "material3-iossimulatorarm64",
+      "purl": "pkg:maven/org.jetbrains.compose.material3/material3-iossimulatorarm64@1.11.0-alpha07",
+      "type": "library",
+      "version": "1.11.0-alpha07"
+    },
+    {
+      "group": "org.jetbrains.compose.runtime",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "runtime",
+      "purl": "pkg:maven/org.jetbrains.compose.runtime/runtime@1.11.1",
+      "type": "library",
+      "version": "1.11.1"
+    },
+    {
+      "group": "org.jetbrains.compose.runtime",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "runtime-desktop",
+      "purl": "pkg:maven/org.jetbrains.compose.runtime/runtime-desktop@1.11.1",
+      "type": "library",
+      "version": "1.11.1"
+    },
+    {
+      "group": "org.jetbrains.compose.runtime",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "runtime-iossimulatorarm64",
+      "purl": "pkg:maven/org.jetbrains.compose.runtime/runtime-iossimulatorarm64@1.11.1",
+      "type": "library",
+      "version": "1.11.1"
+    },
+    {
+      "group": "org.jetbrains.compose.runtime",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "runtime-saveable",
+      "purl": "pkg:maven/org.jetbrains.compose.runtime/runtime-saveable@1.11.1",
+      "type": "library",
+      "version": "1.11.1"
+    },
+    {
+      "group": "org.jetbrains.compose.runtime",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "runtime-saveable-desktop",
+      "purl": "pkg:maven/org.jetbrains.compose.runtime/runtime-saveable-desktop@1.11.1",
+      "type": "library",
+      "version": "1.11.1"
+    },
+    {
+      "group": "org.jetbrains.compose.runtime",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "runtime-saveable-iossimulatorarm64",
+      "purl": "pkg:maven/org.jetbrains.compose.runtime/runtime-saveable-iossimulatorarm64@1.11.1",
+      "type": "library",
+      "version": "1.11.1"
+    },
+    {
+      "group": "org.jetbrains.compose.ui",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "ui",
+      "purl": "pkg:maven/org.jetbrains.compose.ui/ui@1.11.1",
+      "type": "library",
+      "version": "1.11.1"
+    },
+    {
+      "group": "org.jetbrains.compose.ui",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "ui-backhandler",
+      "purl": "pkg:maven/org.jetbrains.compose.ui/ui-backhandler@1.11.1",
+      "type": "library",
+      "version": "1.11.1"
+    },
+    {
+      "group": "org.jetbrains.compose.ui",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "ui-backhandler-desktop",
+      "purl": "pkg:maven/org.jetbrains.compose.ui/ui-backhandler-desktop@1.11.1",
+      "type": "library",
+      "version": "1.11.1"
+    },
+    {
+      "group": "org.jetbrains.compose.ui",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "ui-backhandler-iossimulatorarm64",
+      "purl": "pkg:maven/org.jetbrains.compose.ui/ui-backhandler-iossimulatorarm64@1.11.1",
+      "type": "library",
+      "version": "1.11.1"
+    },
+    {
+      "group": "org.jetbrains.compose.ui",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "ui-desktop",
+      "purl": "pkg:maven/org.jetbrains.compose.ui/ui-desktop@1.11.1",
+      "type": "library",
+      "version": "1.11.1"
+    },
+    {
+      "group": "org.jetbrains.compose.ui",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "ui-geometry",
+      "purl": "pkg:maven/org.jetbrains.compose.ui/ui-geometry@1.11.1",
+      "type": "library",
+      "version": "1.11.1"
+    },
+    {
+      "group": "org.jetbrains.compose.ui",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "ui-geometry-desktop",
+      "purl": "pkg:maven/org.jetbrains.compose.ui/ui-geometry-desktop@1.11.1",
+      "type": "library",
+      "version": "1.11.1"
+    },
+    {
+      "group": "org.jetbrains.compose.ui",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "ui-geometry-iossimulatorarm64",
+      "purl": "pkg:maven/org.jetbrains.compose.ui/ui-geometry-iossimulatorarm64@1.11.1",
+      "type": "library",
+      "version": "1.11.1"
+    },
+    {
+      "group": "org.jetbrains.compose.ui",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "ui-graphics",
+      "purl": "pkg:maven/org.jetbrains.compose.ui/ui-graphics@1.11.1",
+      "type": "library",
+      "version": "1.11.1"
+    },
+    {
+      "group": "org.jetbrains.compose.ui",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "ui-graphics-desktop",
+      "purl": "pkg:maven/org.jetbrains.compose.ui/ui-graphics-desktop@1.11.1",
+      "type": "library",
+      "version": "1.11.1"
+    },
+    {
+      "group": "org.jetbrains.compose.ui",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "ui-graphics-iossimulatorarm64",
+      "purl": "pkg:maven/org.jetbrains.compose.ui/ui-graphics-iossimulatorarm64@1.11.1",
+      "type": "library",
+      "version": "1.11.1"
+    },
+    {
+      "group": "org.jetbrains.compose.ui",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "ui-iossimulatorarm64",
+      "purl": "pkg:maven/org.jetbrains.compose.ui/ui-iossimulatorarm64@1.11.1",
+      "type": "library",
+      "version": "1.11.1"
+    },
+    {
+      "group": "org.jetbrains.compose.ui",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "ui-text",
+      "purl": "pkg:maven/org.jetbrains.compose.ui/ui-text@1.11.1",
+      "type": "library",
+      "version": "1.11.1"
+    },
+    {
+      "group": "org.jetbrains.compose.ui",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "ui-text-desktop",
+      "purl": "pkg:maven/org.jetbrains.compose.ui/ui-text-desktop@1.11.1",
+      "type": "library",
+      "version": "1.11.1"
+    },
+    {
+      "group": "org.jetbrains.compose.ui",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "ui-text-iossimulatorarm64",
+      "purl": "pkg:maven/org.jetbrains.compose.ui/ui-text-iossimulatorarm64@1.11.1",
+      "type": "library",
+      "version": "1.11.1"
+    },
+    {
+      "group": "org.jetbrains.compose.ui",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "ui-tooling",
+      "purl": "pkg:maven/org.jetbrains.compose.ui/ui-tooling@1.11.1",
+      "type": "library",
+      "version": "1.11.1"
+    },
+    {
+      "group": "org.jetbrains.compose.ui",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "ui-tooling-data",
+      "purl": "pkg:maven/org.jetbrains.compose.ui/ui-tooling-data@1.11.1",
+      "type": "library",
+      "version": "1.11.1"
+    },
+    {
+      "group": "org.jetbrains.compose.ui",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "ui-tooling-preview",
+      "purl": "pkg:maven/org.jetbrains.compose.ui/ui-tooling-preview@1.11.1",
+      "type": "library",
+      "version": "1.11.1"
+    },
+    {
+      "group": "org.jetbrains.compose.ui",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "ui-tooling-preview-desktop",
+      "purl": "pkg:maven/org.jetbrains.compose.ui/ui-tooling-preview-desktop@1.11.1",
+      "type": "library",
+      "version": "1.11.1"
+    },
+    {
+      "group": "org.jetbrains.compose.ui",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "ui-tooling-preview-iossimulatorarm64",
+      "purl": "pkg:maven/org.jetbrains.compose.ui/ui-tooling-preview-iossimulatorarm64@1.11.1",
+      "type": "library",
+      "version": "1.11.1"
+    },
+    {
+      "group": "org.jetbrains.compose.ui",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "ui-uikit",
+      "purl": "pkg:maven/org.jetbrains.compose.ui/ui-uikit@1.11.1",
+      "type": "library",
+      "version": "1.11.1"
+    },
+    {
+      "group": "org.jetbrains.compose.ui",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "ui-uikit-iossimulatorarm64",
+      "purl": "pkg:maven/org.jetbrains.compose.ui/ui-uikit-iossimulatorarm64@1.11.1",
+      "type": "library",
+      "version": "1.11.1"
+    },
+    {
+      "group": "org.jetbrains.compose.ui",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "ui-unit",
+      "purl": "pkg:maven/org.jetbrains.compose.ui/ui-unit@1.11.1",
+      "type": "library",
+      "version": "1.11.1"
+    },
+    {
+      "group": "org.jetbrains.compose.ui",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "ui-unit-desktop",
+      "purl": "pkg:maven/org.jetbrains.compose.ui/ui-unit-desktop@1.11.1",
+      "type": "library",
+      "version": "1.11.1"
+    },
+    {
+      "group": "org.jetbrains.compose.ui",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "ui-unit-iossimulatorarm64",
+      "purl": "pkg:maven/org.jetbrains.compose.ui/ui-unit-iossimulatorarm64@1.11.1",
+      "type": "library",
+      "version": "1.11.1"
+    },
+    {
+      "group": "org.jetbrains.compose.ui",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "ui-util",
+      "purl": "pkg:maven/org.jetbrains.compose.ui/ui-util@1.11.1",
+      "type": "library",
+      "version": "1.11.1"
+    },
+    {
+      "group": "org.jetbrains.compose.ui",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "ui-util-desktop",
+      "purl": "pkg:maven/org.jetbrains.compose.ui/ui-util-desktop@1.11.1",
+      "type": "library",
+      "version": "1.11.1"
+    },
+    {
+      "group": "org.jetbrains.compose.ui",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "ui-util-iossimulatorarm64",
+      "purl": "pkg:maven/org.jetbrains.compose.ui/ui-util-iossimulatorarm64@1.11.1",
+      "type": "library",
+      "version": "1.11.1"
+    },
+    {
+      "group": "org.jetbrains.kotlin",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "kotlin-stdlib",
+      "purl": "pkg:maven/org.jetbrains.kotlin/kotlin-stdlib@2.4.10",
+      "type": "library",
+      "version": "2.4.10"
+    },
+    {
+      "group": "org.jetbrains.kotlin",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "kotlin-stdlib-common",
+      "purl": "pkg:maven/org.jetbrains.kotlin/kotlin-stdlib-common@2.4.10",
+      "type": "library",
+      "version": "2.4.10"
+    },
+    {
+      "group": "org.jetbrains.kotlinx",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "atomicfu",
+      "purl": "pkg:maven/org.jetbrains.kotlinx/atomicfu@0.28.0",
+      "type": "library",
+      "version": "0.28.0"
+    },
+    {
+      "group": "org.jetbrains.kotlinx",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "atomicfu",
+      "purl": "pkg:maven/org.jetbrains.kotlinx/atomicfu@0.32.1",
+      "type": "library",
+      "version": "0.32.1"
+    },
+    {
+      "group": "org.jetbrains.kotlinx",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "atomicfu-iossimulatorarm64",
+      "purl": "pkg:maven/org.jetbrains.kotlinx/atomicfu-iossimulatorarm64@0.32.1",
+      "type": "library",
+      "version": "0.32.1"
+    },
+    {
+      "group": "org.jetbrains.kotlinx",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "atomicfu-jvm",
+      "purl": "pkg:maven/org.jetbrains.kotlinx/atomicfu-jvm@0.28.0",
+      "type": "library",
+      "version": "0.28.0"
+    },
+    {
+      "group": "org.jetbrains.kotlinx",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "kotlinx-collections-immutable",
+      "purl": "pkg:maven/org.jetbrains.kotlinx/kotlinx-collections-immutable@0.4.0",
+      "type": "library",
+      "version": "0.4.0"
+    },
+    {
+      "group": "org.jetbrains.kotlinx",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "kotlinx-collections-immutable-iossimulatorarm64",
+      "purl": "pkg:maven/org.jetbrains.kotlinx/kotlinx-collections-immutable-iossimulatorarm64@0.4.0",
+      "type": "library",
+      "version": "0.4.0"
+    },
+    {
+      "group": "org.jetbrains.kotlinx",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "kotlinx-collections-immutable-jvm",
+      "purl": "pkg:maven/org.jetbrains.kotlinx/kotlinx-collections-immutable-jvm@0.4.0",
+      "type": "library",
+      "version": "0.4.0"
+    },
+    {
+      "group": "org.jetbrains.kotlinx",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "kotlinx-coroutines-android",
+      "purl": "pkg:maven/org.jetbrains.kotlinx/kotlinx-coroutines-android@1.11.0",
+      "type": "library",
+      "version": "1.11.0"
+    },
+    {
+      "group": "org.jetbrains.kotlinx",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "kotlinx-coroutines-bom",
+      "purl": "pkg:maven/org.jetbrains.kotlinx/kotlinx-coroutines-bom@1.11.0",
+      "type": "library",
+      "version": "1.11.0"
+    },
+    {
+      "group": "org.jetbrains.kotlinx",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "kotlinx-coroutines-core",
+      "purl": "pkg:maven/org.jetbrains.kotlinx/kotlinx-coroutines-core@1.11.0",
+      "type": "library",
+      "version": "1.11.0"
+    },
+    {
+      "group": "org.jetbrains.kotlinx",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "kotlinx-coroutines-core-iossimulatorarm64",
+      "purl": "pkg:maven/org.jetbrains.kotlinx/kotlinx-coroutines-core-iossimulatorarm64@1.11.0",
+      "type": "library",
+      "version": "1.11.0"
+    },
+    {
+      "group": "org.jetbrains.kotlinx",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "kotlinx-coroutines-core-jvm",
+      "purl": "pkg:maven/org.jetbrains.kotlinx/kotlinx-coroutines-core-jvm@1.11.0",
+      "type": "library",
+      "version": "1.11.0"
+    },
+    {
+      "group": "org.jetbrains.kotlinx",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "kotlinx-coroutines-slf4j",
+      "purl": "pkg:maven/org.jetbrains.kotlinx/kotlinx-coroutines-slf4j@1.11.0",
+      "type": "library",
+      "version": "1.11.0"
+    },
+    {
+      "group": "org.jetbrains.kotlinx",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "kotlinx-coroutines-swing",
+      "purl": "pkg:maven/org.jetbrains.kotlinx/kotlinx-coroutines-swing@1.11.0",
+      "type": "library",
+      "version": "1.11.0"
+    },
+    {
+      "group": "org.jetbrains.kotlinx",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "kotlinx-datetime",
+      "purl": "pkg:maven/org.jetbrains.kotlinx/kotlinx-datetime@0.7.1",
+      "type": "library",
+      "version": "0.7.1"
+    },
+    {
+      "group": "org.jetbrains.kotlinx",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "kotlinx-datetime-iossimulatorarm64",
+      "purl": "pkg:maven/org.jetbrains.kotlinx/kotlinx-datetime-iossimulatorarm64@0.7.1",
+      "type": "library",
+      "version": "0.7.1"
+    },
+    {
+      "group": "org.jetbrains.kotlinx",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "kotlinx-datetime-jvm",
+      "purl": "pkg:maven/org.jetbrains.kotlinx/kotlinx-datetime-jvm@0.7.1",
+      "type": "library",
+      "version": "0.7.1"
+    },
+    {
+      "group": "org.jetbrains.kotlinx",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "kotlinx-io-bytestring",
+      "purl": "pkg:maven/org.jetbrains.kotlinx/kotlinx-io-bytestring@0.8.0",
+      "type": "library",
+      "version": "0.8.0"
+    },
+    {
+      "group": "org.jetbrains.kotlinx",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "kotlinx-io-bytestring-iossimulatorarm64",
+      "purl": "pkg:maven/org.jetbrains.kotlinx/kotlinx-io-bytestring-iossimulatorarm64@0.8.0",
+      "type": "library",
+      "version": "0.8.0"
+    },
+    {
+      "group": "org.jetbrains.kotlinx",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "kotlinx-io-bytestring-jvm",
+      "purl": "pkg:maven/org.jetbrains.kotlinx/kotlinx-io-bytestring-jvm@0.8.0",
+      "type": "library",
+      "version": "0.8.0"
+    },
+    {
+      "group": "org.jetbrains.kotlinx",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "kotlinx-io-core",
+      "purl": "pkg:maven/org.jetbrains.kotlinx/kotlinx-io-core@0.8.0",
+      "type": "library",
+      "version": "0.8.0"
+    },
+    {
+      "group": "org.jetbrains.kotlinx",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "kotlinx-io-core-iossimulatorarm64",
+      "purl": "pkg:maven/org.jetbrains.kotlinx/kotlinx-io-core-iossimulatorarm64@0.8.0",
+      "type": "library",
+      "version": "0.8.0"
+    },
+    {
+      "group": "org.jetbrains.kotlinx",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "kotlinx-io-core-jvm",
+      "purl": "pkg:maven/org.jetbrains.kotlinx/kotlinx-io-core-jvm@0.8.0",
+      "type": "library",
+      "version": "0.8.0"
+    },
+    {
+      "group": "org.jetbrains.kotlinx",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "kotlinx-serialization-bom",
+      "purl": "pkg:maven/org.jetbrains.kotlinx/kotlinx-serialization-bom@1.9.0",
+      "type": "library",
+      "version": "1.9.0"
+    },
+    {
+      "group": "org.jetbrains.kotlinx",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "kotlinx-serialization-core",
+      "purl": "pkg:maven/org.jetbrains.kotlinx/kotlinx-serialization-core@1.9.0",
+      "type": "library",
+      "version": "1.9.0"
+    },
+    {
+      "group": "org.jetbrains.kotlinx",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "kotlinx-serialization-core-iossimulatorarm64",
+      "purl": "pkg:maven/org.jetbrains.kotlinx/kotlinx-serialization-core-iossimulatorarm64@1.9.0",
+      "type": "library",
+      "version": "1.9.0"
+    },
+    {
+      "group": "org.jetbrains.kotlinx",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "kotlinx-serialization-core-jvm",
+      "purl": "pkg:maven/org.jetbrains.kotlinx/kotlinx-serialization-core-jvm@1.9.0",
+      "type": "library",
+      "version": "1.9.0"
+    },
+    {
+      "group": "org.jetbrains.kotlinx",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "kotlinx-serialization-json",
+      "purl": "pkg:maven/org.jetbrains.kotlinx/kotlinx-serialization-json@1.9.0",
+      "type": "library",
+      "version": "1.9.0"
+    },
+    {
+      "group": "org.jetbrains.kotlinx",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "kotlinx-serialization-json-io",
+      "purl": "pkg:maven/org.jetbrains.kotlinx/kotlinx-serialization-json-io@1.9.0",
+      "type": "library",
+      "version": "1.9.0"
+    },
+    {
+      "group": "org.jetbrains.kotlinx",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "kotlinx-serialization-json-io-iossimulatorarm64",
+      "purl": "pkg:maven/org.jetbrains.kotlinx/kotlinx-serialization-json-io-iossimulatorarm64@1.9.0",
+      "type": "library",
+      "version": "1.9.0"
+    },
+    {
+      "group": "org.jetbrains.kotlinx",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "kotlinx-serialization-json-io-jvm",
+      "purl": "pkg:maven/org.jetbrains.kotlinx/kotlinx-serialization-json-io-jvm@1.9.0",
+      "type": "library",
+      "version": "1.9.0"
+    },
+    {
+      "group": "org.jetbrains.kotlinx",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "kotlinx-serialization-json-iossimulatorarm64",
+      "purl": "pkg:maven/org.jetbrains.kotlinx/kotlinx-serialization-json-iossimulatorarm64@1.9.0",
+      "type": "library",
+      "version": "1.9.0"
+    },
+    {
+      "group": "org.jetbrains.kotlinx",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "kotlinx-serialization-json-jvm",
+      "purl": "pkg:maven/org.jetbrains.kotlinx/kotlinx-serialization-json-jvm@1.9.0",
+      "type": "library",
+      "version": "1.9.0"
+    },
+    {
+      "group": "org.jetbrains.runtime",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "jbr-api",
+      "purl": "pkg:maven/org.jetbrains.runtime/jbr-api@1.9.0",
+      "type": "library",
+      "version": "1.9.0"
+    },
+    {
+      "group": "org.jetbrains.skiko",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "skiko",
+      "purl": "pkg:maven/org.jetbrains.skiko/skiko@0.144.6",
+      "type": "library",
+      "version": "0.144.6"
+    },
+    {
+      "group": "org.jetbrains.skiko",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "skiko-awt",
+      "purl": "pkg:maven/org.jetbrains.skiko/skiko-awt@0.144.6",
+      "type": "library",
+      "version": "0.144.6"
+    },
+    {
+      "group": "org.jetbrains.skiko",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "skiko-awt-runtime-linux-x64",
+      "purl": "pkg:maven/org.jetbrains.skiko/skiko-awt-runtime-linux-x64@0.144.6",
+      "type": "library",
+      "version": "0.144.6"
+    },
+    {
+      "group": "org.jetbrains.skiko",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "skiko-awt-runtime-macos-arm64",
+      "purl": "pkg:maven/org.jetbrains.skiko/skiko-awt-runtime-macos-arm64@0.144.6",
+      "type": "library",
+      "version": "0.144.6"
+    },
+    {
+      "group": "org.jetbrains.skiko",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "skiko-awt-runtime-windows-x64",
+      "purl": "pkg:maven/org.jetbrains.skiko/skiko-awt-runtime-windows-x64@0.144.6",
+      "type": "library",
+      "version": "0.144.6"
+    },
+    {
+      "group": "org.jetbrains.skiko",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "skiko-iossimulatorarm64",
+      "purl": "pkg:maven/org.jetbrains.skiko/skiko-iossimulatorarm64@0.144.6",
+      "type": "library",
+      "version": "0.144.6"
+    },
+    {
+      "group": "org.jspecify",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "jspecify",
+      "purl": "pkg:maven/org.jspecify/jspecify@1.0.0",
+      "type": "library",
+      "version": "1.0.0"
+    },
+    {
+      "group": "org.openjfx",
+      "licenses": [
+        {
+          "license": {
+            "id": "GPL-2.0-with-classpath-exception"
+          }
+        }
+      ],
+      "name": "javafx-base",
+      "purl": "pkg:maven/org.openjfx/javafx-base@21.0.7",
+      "type": "library",
+      "version": "21.0.7"
+    },
+    {
+      "group": "org.openjfx",
+      "licenses": [
+        {
+          "license": {
+            "id": "GPL-2.0-with-classpath-exception"
+          }
+        }
+      ],
+      "name": "javafx-controls",
+      "purl": "pkg:maven/org.openjfx/javafx-controls@21.0.7",
+      "type": "library",
+      "version": "21.0.7"
+    },
+    {
+      "group": "org.openjfx",
+      "licenses": [
+        {
+          "license": {
+            "id": "GPL-2.0-with-classpath-exception"
+          }
+        }
+      ],
+      "name": "javafx-graphics",
+      "purl": "pkg:maven/org.openjfx/javafx-graphics@21.0.7",
+      "type": "library",
+      "version": "21.0.7"
+    },
+    {
+      "group": "org.openjfx",
+      "licenses": [
+        {
+          "license": {
+            "id": "GPL-2.0-with-classpath-exception"
+          }
+        }
+      ],
+      "name": "javafx-media",
+      "purl": "pkg:maven/org.openjfx/javafx-media@21.0.7",
+      "type": "library",
+      "version": "21.0.7"
+    },
+    {
+      "group": "org.openjfx",
+      "licenses": [
+        {
+          "license": {
+            "id": "GPL-2.0-with-classpath-exception"
+          }
+        }
+      ],
+      "name": "javafx-swing",
+      "purl": "pkg:maven/org.openjfx/javafx-swing@21.0.7",
+      "type": "library",
+      "version": "21.0.7"
+    },
+    {
+      "group": "org.openjfx",
+      "licenses": [
+        {
+          "license": {
+            "id": "GPL-2.0-with-classpath-exception"
+          }
+        }
+      ],
+      "name": "javafx-web",
+      "purl": "pkg:maven/org.openjfx/javafx-web@21.0.7",
+      "type": "library",
+      "version": "21.0.7"
+    },
+    {
+      "group": "org.slf4j",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "name": "slf4j-api",
+      "purl": "pkg:maven/org.slf4j/slf4j-api@2.0.17",
+      "type": "library",
+      "version": "2.0.17"
+    },
+    {
+      "group": "org.xerial",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "name": "sqlite-jdbc",
+      "purl": "pkg:maven/org.xerial/sqlite-jdbc@3.51.3.0",
+      "type": "library",
+      "version": "3.51.3.0"
+    }
+  ],
+  "metadata": {
+    "component": {
+      "name": "Kelma Review",
+      "type": "application"
+    }
+  },
+  "specVersion": "1.5",
+  "version": 1
+}

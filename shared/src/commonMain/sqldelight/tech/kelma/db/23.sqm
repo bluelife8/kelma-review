@@ -1,0 +1,16 @@
+ALTER TABLE sync_cards ADD COLUMN study_state TEXT NOT NULL DEFAULT 'active';
+ALTER TABLE sync_cards ADD COLUMN study_state_modified_at TEXT NOT NULL DEFAULT '';
+ALTER TABLE sync_cards ADD COLUMN study_state_client_modified_at TEXT NOT NULL DEFAULT '';
+
+CREATE TABLE local_card_study_states (
+    note_guid TEXT NOT NULL,
+    card_ord INTEGER NOT NULL,
+    card_id INTEGER NOT NULL,
+    study_state TEXT NOT NULL CHECK (study_state IN ('active', 'suspended')),
+    client_modified_at_ms INTEGER NOT NULL,
+    upload_state TEXT NOT NULL DEFAULT 'pending',
+    PRIMARY KEY (note_guid, card_ord)
+);
+
+CREATE INDEX local_card_study_states_upload_idx
+ON local_card_study_states(upload_state);

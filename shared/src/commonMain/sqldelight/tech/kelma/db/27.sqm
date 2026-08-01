@@ -1,0 +1,6 @@
+CREATE TABLE local_note_buries (
+    note_guid TEXT NOT NULL PRIMARY KEY,
+    buried_on_day INTEGER NOT NULL
+);
+
+CREATE INDEX local_note_buries_day_idx ON local_note_buries(buried_on_day);

@@ -1,0 +1,157 @@
+name: Publish release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  package:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-26
+            artifact: macos
+            pattern: desktopApp/build/compose/binaries/main/**/*.dmg
+          - os: windows-latest
+            artifact: windows
+            pattern: desktopApp/build/compose/binaries/main/**/*.msi
+          - os: ubuntu-latest
+            artifact: linux
+            pattern: desktopApp/build/compose/binaries/main/**/*.deb
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: bluelife8/kelma-fsrs-v6
+          ref: 8d3844efb01122748fb83497f39255924f905294
+          path: kelma-fsrs-v6
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Configure the MSVC compiler
+        if: runner.os == 'Windows'
+        uses: ilammy/msvc-dev-cmd@v1
+      - name: Package Kelma Review
+        run: ./gradlew -PkelmaFsrsPath=kelma-fsrs-v6 :desktopApp:packageDistributionForCurrentOS
+      - name: Verify packaged Java runtime modules
+        if: runner.os == 'macOS'
+        run: python scripts/check_desktop_runtime_modules.py
+      - name: Verify packaged desktop JVM arguments
+        if: runner.os == 'macOS'
+        run: python scripts/check_desktop_jvm_args.py desktopApp/build/compose/binaries/main/app
+      - uses: actions/upload-artifact@v4
+        with:
+          name: kelma-review-${{ matrix.artifact }}
+          path: ${{ matrix.pattern }}
+          if-no-files-found: error
+
+  android:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: bluelife8/kelma-fsrs-v6
+          ref: 8d3844efb01122748fb83497f39255924f905294
+          path: kelma-fsrs-v6
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: android-actions/setup-android@v3
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Install Android native toolchain
+        run: >-
+          sdkmanager "platforms;android-36" "build-tools;36.0.0"
+          "ndk;28.2.13676358" "cmake;3.22.1"
+      - name: Package Android preview
+        run: |
+          ./gradlew -PkelmaFsrsPath=kelma-fsrs-v6 :androidApp:assembleDebug
+          mkdir mobile-release
+          cp androidApp/build/outputs/apk/debug/androidApp-debug.apk \
+            "mobile-release/KelmaReview-${GITHUB_REF_NAME#v}-Android.apk"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: kelma-review-android
+          path: mobile-release/*.apk
+          if-no-files-found: error
+
+  ios:
+    runs-on: macos-26
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: bluelife8/kelma-fsrs-v6
+          ref: 8d3844efb01122748fb83497f39255924f905294
+          path: kelma-fsrs-v6
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Package unsigned iPhone and iPad build
+        env:
+          ORG_GRADLE_PROJECT_kelmaFsrsPath: ${{ github.workspace }}/kelma-fsrs-v6
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          IFS=. read -r MAJOR MINOR PATCH <<< "$VERSION"
+          BUILD_VERSION=$((MAJOR * 1000000 + MINOR * 1000 + PATCH))
+          xcodebuild \
+            -project iosApp/iosApp.xcodeproj \
+            -scheme iosApp \
+            -configuration Release \
+            -sdk iphoneos \
+            -destination 'generic/platform=iOS' \
+            -derivedDataPath build/ios-release \
+            MARKETING_VERSION="$VERSION" \
+            CURRENT_PROJECT_VERSION="$BUILD_VERSION" \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            DEVELOPMENT_TEAM= \
+            build
+          /usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' \
+            'build/ios-release/Build/Products/Release-iphoneos/Kelma Review.app/Info.plist'
+          test "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' \
+            'build/ios-release/Build/Products/Release-iphoneos/Kelma Review.app/Info.plist')" = "$VERSION"
+          test "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' \
+            'build/ios-release/Build/Products/Release-iphoneos/Kelma Review.app/Info.plist')" = "$BUILD_VERSION"
+          mkdir -p mobile-release/Payload
+          cp -R 'build/ios-release/Build/Products/Release-iphoneos/Kelma Review.app' \
+            mobile-release/Payload/
+          cd mobile-release
+          zip -qry "KelmaReview-${GITHUB_REF_NAME#v}.ipa" Payload
+          rm -rf Payload
+      - uses: actions/upload-artifact@v4
+        with:
+          name: kelma-review-ios
+          path: mobile-release/*.ipa
+          if-no-files-found: error
+
+  publish:
+    needs: [package, android, ios]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: release
+          merge-multiple: true
+      - name: Generate checksums
+        run: |
+          cd release
+          find . -type f -print0 | sort -z | xargs -0 sha256sum > SHA256SUMS.txt
+      - uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          files: release/**/*

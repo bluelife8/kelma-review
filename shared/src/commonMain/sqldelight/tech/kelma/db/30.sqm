@@ -1,0 +1,5 @@
+CREATE TABLE study_day_policy_state (
+    singleton_id INTEGER NOT NULL PRIMARY KEY CHECK (singleton_id = 1),
+    policy_json TEXT NOT NULL,
+    pulled_at_ms INTEGER NOT NULL
+);

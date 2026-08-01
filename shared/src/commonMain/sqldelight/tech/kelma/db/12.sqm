@@ -1,0 +1,25 @@
+CREATE TABLE local_scheduler_profile_versions (
+    local_version INTEGER NOT NULL PRIMARY KEY,
+    settings_json TEXT NOT NULL,
+    created_at_ms INTEGER NOT NULL
+);
+
+CREATE TABLE scheduler_profile_state (
+    singleton_id INTEGER NOT NULL PRIMARY KEY CHECK (singleton_id = 1),
+    active_local_version INTEGER,
+    cloud_profile_json TEXT,
+    projection_summary_json TEXT,
+    pulled_at_ms INTEGER
+);
+
+CREATE TABLE scheduler_profile_outbox (
+    singleton_id INTEGER NOT NULL PRIMARY KEY CHECK (singleton_id = 1),
+    local_profile_version INTEGER NOT NULL,
+    base_profile_version INTEGER NOT NULL,
+    idempotency_key TEXT NOT NULL,
+    candidate_json TEXT NOT NULL,
+    state TEXT NOT NULL,
+    acknowledged_profile_json TEXT,
+    conflict_json TEXT,
+    created_at_ms INTEGER NOT NULL
+);

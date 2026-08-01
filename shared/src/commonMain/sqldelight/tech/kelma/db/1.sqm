@@ -1,0 +1,27 @@
+CREATE TABLE local_card_schedules (
+    card_id INTEGER NOT NULL PRIMARY KEY,
+    phase TEXT NOT NULL,
+    due_at_ms INTEGER NOT NULL,
+    stability REAL NOT NULL,
+    difficulty REAL NOT NULL,
+    scheduled_days INTEGER NOT NULL,
+    repetitions INTEGER NOT NULL,
+    lapses INTEGER NOT NULL,
+    last_review_at_ms INTEGER NOT NULL
+);
+
+CREATE TABLE local_review_events (
+    event_id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    card_id INTEGER NOT NULL,
+    deck_name TEXT NOT NULL,
+    rating TEXT NOT NULL,
+    reviewed_at_ms INTEGER NOT NULL,
+    study_day INTEGER NOT NULL,
+    duration_ms INTEGER NOT NULL,
+    before_json TEXT,
+    after_json TEXT NOT NULL,
+    upload_state TEXT NOT NULL DEFAULT 'pending'
+);
+
+CREATE INDEX local_review_events_day_idx
+ON local_review_events(study_day);

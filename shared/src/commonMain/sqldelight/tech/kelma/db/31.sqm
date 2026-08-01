@@ -1,0 +1,2 @@
+ALTER TABLE local_review_events
+ADD COLUMN consumed_review_limit INTEGER NOT NULL DEFAULT -1;

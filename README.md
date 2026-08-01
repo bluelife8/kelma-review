@@ -1,0 +1,88 @@
+# Kelma Review
+
+Kelma Review is an MIT-licensed spaced-repetition app and Anki competitor for Windows, macOS, Linux, Android, and iOS, developed as a clean room implementation. One Kotlin Multiplatform repository contains the shared product, with platform-appropriate desktop and mobile interfaces. It is distinct from **Kelma Immersion**, which is Kelma's separate immersion-reading application.
+
+Clean room means Kelma Review is designed and implemented independently rather than derived from Anki's AGPL code. It supports Anki package interchange and works alongside the maintained Kelma Anki plugin, but it does not open Anki's live database, use AnkiWeb, or depend on Anki/rslib.
+
+## What Kelma Review modernizes
+
+### UI
+
+Kelma Review replaces legacy, dialog-heavy flashcard workflows with a coherent Compose interface. Desktop gets wide deck, editor, browser, options, statistics, and reviewer workspaces with keyboard and pointer affordances; Android and iOS get touch-first navigation, reachable review controls, safe-area-aware layouts, and readable card surfaces. Both presentations share behavior and visual semantics without forcing a stretched phone UI onto desktop or a compressed desktop UI onto phones.
+
+### Code
+
+The application uses a shared Kotlin Multiplatform domain instead of separate desktop and mobile products. Compose remains declarative, SQLDelight provides reviewed and tested migrations, immutable state drives projections, and blocking database, rendering, plugin, and indexing work stays off the UI thread. Transactional services own collection writes, deterministic tests cover scheduler and sync behavior, and narrow platform adapters provide native storage, security, media, browser, and lifecycle capabilities. A versioned Lua plugin system offers cross-platform extension points without exposing the collection database.
+
+### Sync
+
+KelmaSync exchanges durable content and immutable review events rather than treating one device's mutable due-state projection as universal truth. Offline writes enter transactional outboxes, retries are idempotent, conflicts require explicit resolution, and a confirming pull reconciles acknowledged work. Account data is isolated, credentials use each platform's secure vault, and large media collections use resumable disk-backed, bounded-concurrency transfer instead of retaining the whole collection in memory.
+
+### Scheduling
+
+Kelma Review runs the MIT `kelma-fsrs-v6` scheduler locally on every supported platform. Immutable review history is replayed into device-local schedule projections, so desktop and mobile can share facts without forcing one client's queue state onto every other client. FSRS optimization is explicit and reviewable, custom parameters are versioned, previewed answer intervals are non-mutating, and each completed rating transactionally stores both the review fact and its immediately usable local projection.
+
+### One open-source desktop and mobile app
+
+Anki's desktop, Android, and iOS experiences are maintained as separate applications with different codebases and licensing models. Kelma Review instead ships the desktop and mobile product from the same MIT-licensed repository. Shared scheduling, sync, persistence, import/export, rendering, and plugin contracts reduce platform drift, make mobile behavior auditable in the same open project as desktop, and let contributors fix a core behavior once while still designing the interface appropriately for each device.
+
+The current implementation is the selected foundation for Kelma Review while production hardening and plugin services continue.
+
+## Selected stack
+
+- Kotlin Multiplatform 2.4
+- Compose Multiplatform 1.11
+- Ktor client for KelmaSync v2
+- SQLDelight + SQLite persistence
+- Independent MIT `kelma-fsrs-v6` Kotlin Multiplatform scheduling and local optimization with JVM/Native oracle parity
+- Embedded standard Lua 5.4.8 on desktop, Android, and community iOS
+- Versioned `.kelmaplugin` packages, dependency-aware `require()`, capability confirmation, runtime limits, diagnostics, commands, events, renderers, and a cross-platform plugin manager
+- Optional desktop JAR plugins remain a later escape hatch after the portable API stabilizes
+
+## Run
+
+The generated project uses a Java 21 toolchain. Native plugin builds also use the host C compiler, Android NDK 28.2/CMake 3.22.1, and Xcode's iOS toolchain.
+
+```bash
+# Shared and desktop tests
+./gradlew :shared:jvmTest
+
+# Desktop development runner (stages an isolated runtime before launch)
+./scripts/run-desktop-dev.sh
+
+# Direct Gradle task (do not rebuild other tasks while this process is open)
+./gradlew :desktopApp:run
+
+# Android emulator (builds, boots/reuses an AVD, installs, and launches)
+./scripts/run-android-emulator.sh
+
+# Build the Android APK without launching an emulator
+./gradlew :androidApp:assembleDebug
+
+# iOS simulator, entirely from the CLI
+./scripts/run-ios-simulator.sh
+
+# Or open the Xcode project
+open iosApp/iosApp.xcodeproj
+```
+
+The app opens the locally persisted collection and offers KelmaSync sign-in from the deck toolbar when no account is stored. After sign-in it atomically stores content, immutable review history, notetypes, media, deck records, and tombstones. Card scheduling payloads and legacy daily counters may be retained as opaque interoperability data, but never control Kelma's queues. Ratings run through the local FSRS-6 library and transactionally persist both a derived schedule projection and an undoable review event. Pulled review events are matched by note GUID plus card ordinal and replayed through this device's scheduler; projections rebuild on pulls, restart, Undo, conflicts, and local option changes. KelmaSync uploads review events but never local due dates, FSRS memory state, queue counters, or study Options. Account FSRS-6 profiles use a separate versioned API with a durable idempotent outbox, explicit local/cloud Apply actions, and conflict resolution after acknowledgement plus confirming pull. Local optimization is opt-in and durable: Optimize creates a reviewable candidate with progress and loss metrics, while Apply, Apply & publish, and Discard remain separate explicit actions. This allows Anki and custom-scheduler clients to share history without imposing their schedules on Kelma. Content writes still use account-scoped SQLite outboxes, retry idempotently, reconcile only after acknowledgement and a confirming pull, and hold note/deck conflicts for explicit resolution. Large uploads use bounded 500-record content batches, deduplicated dependencies, concurrent media transfers, and aggregate live progress rather than one request or log row per note/card. The desktop deck list has a real Create Deck action, and desktop and mobile deck lists have per-deck KelmaSync badges that show `+n` locally added cards, `~n` locally changed cards, or a green check only when no card changes remain unsynced; empty and nested decks persist across restart and pulls and are available in Add. Every deck can be renamed or deleted immediately through a persistent overlay; the queued mutation then updates KelmaSync and the overlay is removed only after a confirming pull. Export defaults to versioned native Kelma JSON and also supports Anki-compatible `.apkg` deck packages, `.colpkg` collection packages, self-describing note text, and rendered-card text on desktop, Android, and iOS. Native JSON round-trips immutable history, reusable presets, empty decks, note types, and media; import also accepts legacy v1 Kelma deck JSON plus the Anki package and text formats. Package export can include immutable scheduling history, reusable deck presets, and media, with optional legacy Anki packaging. Package import handles legacy and current Zstandard/Protobuf containers, merges matching GUIDs, retains conflicting notes as copies, validates media, and rebuilds local FSRS projections from imported review history rather than trusting foreign due-state snapshots. A functional Stats destination derives recall, study time, streaks, daily history, and card maturity exclusively from immutable review events and local projections. Options also opens the plugin manager, which installs validated `.kelmaplugin` ZIP packages only after capability confirmation, resolves dependencies, runs bounded standard Lua 5.4 states, attributes failures and logs, and supports disable, reload, safe mode, renderer assignment, and uninstall without exposing the collection SQLite connection. Built-in and Lua commands share a searchable Cmd/Ctrl+K desktop command palette; mobile exposes plugin command actions from Plugin Manager without a global palette modal. Pure Lua HTML/CSS renderers can be assigned by deck or note type and safely fall back to the original network-isolated card. A plain-text Options tab between Browse and Stats provides device-local per-deck limits, learning/relearning steps, audio autoplay, answer-time caps, FSRS-6 retention/parameters, maximum intervals, sibling burying, shared option presets, new-card gather/sort order, new/review mixing, interday-learning placement, and review sorting. Remaining KelmaDesktop option groups are shown disabled until they have functional Kotlin implementations. Add works without signing in. It offers a note-type selector (Basic and Basic-and-reversed), an existing-or-new deck, a full formatting toolbar (bold, italic, underline, super/subscript, text color, highlight, remove formatting, lists, alignment, and math), Fields and Card-template views, per-field pin and preview toggles, tags, and a Help/Add/History/Close footer. New notes and their generated cards appear immediately in decks, counts, and review, and are stored separately from downloaded data so a refresh never overwrites them. Add and Browse/Edit can attach images or audio through native pickers; attachments enter a durable media outbox, write through an atomic platform cache, upload idempotently, and clear only after a confirming pull. A remote blob missing behind existing metadata is requeued from the durable local copy instead of advancing the sync cursor or losing media. Browse searches the whole collection with an Anki-style query language (plain terms plus `deck:`, `tag:`, `note:`, and `is:new|learning|review|suspended|due|local`), with a sortable table, filter sidebar, and card detail panel on desktop and filter chips with an in-place detail view on mobile. Every note can be edited directly in the card pane: Edit sits at the top and replaces the rendered preview with source-text fields for every ordered field and the tags. Edits to downloaded notes persist as local overlays and are reapplied after pulls; locally authored notes can also be deleted.
+
+The KelmaSync bearer token is stored outside SQLite in Android Keystore-encrypted storage, iOS Keychain, macOS Keychain, Windows PasswordVault, or Linux Secret Service; passwords are never stored. Migration 14 permanently removes legacy SQLite token bytes and may require a one-time sign-in after upgrading. Sync cursors, downloaded records, and media bytes remain in SQLite. Cards render downloaded notetype question/answer templates, including field selection, reverse templates, conditionals, cloze deletions, ordered images, and `[sound:...]` media. Review renders one complete question or answer document in a full-viewport browser surface: Android WebView, iOS WKWebView, or desktop JavaFX WebView/WebKit. Template CSS, inline JavaScript, embedded local images, native audio bridges, internal scrolling, and answer-anchor scrolling are preserved. Mobile surfaces bridge touch ratings, while the desktop browser is non-focusable so Compose review shortcuts remain authoritative. Audio playback and autoplay remain device-local.
+
+## Documents
+
+- [`docs/DESIGN.md`](docs/DESIGN.md)
+- [`docs/FSRS_DESIGN.md`](docs/FSRS_DESIGN.md)
+- [`docs/ANKI_INTERCHANGE.md`](docs/ANKI_INTERCHANGE.md)
+- [`docs/PLUGIN_SYSTEM.md`](docs/PLUGIN_SYSTEM.md)
+- [`docs/TESTING.md`](docs/TESTING.md)
+- [`docs/RELEASE.md`](docs/RELEASE.md)
+- [`docs/PROTOTYPE_PLAN.md`](docs/PROTOTYPE_PLAN.md)
+- [`docs/EVALUATION.md`](docs/EVALUATION.md)
+- [`docs/STYLE.md`](docs/STYLE.md)
+- [`docs/VISUAL_PARITY.md`](docs/VISUAL_PARITY.md)
+
+## License
+
+The application is MIT-licensed. See [`LICENSE`](LICENSE). Dependencies remain subject to their own permissive licenses and are summarized in [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md).

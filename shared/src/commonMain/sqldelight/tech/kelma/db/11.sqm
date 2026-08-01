@@ -1,0 +1,1 @@
+ALTER TABLE local_card_schedules ADD COLUMN step INTEGER;

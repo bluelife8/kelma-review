@@ -1,0 +1,5 @@
+ALTER TABLE local_review_events ADD COLUMN note_guid TEXT NOT NULL DEFAULT '';
+ALTER TABLE local_review_events ADD COLUMN card_ord INTEGER NOT NULL DEFAULT 0;
+
+CREATE INDEX local_review_events_note_card_idx
+ON local_review_events(note_guid, card_ord);

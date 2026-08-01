@@ -1,0 +1,15 @@
+CREATE TABLE local_card_resets (
+    note_guid TEXT NOT NULL,
+    card_ord INTEGER NOT NULL,
+    card_id INTEGER NOT NULL,
+    reset_through_review_id INTEGER NOT NULL,
+    client_modified_at_ms INTEGER NOT NULL,
+    upload_state TEXT NOT NULL DEFAULT 'pending',
+    PRIMARY KEY (note_guid, card_ord)
+);
+
+CREATE INDEX local_card_resets_upload_idx ON local_card_resets(upload_state);
+
+ALTER TABLE sync_cards ADD COLUMN schedule_reset_through_review_id INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE sync_cards ADD COLUMN schedule_reset_modified_at TEXT NOT NULL DEFAULT '';
+ALTER TABLE sync_cards ADD COLUMN schedule_reset_client_modified_at TEXT NOT NULL DEFAULT '';
