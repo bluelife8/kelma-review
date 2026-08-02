@@ -15,6 +15,57 @@ import kotlin.test.assertTrue
 
 class DesktopRichCardRendererAcceptanceTest {
     @Test
+    fun desktopBrowserPreservesSupplementaryUnicodeAndShapesArabicText() {
+        val panelClass = Class.forName("tech.kelma.app.DesktopBrowserCardPanel")
+        val constructor = panelClass.getDeclaredConstructor().apply { isAccessible = true }
+        val panel = AtomicReference<Any>()
+        SwingUtilities.invokeAndWait { panel.set(constructor.newInstance()) }
+        panelClass.getDeclaredMethod("awaitInitialShell").apply { isAccessible = true }.invoke(panel.get())
+        panelClass.getDeclaredMethod("prepareForMount").apply { isAccessible = true }.invoke(panel.get())
+        val update = panelClass.declaredMethods.single { it.name == "update" }.apply { isAccessible = true }
+        val loading = panelClass.getDeclaredField("loadingPanel").apply { isAccessible = true }
+            .get(panel.get()) as JPanel
+        val content =
+            "<span id='unicode-probe' style='display:inline-block;color:#6d28d9;background:#ede9fe'>" +
+                "🗣 Moroccan</span><br><span id='arabic-probe'>طالع</span>"
+
+        update.invoke(
+            panel.get(),
+            document(content),
+            script(content),
+            { _: String -> },
+            { _: Float -> },
+        )
+
+        assertTrue(
+            awaitScript(
+                panel.get(),
+                "document.getElementById('unicode-probe').textContent.codePointAt(0) === 0x1F5E3",
+            ),
+        )
+        assertTrue(
+            awaitScript(
+                panel.get(),
+                "document.querySelectorAll('#unicode-probe > [data-kelma-unicode-run]').length === 2",
+            ),
+        )
+        assertTrue(awaitLoadingHidden(loading))
+        assertTrue(
+            awaitScript(
+                panel.get(),
+                "document.getElementById('arabic-probe').textContent.codePointAt(0) === 0xFEC3",
+            ),
+        )
+        assertTrue(awaitScript(panel.get(), "getComputedStyle(document.body).display === 'grid'"))
+        assertTrue(
+            awaitScript(
+                panel.get(),
+                "document.getElementById('kelma-card-content').getBoundingClientRect().top < innerHeight * 0.4",
+            ),
+        )
+    }
+
+    @Test
     fun retainedBrowserIsolatesConsecutiveCardsAndAnswerSides() {
         val panelClass = Class.forName("tech.kelma.app.DesktopBrowserCardPanel")
         val constructor = panelClass.getDeclaredConstructor().apply { isAccessible = true }

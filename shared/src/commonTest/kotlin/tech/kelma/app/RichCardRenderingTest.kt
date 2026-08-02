@@ -56,16 +56,32 @@ class RichCardRenderingTest {
     }
 
     @Test
-    fun cardContentIsSafelyCenteredInTheDesktopViewport() {
+    fun shortDesktopCardsUseAnUpperWeightedLayoutAndBoundedImages() {
         val document = buildCardHtmlDocument(
-            CardHtmlFace("question", "", emptyList()),
+            CardHtmlFace("question<img src='photo.png'>", "", listOf(CardMedia("photo.png", byteArrayOf(1)))),
             desktop = true,
         )
 
+        assertContains(
+            document,
+            "display:grid;grid-template-rows:minmax(24px,1fr) auto minmax(24px,3fr)",
+        )
+        assertContains(document, "grid-row:2;margin-block:0")
+        assertContains(document, "max-width:min(62%,520px)!important;max-height:42vh!important")
+        assertContains(document, "<main id=\"kelma-card-content\">question")
+    }
+
+    @Test
+    fun mobileCardsRetainCenteredFlowAndViewportWidthImages() {
+        val document = buildCardHtmlDocument(
+            CardHtmlFace("question", "", emptyList()),
+            desktop = false,
+        )
+
         assertContains(document, "display:flex;flex-direction:column")
-        assertContains(document, "#kelma-card-content")
         assertContains(document, "margin-block:auto")
-        assertContains(document, "<main id=\"kelma-card-content\">question</main>")
+        assertContains(document, "img{max-width:100%!important;height:auto!important")
+        assertFalse(document.contains("max-height:42vh"))
     }
 
     @Test

@@ -70,6 +70,17 @@ internal fun buildCardHtmlDocument(
         }
     }
     val foreground = if (desktop) "#F4F1E7" else "#F4F1E7"
+    val bodyLayout = if (desktop) {
+        "display:grid;grid-template-rows:minmax(24px,1fr) auto minmax(24px,3fr)"
+    } else {
+        "display:flex;flex-direction:column"
+    }
+    val contentLayout = if (desktop) "grid-row:2;margin-block:0" else "margin-block:auto"
+    val imageBounds = if (desktop) {
+        "max-width:min(62%,520px)!important;max-height:42vh!important"
+    } else {
+        "max-width:100%!important"
+    }
     val answerScrollScript = if (scrollToAnswer) {
         "window.addEventListener('load',function(){requestAnimationFrame(function(){var a=document.getElementById('answer');if(a)a.scrollIntoView({block:'start',inline:'nearest'});});});"
     } else {
@@ -83,14 +94,15 @@ internal fun buildCardHtmlDocument(
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src data:; style-src 'unsafe-inline'; script-src 'unsafe-inline'">
 <style id="kelma-card-style">
 html,body{margin:0;padding:0;min-height:100%;background:transparent;color:$foreground;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;overflow-wrap:anywhere}
-body{box-sizing:border-box;min-height:100vh;font-size:${if (desktop) 20 else 22}px;line-height:1.5;text-align:center;display:flex;flex-direction:column}
-#kelma-card-content{box-sizing:border-box;width:100%;margin-block:auto}
+body{box-sizing:border-box;min-height:100vh;font-size:${if (desktop) 20 else 22}px;line-height:1.5;text-align:center;$bodyLayout}
+#kelma-card-content{box-sizing:border-box;width:100%;$contentLayout}
 pre{white-space:pre-wrap;text-align:left} blockquote{margin-left:1em;border-left:3px solid #C9AC6B;padding-left:.8em}
 a{color:#DCC48F} $RichCardAccessibilityCss
 ${face.css}
-html,body.card{background:transparent!important} body.card{color:$foreground!important}
+html,body.card{background:transparent!important} body.card{color:$foreground!important;$bodyLayout}
+#kelma-card-content{$contentLayout}
 html,body{max-width:100%!important;overflow-x:hidden!important;overflow-y:auto!important}
-img{max-width:100%!important;height:auto} table{max-width:100%;border-collapse:collapse}
+img{$imageBounds;height:auto!important;object-fit:contain!important} table{max-width:100%;border-collapse:collapse}
 .kelma-missing-media{display:inline-block!important;padding:6px 9px!important;border:1px solid #FF6B73!important;border-radius:6px!important;color:#FFB0B5!important;font:13px/1.3 sans-serif!important}
 a.kelma-audio{all:initial!important;box-sizing:border-box!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;width:38px!important;height:38px!important;margin:2px 4px!important;border-radius:50%!important;border:1px solid #DCC48F!important;background:#C9AC6B!important;vertical-align:middle!important;cursor:pointer!important}
 a.kelma-audio .kelma-audio-play{all:initial!important;display:block!important;box-sizing:border-box!important;width:0!important;height:0!important;margin-left:3px!important;border-top:7px solid transparent!important;border-bottom:7px solid transparent!important;border-left:11px solid #0F100A!important}

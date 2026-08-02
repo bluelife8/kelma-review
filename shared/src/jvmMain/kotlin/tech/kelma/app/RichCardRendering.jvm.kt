@@ -6,6 +6,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.awt.SwingPanel
 import androidx.compose.ui.graphics.Color as ComposeColor
 import java.awt.Color as AwtColor
+import java.util.Base64
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
@@ -123,6 +124,7 @@ private class DesktopBrowserCardPanel : JLayeredPane() {
                                 completedGeneration == generation.get() &&
                                 requested != null
                             ) {
+                                applyDesktopCardTextCompatibility(this)
                                 installBridge(this)
                                 browserHasCard = true
                                 scheduleBrowserReveal(completedGeneration)
@@ -143,7 +145,7 @@ private class DesktopBrowserCardPanel : JLayeredPane() {
                 style = "-fx-background-color: #0F100A;"
             }
             fxPanel.scene = Scene(root).apply { fill = DesktopSurfaceFx }
-            engine.loadContent(DesktopShellHtml, "text/html")
+            engine.loadUtf8Html(DesktopShellHtml)
         }
     }
 
@@ -208,7 +210,7 @@ private class DesktopBrowserCardPanel : JLayeredPane() {
         // A complete document load isolates every card side from scripts,
         // styles, and DOM mutations left by the previous card. The WebView is
         // retained, but its document is not.
-        engine.loadContent(html, "text/html")
+        engine.loadUtf8Html(html)
     }
 
     private fun resetBlockedNavigation(engine: WebEngine) {
@@ -217,7 +219,7 @@ private class DesktopBrowserCardPanel : JLayeredPane() {
         activeLoadGeneration = 0
         generation.incrementAndGet()
         SwingUtilities.invokeLater { showLoadingCard() }
-        Platform.runLater { engine.loadContent(DesktopShellHtml, "text/html") }
+        Platform.runLater { engine.loadUtf8Html(DesktopShellHtml) }
     }
 
     private fun showLoadingCard() {
@@ -263,6 +265,19 @@ internal class DesktopCardBridge(
     fun cardTap(fraction: Double) {
         SwingUtilities.invokeLater { callbacks.get().onCardTap(fraction.toFloat().coerceIn(0f, 1f)) }
     }
+}
+
+private fun WebEngine.loadUtf8Html(html: String) {
+    // JavaFX 21 loadContent() corrupts supplementary Unicode code points while
+    // crossing its native string boundary. Preserve the cheaper direct load
+    // for BMP-only cards; otherwise let WebKit decode the original UTF-8 bytes
+    // from an ASCII base64 data URL.
+    if (html.none { it.isSurrogate() }) {
+        loadContent(html, "text/html")
+        return
+    }
+    val encoded = Base64.getEncoder().encodeToString(html.encodeToByteArray())
+    load("data:text/html;charset=utf-8;base64,$encoded")
 }
 
 private fun isAllowedInternalLocation(location: String?): Boolean =
