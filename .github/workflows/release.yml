@@ -41,7 +41,10 @@ jobs:
         if: runner.os == 'Windows'
         uses: ilammy/msvc-dev-cmd@v1
       - name: Package Kelma Review
-        run: ./gradlew -PkelmaFsrsPath=kelma-fsrs-v6 :desktopApp:packageDistributionForCurrentOS
+        run: >-
+          ./gradlew -PkelmaFsrsPath=kelma-fsrs-v6
+          :desktopApp:createDistributable
+          :desktopApp:packageDistributionForCurrentOS
       - name: Verify packaged legal notices
         run: python scripts/check_packaged_legal_notices.py desktopApp/build/compose/binaries/main/app
       - name: Verify packaged Java runtime modules
