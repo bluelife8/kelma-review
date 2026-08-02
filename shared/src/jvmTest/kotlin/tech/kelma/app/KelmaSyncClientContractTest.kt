@@ -15,6 +15,7 @@ import java.util.concurrent.atomic.AtomicInteger
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withTimeout
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -124,6 +125,7 @@ class KelmaSyncClientContractTest {
         val mediaRequests = AtomicInteger()
         val activeRequests = AtomicInteger()
         val maximumActive = AtomicInteger()
+        val minimumConcurrencyReached = CompletableDeferred<Unit>()
         val engine = MockEngine { request ->
             when (request.url.encodedPath) {
                 "/v2/sync/manifest" -> respondJson(
@@ -139,7 +141,8 @@ class KelmaSyncClientContractTest {
                     mediaRequests.incrementAndGet()
                     val active = activeRequests.incrementAndGet()
                     maximumActive.updateAndGet { maxOf(it, active) }
-                    delay(5)
+                    if (active >= 32) minimumConcurrencyReached.complete(Unit)
+                    withTimeout(5_000) { minimumConcurrencyReached.await() }
                     activeRequests.decrementAndGet()
                     respond(
                         content = byteArrayOf(1),
