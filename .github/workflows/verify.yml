@@ -35,11 +35,16 @@ jobs:
           git diff --exit-code -- sbom.cdx.json
       - name: Verify desktop JVM arguments
         run: python3 scripts/check_desktop_jvm_args.py
-      - name: Test core, migrations, desktop, and Android
+      - name: Test JVM core and desktop UI
         run: >-
+          xvfb-run --auto-servernum
           ./gradlew
           -PkelmaFsrsPath=kelma-fsrs-v6
           :shared:jvmTest
+      - name: Verify migrations, Android, and desktop compilation
+        run: >-
+          ./gradlew
+          -PkelmaFsrsPath=kelma-fsrs-v6
           :shared:verifySqlDelightMigration
           :shared:testAndroidHostTest
           :shared:compileAndroidDeviceTest
