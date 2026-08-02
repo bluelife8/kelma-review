@@ -83,7 +83,7 @@ compose.desktop {
             includeAllModules = true
             modules("java.sql", "jdk.jsobject", "jdk.unsupported.desktop")
             packageName = "KelmaReview"
-            packageVersion = "1.0.14"
+            packageVersion = "1.0.15"
             macOS {
                 iconFile.set(project.file("src/main/resources/icon.icns"))
                 // packageName stays "KelmaReview" so the bundle path, the DMG
