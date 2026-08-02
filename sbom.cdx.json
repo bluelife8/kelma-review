@@ -5030,6 +5030,13 @@
   ],
   "metadata": {
     "component": {
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
       "name": "Kelma Review",
       "type": "application"
     }

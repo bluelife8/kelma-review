@@ -1,6 +1,6 @@
 # Kelma Review
 
-Kelma Review is an MIT-licensed spaced-repetition app and Anki competitor for Windows, macOS, Linux, Android, and iOS, developed as a clean room implementation. One Kotlin Multiplatform repository contains the shared product, with platform-appropriate desktop and mobile interfaces. It is distinct from **Kelma Immersion**, which is Kelma's separate immersion-reading application.
+Kelma Review is an Apache-2.0-licensed spaced-repetition app and Anki competitor for Windows, macOS, Linux, Android, and iOS, developed as a clean room implementation. One Kotlin Multiplatform repository contains the shared product, with platform-appropriate desktop and mobile interfaces. It is distinct from **Kelma Immersion**, which is Kelma's separate immersion-reading application.
 
 Clean room means Kelma Review is designed and implemented independently rather than derived from Anki's AGPL code. It supports Anki package interchange and works alongside the maintained Kelma Anki plugin, but it does not open Anki's live database, use AnkiWeb, or depend on Anki/rslib.
 
@@ -20,11 +20,11 @@ KelmaSync exchanges durable content and immutable review events rather than trea
 
 ### Scheduling
 
-Kelma Review runs the MIT `kelma-fsrs-v6` scheduler locally on every supported platform. Immutable review history is replayed into device-local schedule projections, so desktop and mobile can share facts without forcing one client's queue state onto every other client. FSRS optimization is explicit and reviewable, custom parameters are versioned, previewed answer intervals are non-mutating, and each completed rating transactionally stores both the review fact and its immediately usable local projection.
+Kelma Review runs the Apache-2.0 `kelma-fsrs-v6` scheduler locally on every supported platform. Immutable review history is replayed into device-local schedule projections, so desktop and mobile can share facts without forcing one client's queue state onto every other client. FSRS optimization is explicit and reviewable, custom parameters are versioned, previewed answer intervals are non-mutating, and each completed rating transactionally stores both the review fact and its immediately usable local projection.
 
 ### One open-source desktop and mobile app
 
-Anki's desktop, Android, and iOS experiences are maintained as separate applications with different codebases and licensing models. Kelma Review instead ships the desktop and mobile product from the same MIT-licensed repository. Shared scheduling, sync, persistence, import/export, rendering, and plugin contracts reduce platform drift, make mobile behavior auditable in the same open project as desktop, and let contributors fix a core behavior once while still designing the interface appropriately for each device.
+Anki's desktop, Android, and iOS experiences are maintained as separate applications with different codebases and licensing models. Kelma Review instead ships the desktop and mobile product from the same Apache-2.0-licensed repository. Shared scheduling, sync, persistence, import/export, rendering, and plugin contracts reduce platform drift, make mobile behavior auditable in the same open project as desktop, and let contributors fix a core behavior once while still designing the interface appropriately for each device.
 
 The current implementation is the selected foundation for Kelma Review while production hardening and plugin services continue.
 
@@ -34,7 +34,7 @@ The current implementation is the selected foundation for Kelma Review while pro
 - Compose Multiplatform 1.11
 - Ktor client for KelmaSync v2
 - SQLDelight + SQLite persistence
-- Independent MIT `kelma-fsrs-v6` Kotlin Multiplatform scheduling and local optimization with JVM/Native oracle parity
+- Independent Apache-2.0 `kelma-fsrs-v6` Kotlin Multiplatform scheduling and local optimization with JVM/Native oracle parity
 - Embedded standard Lua 5.4.8 on desktop, Android, and community iOS
 - Versioned `.kelmaplugin` packages, dependency-aware `require()`, capability confirmation, runtime limits, diagnostics, commands, events, renderers, and a cross-platform plugin manager
 - Optional desktop JAR plugins remain a later escape hatch after the portable API stabilizes
@@ -85,4 +85,4 @@ The KelmaSync bearer token is stored outside SQLite in Android Keystore-encrypte
 
 ## License
 
-The application is MIT-licensed. See [`LICENSE`](LICENSE). Dependencies remain subject to their own permissive licenses and are summarized in [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md).
+The application is licensed under Apache License 2.0. See [`LICENSE`](LICENSE) and [`NOTICE`](NOTICE). Dependencies remain subject to their own permissive licenses and are summarized in [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md).

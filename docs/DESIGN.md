@@ -10,7 +10,7 @@ Candidate architecture for prototyping. No production commitment has been made.
 ## Goals
 
 - One repository and mostly shared implementation for Windows, macOS, Linux, Android, and iOS.
-- Clean room MIT application with no Anki/rslib code.
+- Clean room Apache-2.0 application with no Anki/rslib code.
 - Kelma-native collection schema and KelmaSync v2.
 - FSRS as the built-in scheduler.
 - Powerful third-party Lua plugins.
@@ -115,7 +115,7 @@ Use SQLDelight with hand-reviewed migrations. The schema persists KelmaSync cred
 
 ## Scheduling
 
-The current prototype uses the separate MIT `kelma-fsrs-v6` Kotlin Multiplatform library with the same 705-case Python parity contract as KelmaSync. Customized 19-parameter FSRS-5 profiles continue through a labeled legacy engine and are never relabeled as FSRS-6, as specified in [FSRS_DESIGN.md](FSRS_DESIGN.md). New, learning, review, and relearning queues continue to use device-local absolute due times cached in SQLite. Pulled reviews are matched by note GUID plus template ordinal, ordered by review timestamp and immutable ID, and replayed with the active local profile; origin intervals, factors, due dates, and memory state remain ignored. A synchronized study-day counter matching the active policy supplies remote New/Review quota consumption when present; immutable review kinds and local pre-review phases provide the deterministic fallback. Optimization is an explicit local Optimize/Apply workflow and never runs automatically.
+The current prototype uses the separate Apache-2.0 `kelma-fsrs-v6` Kotlin Multiplatform library with the same 705-case Python parity contract as KelmaSync. Customized 19-parameter FSRS-5 profiles continue through a labeled legacy engine and are never relabeled as FSRS-6, as specified in [FSRS_DESIGN.md](FSRS_DESIGN.md). New, learning, review, and relearning queues continue to use device-local absolute due times cached in SQLite. Pulled reviews are matched by note GUID plus template ordinal, ordered by review timestamp and immutable ID, and replayed with the active local profile; origin intervals, factors, due dates, and memory state remain ignored. A synchronized study-day counter matching the active policy supplies remote New/Review quota consumption when present; immutable review kinds and local pre-review phases provide the deterministic fallback. Optimization is an explicit local Optimize/Apply workflow and never runs automatically.
 
 An active reviewer owns an immutable dynamic session rather than a fixed card list. It keeps the current card, the daily-limit-bounded regular queue, and an absolute-time Learning/Relearning queue as separate values. Committing a rating replaces any timed entry for that card by ID. Next-card selection chooses due timed learning before regular cards, then allows learn-ahead only after the regular queue is empty; it never interrupts a displayed card. Steps crossing the account's synchronized, DST-aware study-day boundary remain in the persisted projection for a later session. Deck projection refreshes may update queued card content and introduce newly visible intraday learning, but never append ordinary cards or own repeats created by the active session.
 
@@ -168,13 +168,13 @@ Community:        tech.kelma.app.community
 
 ## Licensing controls
 
-- MIT project and plugin SDK.
+- Apache-2.0 project and plugin SDK.
 - SPDX headers/metadata.
 - Dependency lockfiles.
 - Automated license allowlist in CI.
 - Generated third-party notices.
 - No implementation copied from AGPL Kelma/ForkiCards repositories.
-- Protocol schemas intended for both MIT clients and the AGPL Anki bridge must live in a separately permissive module.
+- Protocol schemas intended for both Apache-2.0 clients and the AGPL Anki bridge must live in a separately permissive module.
 
 ## Main risks
 

@@ -15,7 +15,7 @@ Android/JVM desktop -> JNI -> Lua C API
 iOS                 -> Kotlin/Native cinterop -> Lua C API
 ```
 
-The same Lua plugin source runs on desktop, Android, and the iOS community build. Kelma vendors unmodified standard Lua 5.4.8 under its MIT license and wraps it with a small MIT C host.
+The same Lua plugin source runs on desktop, Android, and the iOS community build. Kelma vendors unmodified standard Lua 5.4.8 under its MIT license and wraps it with a small Apache-2.0 C host.
 
 ## Package layout
 

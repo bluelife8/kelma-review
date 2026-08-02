@@ -8,7 +8,7 @@ The corresponding server contract is in
 
 ## Goals
 
-- Use the independent MIT `kelma-fsrs-v6` Kotlin Multiplatform library instead
+- Use the independent Apache-2.0 `kelma-fsrs-v6` Kotlin Multiplatform library instead
   of application-owned scheduling equations.
 - Keep review history authoritative and scheduling projections device-local.
 - Match the pinned Python reference and the KelmaSync Go compatibility
@@ -35,7 +35,7 @@ The corresponding server contract is in
 
 ## Library boundary
 
-`kelma-fsrs-v6` is a separate MIT Kotlin Multiplatform library. The application
+`kelma-fsrs-v6` is a separate Apache-2.0 Kotlin Multiplatform library. The application
 uses its public models rather than retaining FSRS equations in application UI
 or persistence code.
 
@@ -350,7 +350,7 @@ Optimizer failures and sync logs exclude card contents and credentials.
 
 ## Licensing and provenance
 
-The application and `kelma-fsrs-v6` are MIT licensed. The library documents the
+The application and `kelma-fsrs-v6` are licensed under Apache License 2.0. The library documents the
 formulas/reference behavior used, pinned oracle versions, fixture provenance,
 and all copied or adapted permissive sources. It contains no Anki/rslib or AGPL
 implementation code.

@@ -78,5 +78,5 @@ These rules apply to hand-written production and test code. Generated files, ven
 
 - Add dependencies only with a clear owner and cross-platform/license review.
 - Pin versions and commit lock/checksum metadata where supported.
-- Allow only permissive licenses approved for the MIT application; generate third-party notices.
+- Allow only permissive licenses approved for the Apache-2.0 application; generate third-party notices.
 - Do not copy code from the AGPL ForkiCards or Anki repositories.

@@ -19,7 +19,7 @@ The JVM suite is the fastest application gate. The separate `kelma-fsrs-v6` buil
 
 ## FSRS validation
 
-New/default scheduling is pinned to **FSRS-6** through the independent MIT `kelma-fsrs-v6` library, with fuzzing disabled, desired retention `0.9`, maximum interval `36500`, and 21 standard parameters. Customized 19-parameter FSRS-5 profiles remain labeled legacy and continue using the preserved compatibility engine.
+New/default scheduling is pinned to **FSRS-6** through the independent Apache-2.0 `kelma-fsrs-v6` library, with fuzzing disabled, desired retention `0.9`, maximum interval `36500`, and 21 standard parameters. Customized 19-parameter FSRS-5 profiles remain labeled legacy and continue using the preserved compatibility engine.
 
 Validation has these layers:
 

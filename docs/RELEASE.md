@@ -24,6 +24,12 @@ verifies the pinned Lua 5.4.8 source inventory against
 `native/lua/SHA256SUMS`; changing vendored source requires an explicit checksum
 and upstream-provenance review.
 
+Release packages embed exact copies of the Apache license, Kelma notice,
+third-party notices, and vendored Lua license from
+`shared/src/commonMain/composeResources/files/legal/`. Keep those copies in
+sync and verify each packaged artifact with
+`scripts/check_packaged_legal_notices.py`.
+
 ## Verification
 
 ```bash

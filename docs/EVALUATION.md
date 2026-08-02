@@ -42,7 +42,7 @@ This selection does not erase the remaining technical risks: production migratio
 
 - [x] SQLDelight credential and complete-download transaction
 - [x] Transactional local review state, due queues, and Undo
-- [x] Independent MIT `kelma-fsrs-v6` Kotlin Multiplatform scheduler
+- [x] Independent Apache-2.0 `kelma-fsrs-v6` Kotlin Multiplatform scheduler
 - [x] Shared 705-case Python FSRS-6 parity fixture on JVM and Native
 - [x] Preserved MIT `ts-fsrs` coverage for labeled custom FSRS-5 profiles
 - [x] Standard Lua 5.4 bridge on desktop, Android, and community iOS

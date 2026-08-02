@@ -79,7 +79,13 @@ def main() -> int:
         "bomFormat": "CycloneDX",
         "specVersion": "1.5",
         "version": 1,
-        "metadata": {"component": {"type": "application", "name": "Kelma Review"}},
+        "metadata": {
+            "component": {
+                "type": "application",
+                "name": "Kelma Review",
+                "licenses": [{"license": {"id": "Apache-2.0"}}],
+            },
+        },
         "components": [components[key] for key in sorted(components)],
     }
     print(json.dumps(document, indent=2, sort_keys=True) + "\n", end="")

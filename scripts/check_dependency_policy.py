@@ -53,6 +53,7 @@ def main() -> int:
             failures.append(f"{alias}: forbidden dependency coordinate {module}")
     for required in (
         "LICENSE",
+        "NOTICE",
         "THIRD_PARTY_NOTICES.md",
         "sbom.cdx.json",
         "native/lua/LICENSE",
@@ -61,6 +62,18 @@ def main() -> int:
     ):
         if not (ROOT / required).is_file():
             failures.append(f"missing {required}")
+    bundled_legal_root = ROOT / "shared/src/commonMain/composeResources/files/legal"
+    bundled_notices = {
+        bundled_legal_root / "LICENSE.txt": ROOT / "LICENSE",
+        bundled_legal_root / "NOTICE.txt": ROOT / "NOTICE",
+        bundled_legal_root / "THIRD_PARTY_NOTICES.md": ROOT / "THIRD_PARTY_NOTICES.md",
+        bundled_legal_root / "LUA_LICENSE.txt": ROOT / "native/lua/LICENSE",
+    }
+    for bundled, source in bundled_notices.items():
+        if not bundled.is_file():
+            failures.append(f"missing bundled legal notice {bundled.relative_to(ROOT)}")
+        elif bundled.read_bytes() != source.read_bytes():
+            failures.append(f"bundled legal notice differs from {source.relative_to(ROOT)}")
     lua_root = ROOT / "native/lua"
     checksum_file = lua_root / "SHA256SUMS"
     if checksum_file.is_file():
@@ -82,7 +95,14 @@ def main() -> int:
             failures.append("vendored Lua source inventory does not match SHA256SUMS")
     sbom_path = ROOT / "sbom.cdx.json"
     if sbom_path.is_file():
-        sbom_components = json.loads(sbom_path.read_text()).get("components", [])
+        sbom = json.loads(sbom_path.read_text())
+        root_licenses = {
+            entry.get("license", {}).get("id")
+            for entry in sbom.get("metadata", {}).get("component", {}).get("licenses", [])
+        }
+        if root_licenses != {"Apache-2.0"}:
+            failures.append("SBOM root component must declare Apache-2.0")
+        sbom_components = sbom.get("components", [])
         for component in sbom_components:
             identities = {
                 entry.get("license", {}).get("id")
