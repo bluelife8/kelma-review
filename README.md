@@ -1,5 +1,30 @@
 # Kelma Review
 
+<p align="center">
+  <a href="https://kelma.tech/downloads">
+    <img src="desktopApp/src/main/resources/icon.png" width="160" alt="Kelma Review logo">
+  </a>
+</p>
+
+<p align="center">
+  A progressive, community-driven spaced-repetition app for desktop and mobile.
+</p>
+
+<p align="center">
+  <a href="https://github.com/bluelife8/kelma-review/releases"><img alt="Latest release" src="https://img.shields.io/github/v/release/bluelife8/kelma-review?style=flat-square"></a>
+  <a href="https://github.com/bluelife8/kelma-review/actions/workflows/release.yml"><img alt="Release builds" src="https://img.shields.io/github/actions/workflow/status/bluelife8/kelma-review/release.yml?style=flat-square&label=release"></a>
+  <a href="LICENSE"><img alt="Apache License 2.0" src="https://img.shields.io/badge/license-Apache--2.0-blue?style=flat-square"></a>
+  <img alt="Kotlin Multiplatform" src="https://img.shields.io/badge/Kotlin-Multiplatform-7F52FF?style=flat-square&logo=kotlin&logoColor=white">
+</p>
+
+<p align="center">
+  <a href="https://kelma.tech/downloads"><strong>Download Kelma Review</strong></a>
+  ·
+  <a href="https://github.com/bluelife8/kelma-review/releases">Release notes</a>
+  ·
+  <a href="https://github.com/bluelife8/kelma-review/issues">Contribute</a>
+</p>
+
 [Kelma Review](https://github.com/bluelife8/kelma-review) is a progressive, open source, community-driven spaced repitition flashcard application for Linux, Android, macOS, iOS, and Windows. It was developed to compete with [Anki](https://apps.ankiweb.net/) and to bring a serious, permissively licensed application to the ecosystem. Kelma Review is licensed under [Apache 2.0](https://www.apache.org/licenses/LICENSE-2.0) and can be used in and with proprietary software.
 
 Kelma Review is sponsored by [Kelma Tech LLC](https://kelma.tech/), which also develops [Kelma Immersion](https://kelma.tech/), a science-based language learning platform that was originally intended to be integrated with Anki. Kelma Review development depends on volunteer work and funds from Kelma Immersion profits. Unlike Anki, Kelma Review is completely free to use on any platform. It was developed to be a single free and open source application with opensource licensing that is compatible with [Google Play](https://play.google.com/store) and the [Apple App Store](https://www.apple.com/app-store/).
