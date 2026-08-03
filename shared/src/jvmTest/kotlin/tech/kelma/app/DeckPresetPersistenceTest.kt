@@ -33,6 +33,10 @@ class DeckPresetPersistenceTest {
         content = store.saveDeckOptions("B", changed, 6L)
         assertEquals(changed.validated(), content.deckOptions.getValue("A"))
         assertEquals(changed.validated(), content.deckOptions.getValue("B"))
+        val syncedLimits = store.prepareSyncUpload().decks.associate { upload ->
+            upload.sourceName to upload.targetBody?.config?.syncedDailyLimits()?.newCardsPerDay
+        }
+        assertEquals(mapOf("A" to 70, "B" to 70), syncedLimits)
 
         store = PersistentCollectionStore(database)
         content = store.loadLocalContent()

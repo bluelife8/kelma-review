@@ -1,5 +1,6 @@
 package tech.kelma.app
 
+import app.cash.sqldelight.db.QueryResult
 import app.cash.sqldelight.driver.jdbc.sqlite.JdbcSqliteDriver
 import java.nio.file.Files
 import java.sql.DriverManager
@@ -171,6 +172,13 @@ class PersistentCollectionStoreTest {
         )
         driver.execute(
             null,
+            """CREATE TABLE sync_decks (
+                name TEXT, config_json TEXT, checksum TEXT, modified_at TEXT, client_modified_at TEXT
+            )""".trimIndent(),
+            0,
+        )
+        driver.execute(
+            null,
             """CREATE TABLE local_card_schedules (
                 card_id INTEGER PRIMARY KEY, phase TEXT NOT NULL, due_at_ms INTEGER NOT NULL,
                 stability REAL NOT NULL, difficulty REAL NOT NULL, scheduled_days INTEGER NOT NULL,
@@ -243,6 +251,35 @@ class PersistentCollectionStoreTest {
         )
 
         assertEquals(1, queries.selectStudyDayPolicyState().executeAsList().size)
+        driver.close()
+    }
+
+    @Test
+    fun migrationThirtyTwoAddsCreationDatesAndBackfillsPlausibleAnkiIds() {
+        val driver = JdbcSqliteDriver(JdbcSqliteDriver.IN_MEMORY)
+        driver.execute(null, "CREATE TABLE sync_cards (card_id INTEGER NOT NULL PRIMARY KEY)", 0)
+        driver.execute(null, "INSERT INTO sync_cards(card_id) VALUES (1704067200000), (-1)", 0)
+        driver.execute(null, "CREATE TABLE browse_card_index (card_id INTEGER NOT NULL PRIMARY KEY)", 0)
+        driver.execute(
+            null,
+            "CREATE TABLE browse_index_state (singleton_id INTEGER PRIMARY KEY, dirty INTEGER NOT NULL)",
+            0,
+        )
+        driver.execute(null, "INSERT INTO browse_index_state VALUES (1, 0)", 0)
+
+        KelmaDatabase.Schema.migrate(driver, 32, 33)
+
+        val createdAt = driver.executeQuery(
+            null,
+            "SELECT created_at FROM sync_cards ORDER BY card_id DESC",
+            { cursor ->
+                QueryResult.Value(buildList { while (cursor.next().value) add(cursor.getString(0).orEmpty()) })
+            },
+            0,
+        ).value
+        assertTrue(createdAt.first().startsWith("2024-01-01T00:00:00"))
+        assertEquals("", createdAt.last())
+        assertEquals(1L, KelmaDatabase(driver).kelmaQueries.selectBrowseIndexDirty().executeAsOne())
         driver.close()
     }
 
@@ -672,6 +709,10 @@ class PersistentCollectionStoreTest {
         assertNotNull(firstPlan.notes.single().deck)
         assertNotNull(firstPlan.notes.single().notetype)
         assertEquals(listOf(added.cardId), firstPlan.notes.single().cards.map { it.first })
+        assertEquals(
+            epochMillisToRfc3339(11_000L),
+            firstPlan.notes.single().cards.single().second.createdAt,
+        )
         assertEquals(firstPlan, PersistentCollectionStore(database).prepareSyncUpload())
 
         store.applySyncPushResult(
@@ -693,6 +734,7 @@ class PersistentCollectionStoreTest {
                 "upload-note",
                 "Authored",
                 scheduling = newCardScheduling(),
+                createdAt = epochMillisToRfc3339(11_000L),
             )),
             reviews = mapOf(
                 10_000L to SyncReview(10_000L, 7, "server-note", deckName = "Server", ease = 3),
@@ -704,6 +746,7 @@ class PersistentCollectionStoreTest {
 
         assertTrue(store.prepareSyncUpload().isEmpty)
         assertTrue(store.loadLocalContent().cards.isEmpty())
+        assertEquals(11_000L, store.load(12_000L).collection.cards.getValue(added.cardId).createdAtMillis(12_000L))
         assertTrue(store.loadLocalContent().pendingSyncByDeck.isEmpty())
         assertTrue(store.loadLocalReviews(12_000L).pendingSyncByDeck.isEmpty())
         assertNotNull(store.loadLocalReviews(12_000L).schedules[7L])
@@ -799,30 +842,32 @@ class PersistentCollectionStoreTest {
     }
 
     @Test
-    fun deckOptionsRemainLocalAndIgnoreLegacySyncedCopies() {
+    fun dailyDeckLimitsSyncWhileOtherDeckOptionsStayLocal() {
         val driver = JdbcSqliteDriver(JdbcSqliteDriver.IN_MEMORY)
         KelmaDatabase.Schema.create(driver)
         val database = KelmaDatabase(driver)
         val store = PersistentCollectionStore(database)
-        val serverOptions = DeckOptions(newCardsPerDay = 6, desiredRetention = 0.92)
-        store.replaceCollection(
-            SyncedCollection(
-                deckRecords = mapOf(
-                    "Deck" to SyncDeck(
-                        "Deck",
-                        config = buildJsonObject {
-                            put("kelma_options", Json.encodeToJsonElement(serverOptions))
-                        },
-                        checksum = "server-deck-checksum",
-                    ),
+        val initialServer = SyncedCollection(
+            deckRecords = mapOf(
+                "Deck" to SyncDeck(
+                    "Deck",
+                    config = buildJsonObject {
+                        put("newLimit", 6)
+                        put("reviewLimit", 60)
+                        put("opaque", "preserved")
+                        put("kelma_options", Json.encodeToJsonElement(DeckOptions(desiredRetention = 0.92)))
+                    },
+                    checksum = "server-deck-checksum",
                 ),
-                deckNames = setOf("Deck"),
             ),
+            deckNames = setOf("Deck"),
         )
-        assertNull(store.loadLocalContent().deckOptions["Deck"])
+        store.replaceCollection(initialServer)
 
-        val localOptions = serverOptions.copy(
+        val localOptions = DeckOptions(
             newCardsPerDay = 12,
+            maximumReviewsPerDay = 90,
+            desiredRetention = 0.93,
             newCardGatherOrder = NewCardGatherOrder.RandomCards,
             newCardSortOrder = NewCardSortOrder.RandomCard,
             newReviewMixOrder = QueueMixOrder.BeforeReviews,
@@ -831,28 +876,46 @@ class PersistentCollectionStoreTest {
         )
         store.saveDeckOptions("Deck", localOptions, nowMillis = 1_000L)
         assertEquals(localOptions.validated(), store.loadLocalContent().deckOptions["Deck"])
-        assertTrue(store.prepareSyncUpload().isEmpty)
-        store.replaceCollection(
-            SyncedCollection(
-                deckRecords = mapOf("Deck" to SyncDeck("Deck", checksum = "new-server-checksum")),
-                deckNames = setOf("Deck"),
+
+        val upload = store.prepareSyncUpload().decks.single()
+        val uploadedConfig = upload.targetBody?.config ?: error("Missing deck config")
+        assertEquals(12, uploadedConfig.syncedDailyLimits().newCardsPerDay)
+        assertEquals(90, uploadedConfig.syncedDailyLimits().maximumReviewsPerDay)
+        assertEquals("preserved", uploadedConfig["opaque"]?.toString()?.trim('"'))
+        assertTrue("kelma_options" !in uploadedConfig)
+
+        store.applySyncPushResult(SyncPushResult(uploadedDeckSources = setOf("Deck")))
+        val confirmedServer = initialServer.copy(
+            deckRecords = mapOf(
+                "Deck" to SyncDeck("Deck", config = uploadedConfig, checksum = "confirmed-checksum"),
             ),
         )
-        assertEquals(localOptions.validated(), PersistentCollectionStore(database)
-            .loadLocalContent().deckOptions["Deck"])
+        store.replaceCollection(confirmedServer)
         assertTrue(store.prepareSyncUpload().isEmpty)
 
-        database.kelmaQueries.upsertLocalDeckSync(
-            "Deck", "upsert", null, "legacy-options-checksum", 500L,
+        val secondDriver = JdbcSqliteDriver(JdbcSqliteDriver.IN_MEMORY)
+        KelmaDatabase.Schema.create(secondDriver)
+        val secondDatabase = KelmaDatabase(secondDriver)
+        val secondStore = PersistentCollectionStore(secondDatabase)
+        secondStore.replaceCollection(confirmedServer)
+        val secondDeviceOptions = localOptions.copy(
+            newCardsPerDay = 2,
+            maximumReviewsPerDay = 3,
+            desiredRetention = 0.97,
+            autoplayAudio = false,
+        ).validated()
+        secondDatabase.kelmaQueries.upsertLocalDeckOptions(
+            "Deck",
+            Json.encodeToJsonElement(secondDeviceOptions).toString(),
+            2_000L,
         )
-        val legacyUpload = store.prepareSyncUpload().decks.single()
-        assertTrue("kelma_options" !in legacyUpload.targetBody!!.config)
-        database.kelmaQueries.deleteLocalDeckSync("Deck")
 
-        store.createLocalDeck("Local")
-        store.saveDeckOptions("Local", localOptions)
-        val localDeckUpload = store.prepareSyncUpload().decks.single()
-        assertTrue("kelma_options" !in localDeckUpload.targetBody!!.config)
+        val merged = secondStore.loadLocalContent().deckOptions.getValue("Deck")
+        assertEquals(12, merged.newCardsPerDay)
+        assertEquals(90, merged.maximumReviewsPerDay)
+        assertEquals(0.97, merged.desiredRetention)
+        assertFalse(merged.autoplayAudio)
+        secondDriver.close()
         driver.close()
     }
 
@@ -1038,7 +1101,11 @@ class PersistentCollectionStoreTest {
             reviewedAt + 25 * 60_000L,
             store.loadLocalReviews(reviewedAt).schedules.getValue(77).dueAtMillis,
         )
-        assertTrue(store.prepareSyncUpload().isEmpty)
+        val optionsUpload = store.prepareSyncUpload()
+        assertTrue(optionsUpload.reviews.isEmpty())
+        assertEquals(20, optionsUpload.decks.single().targetBody?.config?.syncedDailyLimits()?.newCardsPerDay)
+        assertEquals(200, optionsUpload.decks.single().targetBody?.config
+            ?.syncedDailyLimits()?.maximumReviewsPerDay)
         driver.close()
     }
 

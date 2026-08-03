@@ -176,9 +176,19 @@ internal class CollectionImportPersistence(
                 require(byId[cardId]?.let { it.noteGuid == guid && it.ord == source.ordinal } != false) {
                     "An imported card identity collided with an existing local card"
                 }
+                val createdAtMillis = source.createdAtMillis
+                    ?: nowMillis.takeIf { source.createdOnImport }
+                    ?: inferredAnkiCardCreatedAtMillis(source.sourceId, nowMillis)
+                    ?: 0L
                 deckHierarchyNames(deck).forEach { queries.insertLocalDeck(it, nowMillis) }
-                queries.insertLocalCard(cardId, guid, deck, source.ordinal.toLong(), nowMillis)
-                SyncCard(cardId, guid, deck, source.ordinal).also {
+                queries.insertLocalCard(cardId, guid, deck, source.ordinal.toLong(), createdAtMillis)
+                SyncCard(
+                    cardId,
+                    guid,
+                    deck,
+                    source.ordinal,
+                    createdAt = createdAtMillis.takeIf { it > 0L }?.let(::epochMillisToRfc3339),
+                ).also {
                     byIdentity[identity] = it
                     byId[cardId] = it
                     added++

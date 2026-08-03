@@ -69,6 +69,7 @@ class AnkiInterchangeRoundTripTest {
             val imported = service.previewImport(InterchangeDocument(exported.filename, exported.bytes))
             assertEquals(listOf("<img src=\"picture.png\">front", "back"), imported.notes.single().fields)
             assertEquals("Languages::Arabic", imported.cards.single().deckName)
+            assertEquals(1_577_934_245_000L, imported.cards.single().createdAtMillis)
             assertEquals(Rating.Good, imported.reviews.single().rating)
             assertTrue(imported.notetypes.single().definitionJson.contains("{{Front}}"))
             assertTrue(imported.media.single().bytes.contentEquals(mediaBytes))
@@ -402,7 +403,14 @@ class AnkiInterchangeRoundTripTest {
 
     private fun sampleCollection(): SyncedCollection {
         val note = SyncNote("note-1", NotetypeCatalog.BasicId, listOf("front", "back"), listOf("tag"))
-        val card = SyncCard(100, note.guid, "Languages::Arabic", 0, JsonObject(emptyMap()))
+        val card = SyncCard(
+            100,
+            note.guid,
+            "Languages::Arabic",
+            0,
+            JsonObject(emptyMap()),
+            createdAt = "2020-01-02T03:04:05.000Z",
+        )
         return SyncedCollection(
             notes = mapOf(note.guid to note),
             cards = mapOf(card.cardId to card),

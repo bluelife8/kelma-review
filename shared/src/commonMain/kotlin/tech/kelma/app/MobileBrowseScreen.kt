@@ -43,6 +43,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.TextFieldValue
@@ -160,7 +161,7 @@ private fun MobileBrowseSearch(state: BrowseUiState, actions: BrowseActions) {
         value = state.query,
         onValueChange = actions.onQueryChange,
         modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp).testTag("browse-search"),
-        placeholder = { Text("Search cards") },
+        placeholder = { Text("Search or created:YYYY-MM-DD") },
         singleLine = true,
         leadingIcon = { Icon(Icons.Rounded.Search, contentDescription = null, tint = KelmaColors.TextMuted) },
         trailingIcon = {
@@ -176,6 +177,10 @@ private fun MobileBrowseSearch(state: BrowseUiState, actions: BrowseActions) {
 
 @Composable
 private fun MobileBrowseChips(state: BrowseUiState, actions: BrowseActions) {
+    var creationDateDialogOpen by remember { mutableStateOf(false) }
+    val selectedCreationDate = selectedBrowseCreationDate(state.query.text)
+    val creationDate = selectedCreationDate ?: formatDueDate(state.nowMillis)
+    val creationFilterActive = parseBrowseQuery(state.query.text).any { it is BrowseTerm.Created }
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -193,6 +198,9 @@ private fun MobileBrowseChips(state: BrowseUiState, actions: BrowseActions) {
                 if (term.isEmpty()) actions.onQueryChange(TextFieldValue()) else actions.onApplyTerm(term)
             }
         }
+        FilterChip("Created · $creationDate", creationFilterActive) {
+            creationDateDialogOpen = true
+        }
         state.decks.take(6).forEach { (deck, _) ->
             val term = browseQualifier("deck", deck)
             FilterChip(deck, queryHasTerm(state.query.text, term)) {
@@ -205,6 +213,17 @@ private fun MobileBrowseChips(state: BrowseUiState, actions: BrowseActions) {
                 actions.onApplyTerm(term)
             }
         }
+    }
+    if (creationDateDialogOpen) {
+        CreationDateFilterDialog(
+            initialDate = creationDate,
+            onDismiss = { creationDateDialogOpen = false },
+            onConfirm = { date ->
+                creationDateDialogOpen = false
+                val updated = setQueryTerm(state.query.text, "created:$date")
+                actions.onQueryChange(TextFieldValue(updated, TextRange(updated.length)))
+            },
+        )
     }
 }
 
@@ -379,6 +398,7 @@ private fun MobileBrowseDetail(
             MobileDetailLine("Deck", row.deck)
             MobileDetailLine("State", row.state.label)
             MobileDetailLine("Due", row.dueMillis?.let(::formatDueDate) ?: "—")
+            MobileDetailLine("Created", row.createdAtMillis?.let(::formatDueDate) ?: "Unknown")
             MobileDetailLine("Tags", row.tags.joinToString(", ").ifBlank { "—" })
             Spacer(Modifier.height(18.dp))
             Button(

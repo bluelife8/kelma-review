@@ -107,6 +107,7 @@ internal class BrowseIndexPersistence(
             if (entry.row.isLocal) 1 else 0,
             entry.remoteDueAtMillis,
             entry.remoteDueModifiedAtMillis,
+            entry.row.createdAtMillis,
         )
         entry.row.tags.distinctBy(String::lowercase).forEach { tag ->
             queries.insertBrowseIndexTag(entry.row.cardId, tag, tag.lowercase())
@@ -178,6 +179,7 @@ private fun SyncedCollection.browseIndexEntry(card: SyncCard): BrowseIndexEntry?
         },
         dueMillis = null,
         isLocal = card.cardId < 0,
+        createdAtMillis = card.createdAtMillis(),
     )
     return BrowseIndexEntry(
         row = row,
@@ -193,16 +195,26 @@ private fun SyncedCollection.browseIndexEntry(card: SyncCard): BrowseIndexEntry?
     )
 }
 
-private fun String.toBrowseIndexTerms(): List<Pair<String, String>> = parseBrowseQuery(this).mapNotNull { term ->
+private fun String.toBrowseIndexTerms(): List<Pair<String, String>> = parseBrowseQuery(this).flatMap { term ->
     when (term) {
-        is BrowseTerm.Text -> "text" to term.value.lowercase()
-        is BrowseTerm.Deck -> "deck" to term.value.lowercase()
-        is BrowseTerm.Tag -> "tag" to term.value.lowercase()
-        is BrowseTerm.Notetype -> "notetype" to term.value.lowercase()
+        is BrowseTerm.Text -> listOf("text" to term.value.lowercase())
+        is BrowseTerm.Deck -> listOf("deck" to term.value.lowercase())
+        is BrowseTerm.Tag -> listOf("tag" to term.value.lowercase())
+        is BrowseTerm.Notetype -> listOf("notetype" to term.value.lowercase())
         is BrowseTerm.Flag -> when (term.value) {
-            "new", "learning", "review", "suspended" -> "state" to term.value
-            "due", "local" -> term.value to term.value
-            else -> null
+            "new", "learning", "review", "suspended" -> listOf("state" to term.value)
+            "due", "local" -> listOf(term.value to term.value)
+            else -> emptyList()
+        }
+        is BrowseTerm.Created -> when (val filter = parseBrowseCreatedFilter(term.value)) {
+            BrowseCreatedFilter.Unknown -> listOf("created_unknown" to "")
+            is BrowseCreatedFilter.Range -> buildList {
+                if (filter.startMillis != Long.MIN_VALUE) add("created_min" to filter.startMillis.toString())
+                if (filter.endExclusiveMillis != Long.MAX_VALUE) {
+                    add("created_max" to filter.endExclusiveMillis.toString())
+                }
+            }
+            BrowseCreatedFilter.Invalid -> listOf("created_invalid" to "")
         }
     }
 }

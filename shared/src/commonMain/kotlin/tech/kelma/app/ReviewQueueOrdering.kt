@@ -110,41 +110,43 @@ private fun applyDailyLimitsAndSiblingBurying(
     studyDayPolicy: AccountStudyDayPolicy,
 ): List<SyncCard> {
     val limits = (dailyLimitPlan ?: DeckDailyLimitPlan.single(options, remainingNew, remainingReviews)).tracker()
-    val reservationSeenByNote = studiedCardOrdsByNoteToday
+    val allocationSeenByNote = studiedCardOrdsByNoteToday
         .mapValuesTo(mutableMapOf()) { it.value.toMutableSet() }
+    ordered.filter { schedules[it.cardId] == null }.forEach { card ->
+        val shownSibling = allocationSeenByNote[card.noteGuid].orEmpty().any { it != card.ord }
+        if (!shownSibling || !shouldBurySibling(null, options, null, studyDayPolicy)) {
+            if (limits.reserveNew(card)) {
+                allocationSeenByNote.getOrPut(card.noteGuid, ::mutableSetOf).add(card.ord)
+            }
+        }
+    }
     ordered.forEach { card ->
         val schedule = schedules[card.cardId]
-        val shownSibling = reservationSeenByNote[card.noteGuid].orEmpty().any { it != card.ord }
+        val shownSibling = allocationSeenByNote[card.noteGuid].orEmpty().any { it != card.ord }
         when (schedule?.phase) {
             ReviewPhase.Review -> if (
                 !shownSibling ||
                 !shouldBurySibling(schedule, options, dueDateOverrides[card.cardId], studyDayPolicy)
             ) {
                 if (limits.reserveReview(card)) {
-                    reservationSeenByNote.getOrPut(card.noteGuid, ::mutableSetOf).add(card.ord)
+                    allocationSeenByNote.getOrPut(card.noteGuid, ::mutableSetOf).add(card.ord)
                 }
             }
             ReviewPhase.Learning, ReviewPhase.Relearning -> if (
                 !shownSibling ||
                 !shouldBurySibling(schedule, options, dueDateOverrides[card.cardId], studyDayPolicy)
             ) {
-                reservationSeenByNote.getOrPut(card.noteGuid, ::mutableSetOf).add(card.ord)
+                allocationSeenByNote.getOrPut(card.noteGuid, ::mutableSetOf).add(card.ord)
             }
             null -> Unit
         }
     }
-    val reservedReviewOrdsByNote = ordered
-        .filter(limits::isReservedReview)
-        .groupBy(SyncCard::noteGuid)
-        .mapValues { (_, cards) -> cards.mapTo(mutableSetOf(), SyncCard::ord) }
     return buildList {
         val seenByNote = studiedCardOrdsByNoteToday.mapValuesTo(mutableMapOf()) { it.value.toMutableSet() }
         ordered.forEach { card ->
             val schedule = schedules[card.cardId]
-            val reservedReviewSibling = schedule == null &&
-                reservedReviewOrdsByNote[card.noteGuid].orEmpty().any { it != card.ord }
             val withinLimit = when (schedule?.phase) {
-                null -> !reservedReviewSibling && limits.canAcceptNew(card)
+                null -> limits.isReservedNew(card)
                 ReviewPhase.Review -> limits.isReservedReview(card)
                 else -> true
             }
@@ -156,7 +158,6 @@ private fun applyDailyLimitsAndSiblingBurying(
             ) return@forEach
             add(card)
             seenByNote.getOrPut(card.noteGuid, ::mutableSetOf).add(card.ord)
-            if (schedule == null) limits.acceptNew(card)
         }
     }
 }
@@ -224,8 +225,12 @@ private fun reviewComparator(
         ReviewSortOrder.Random -> compareBy<SyncCard> {
             stableQueueKey(it.cardId.toString(), seed)
         }.thenBy { it.cardId }
-        ReviewSortOrder.Added -> compareBy(SyncCard::cardId)
-        ReviewSortOrder.LatestAddedFirst -> compareByDescending(SyncCard::cardId)
+        ReviewSortOrder.Added -> compareBy<SyncCard> { it.createdAtMillis(nowMillis) == null }
+            .thenBy { it.createdAtMillis(nowMillis) }
+            .thenBy(SyncCard::cardId)
+        ReviewSortOrder.LatestAddedFirst -> compareBy<SyncCard> { it.createdAtMillis(nowMillis) == null }
+            .thenByDescending { it.createdAtMillis(nowMillis) }
+            .thenByDescending(SyncCard::cardId)
     }
 }
 

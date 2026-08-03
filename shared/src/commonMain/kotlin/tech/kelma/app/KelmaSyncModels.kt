@@ -130,6 +130,7 @@ data class SyncCard(
     @SerialName("due_date_override_client_modified_at") val dueDateOverrideClientModifiedAt: String = "",
     @SerialName("modified_at") val modifiedAt: String = "",
     @SerialName("client_modified_at") val clientModifiedAt: String = "",
+    @SerialName("created_at") val createdAt: String? = null,
 )
 
 /**

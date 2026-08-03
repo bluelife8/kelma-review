@@ -29,7 +29,17 @@ internal class DeckDailyLimitTracker(
     private val remainingReviewByDeck: MutableMap<String, Int>,
     private val newConsumesReviewByDeck: Map<String, Boolean>,
 ) {
+    private val reservedNewCardIds = mutableSetOf<Long>()
     private val reservedReviewCardIds = mutableSetOf<Long>()
+
+    fun reserveNew(card: SyncCard): Boolean {
+        if (!canAcceptNew(card)) return false
+        acceptNew(card)
+        reservedNewCardIds += card.cardId
+        return true
+    }
+
+    fun isReservedNew(card: SyncCard): Boolean = card.cardId in reservedNewCardIds
 
     fun reserveReview(card: SyncCard): Boolean {
         val path = limitPath(card)
@@ -41,12 +51,12 @@ internal class DeckDailyLimitTracker(
 
     fun isReservedReview(card: SyncCard): Boolean = card.cardId in reservedReviewCardIds
 
-    fun canAcceptNew(card: SyncCard): Boolean = limitPath(card).all { deckName ->
+    private fun canAcceptNew(card: SyncCard): Boolean = limitPath(card).all { deckName ->
         remainingNewByDeck.getValue(deckName) > 0 &&
             (newConsumesReviewByDeck.getValue(deckName).not() || remainingReviewByDeck.getValue(deckName) > 0)
     }
 
-    fun acceptNew(card: SyncCard) {
+    private fun acceptNew(card: SyncCard) {
         limitPath(card).forEach { deckName ->
             remainingNewByDeck[deckName] = remainingNewByDeck.getValue(deckName) - 1
             if (newConsumesReviewByDeck.getValue(deckName)) {

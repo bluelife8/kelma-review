@@ -148,7 +148,13 @@ private fun mapKelmaContent(
             warnings += "A Kelma card whose note was missing was skipped."
             null
         } else {
-            ImportedCard(card.cardId, noteId, normalizeDeckName(card.deckName), card.ord)
+            ImportedCard(
+                card.cardId,
+                noteId,
+                normalizeDeckName(card.deckName),
+                card.ord,
+                createdAtMillis = card.createdAtMillis(),
+            )
         }
     }
     val importedMedia = media.mapNotNull { entry ->

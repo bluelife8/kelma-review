@@ -26,13 +26,14 @@ internal fun loadLocalContentSnapshot(
             definition = json.parseToJsonElement(definition) as? JsonObject ?: JsonObject(emptyMap()),
         )
     }.executeAsList().toMap()
-    val cards = queries.selectLocalCards { cardId, noteGuid, deckName, ord, _ ->
+    val cards = queries.selectLocalCards { cardId, noteGuid, deckName, ord, createdAt ->
         cardId to SyncCard(
             cardId = cardId,
             noteGuid = noteGuid,
             deckName = deckName,
             ord = ord.toInt(),
             scheduling = JsonObject(emptyMap()),
+            createdAt = createdAt.takeIf { it > 0L }?.let(::epochMillisToRfc3339),
         )
     }.executeAsList().toMap()
     val media = queries.selectLocalMedia { filename, mimeType, checksum, bytes, modifiedAt, state ->
@@ -60,9 +61,24 @@ internal fun loadLocalContentSnapshot(
         deckName to presetId
     }.executeAsList().toMap()
     val presetsById = presets.associateBy(DeckOptionsPreset::id)
+    val pendingDeckLimitNames = queries.selectLocalDeckSyncMutations { source, _, target, _ ->
+        listOfNotNull(source, target)
+    }.executeAsList().flatten().toSet()
+    val syncedDeckConfigs = queries.selectDecks { name, config, _, _, _ ->
+        name to (json.parseToJsonElement(config) as? JsonObject)
+    }.executeAsList().toMap()
     val effectiveDeckOptions = storedDeckOptions.toMutableMap().apply {
         assignments.forEach { (deckName, presetId) ->
             presetsById[presetId]?.let { put(deckName, it.options) }
+        }
+    }.mapValues { (deckName, options) ->
+        if (pendingDeckLimitNames.any { it.equals(deckName, ignoreCase = true) }) {
+            options
+        } else {
+            val config = syncedDeckConfigs.entries
+                .firstOrNull { it.key.equals(deckName, ignoreCase = true) }
+                ?.value
+            options.withSyncedAnkiDailyLimits(config)
         }
     }
     val deckOverrides = queries.selectLocalDeckOverrides { source, replacement ->
@@ -73,7 +89,7 @@ internal fun loadLocalContentSnapshot(
     val changedByDeck = mutableMapOf<String, MutableSet<Long>>()
     val changedNoteGuids = queries.selectAllLocalNoteSyncGuids().executeAsList().toSet() - notes.keys
     if (changedNoteGuids.isNotEmpty() || deckOverrides.isNotEmpty()) {
-        queries.selectCards { cardId, noteGuid, deckName, _, _, _, _, _, _, _, _, _, _, _, _, _ ->
+        queries.selectCards { cardId, noteGuid, deckName, _, _, _, _, _, _, _, _, _, _, _, _, _, _ ->
             Triple(cardId, noteGuid, deckName)
         }.executeAsList().forEach { (cardId, noteGuid, deckName) ->
             val visibleDeck = deckName.remapDownloadedDeckName(deckOverrides)
@@ -89,7 +105,7 @@ internal fun loadLocalContentSnapshot(
             queries.selectLocalCardDueOverrides { _, _, cardId, _, _, _ -> cardId }.executeAsList()
         ).distinct()
     if (pendingCardMetadataIds.isNotEmpty()) {
-        val syncedDeckByCard = queries.selectCards { cardId, _, deckName, _, _, _, _, _, _, _, _, _, _, _, _, _ ->
+        val syncedDeckByCard = queries.selectCards { cardId, _, deckName, _, _, _, _, _, _, _, _, _, _, _, _, _, _ ->
             cardId to deckName
         }.executeAsList().toMap()
         pendingCardMetadataIds.forEach { cardId ->

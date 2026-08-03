@@ -68,6 +68,8 @@ data class ImportedCard(
     val noteSourceId: Long,
     val deckName: String,
     val ordinal: Int,
+    val createdAtMillis: Long? = null,
+    val createdOnImport: Boolean = false,
 )
 
 data class ImportedReview(

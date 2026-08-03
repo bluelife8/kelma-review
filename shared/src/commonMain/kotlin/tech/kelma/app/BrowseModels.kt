@@ -19,6 +19,7 @@ data class BrowseCardRow(
     val state: BrowseCardState,
     val dueMillis: Long?,
     val isLocal: Boolean,
+    val createdAtMillis: Long? = null,
 )
 
 enum class BrowseSort {
@@ -27,6 +28,7 @@ enum class BrowseSort {
     Deck,
     State,
     Due,
+    Created,
     Tags,
 }
 
@@ -55,7 +57,7 @@ internal fun interface BrowsePageLoader {
     suspend fun load(request: BrowsePageRequest): BrowsePage
 }
 
-/** A single token of the browser's search language (`deck:x`, `tag:x`, `note:x`, `is:x`, or plain text). */
+/** A browser token (`deck:`, `tag:`, `note:`, `created:`, `is:`, or plain text). */
 sealed interface BrowseTerm {
     data class Text(val value: String) : BrowseTerm
 
@@ -66,9 +68,12 @@ sealed interface BrowseTerm {
     data class Notetype(val value: String) : BrowseTerm
 
     data class Flag(val value: String) : BrowseTerm
+
+    data class Created(val value: String) : BrowseTerm
 }
 
 private val QueryToken = Regex("""\S+:"[^"]*"|\S+""")
+private val BrowseDate = Regex("""\d{4}-\d{2}-\d{2}""")
 
 private val StateFlagTerms = setOf("is:new", "is:learning", "is:review", "is:suspended")
 
@@ -83,6 +88,7 @@ fun parseBrowseQuery(raw: String): List<BrowseTerm> = QueryToken.findAll(raw.tri
             lower.startsWith("tag:") -> BrowseTerm.Tag(value)
             lower.startsWith("note:") -> BrowseTerm.Notetype(value)
             lower.startsWith("is:") -> BrowseTerm.Flag(value.lowercase())
+            lower.startsWith("created:") -> BrowseTerm.Created(value.lowercase())
             else -> BrowseTerm.Text(token)
         }
     }
@@ -102,20 +108,31 @@ fun queryHasTerm(query: String, term: String): Boolean =
  */
 fun toggleQueryTerm(query: String, term: String): String {
     val tokens = QueryToken.findAll(query.trim()).map { it.value }
-    val lower = term.lowercase()
-    val toggled = if (tokens.any { it.equals(term, ignoreCase = true) }) {
-        tokens.filterNot { it.equals(term, ignoreCase = true) }
+    return if (tokens.any { it.equals(term, ignoreCase = true) }) {
+        tokens.filterNot { it.equals(term, ignoreCase = true) }.joinToString(" ")
     } else {
-        val base = when {
-            lower in StateFlagTerms -> tokens.filterNot { it.lowercase() in StateFlagTerms }
-            lower.startsWith("deck:") -> tokens.filterNot { it.lowercase().startsWith("deck:") }
-            lower.startsWith("note:") -> tokens.filterNot { it.lowercase().startsWith("note:") }
-            else -> tokens
-        }
-        base + term
+        setQueryTerm(query, term)
     }
-    return toggled.joinToString(" ")
 }
+
+/** Adds [term], replacing any mutually exclusive qualifier already in [query]. */
+fun setQueryTerm(query: String, term: String): String {
+    val tokens = QueryToken.findAll(query.trim()).map { it.value }
+    val lower = term.lowercase()
+    val base = when {
+        lower in StateFlagTerms -> tokens.filterNot { it.lowercase() in StateFlagTerms }
+        lower.startsWith("deck:") -> tokens.filterNot { it.lowercase().startsWith("deck:") }
+        lower.startsWith("note:") -> tokens.filterNot { it.lowercase().startsWith("note:") }
+        lower.startsWith("created:") -> tokens.filterNot { it.lowercase().startsWith("created:") }
+        else -> tokens
+    }
+    return (base + term).joinToString(" ")
+}
+
+internal fun selectedBrowseCreationDate(query: String): String? = parseBrowseQuery(query)
+    .filterIsInstance<BrowseTerm.Created>()
+    .map(BrowseTerm.Created::value)
+    .firstOrNull { ".." !in it && parseBrowseCreatedFilter(it) is BrowseCreatedFilter.Range }
 
 fun BrowseCardRow.matches(terms: List<BrowseTerm>, nowMillis: Long): Boolean = terms.all { term ->
     when (term) {
@@ -125,6 +142,7 @@ fun BrowseCardRow.matches(terms: List<BrowseTerm>, nowMillis: Long): Boolean = t
         is BrowseTerm.Tag -> tags.any { it.equals(term.value, ignoreCase = true) }
         is BrowseTerm.Notetype -> notetype.contains(term.value, ignoreCase = true)
         is BrowseTerm.Flag -> matchesFlag(term.value, nowMillis)
+        is BrowseTerm.Created -> matchesCreatedAt(term.value)
     }
 }
 
@@ -138,6 +156,50 @@ private fun BrowseCardRow.matchesFlag(flag: String, nowMillis: Long): Boolean = 
     else -> true
 }
 
+internal sealed interface BrowseCreatedFilter {
+    data object Unknown : BrowseCreatedFilter
+
+    data class Range(val startMillis: Long, val endExclusiveMillis: Long) : BrowseCreatedFilter
+
+    data object Invalid : BrowseCreatedFilter
+}
+
+internal fun parseBrowseCreatedFilter(value: String): BrowseCreatedFilter {
+    if (value.equals("unknown", ignoreCase = true)) return BrowseCreatedFilter.Unknown
+    val separator = value.indexOf("..")
+    if (separator < 0) {
+        val start = parseBrowseDate(value) ?: return BrowseCreatedFilter.Invalid
+        return BrowseCreatedFilter.Range(start, (start + MillisPerDay).coerceAtLeast(start))
+    }
+    val startText = value.substring(0, separator)
+    val endText = value.substring(separator + 2)
+    val start = if (startText.isBlank()) Long.MIN_VALUE else parseBrowseDate(startText)
+        ?: return BrowseCreatedFilter.Invalid
+    val endStart = if (endText.isBlank()) null else parseBrowseDate(endText)
+        ?: return BrowseCreatedFilter.Invalid
+    val endExclusive = endStart?.let { (it + MillisPerDay).coerceAtLeast(it) } ?: Long.MAX_VALUE
+    return if (start < endExclusive) {
+        BrowseCreatedFilter.Range(start, endExclusive)
+    } else {
+        BrowseCreatedFilter.Invalid
+    }
+}
+
+private fun parseBrowseDate(value: String): Long? {
+    if (!BrowseDate.matches(value)) return null
+    val millis = rfc3339ToEpochMillis("${value}T00:00:00Z") ?: return null
+    return millis.takeIf { formatDueDate(it) == value }
+}
+
+private fun BrowseCardRow.matchesCreatedAt(value: String): Boolean =
+    when (val filter = parseBrowseCreatedFilter(value)) {
+        BrowseCreatedFilter.Unknown -> createdAtMillis == null
+        is BrowseCreatedFilter.Range -> createdAtMillis
+            ?.let { it in filter.startMillis until filter.endExclusiveMillis }
+            ?: false
+        BrowseCreatedFilter.Invalid -> false
+    }
+
 private data class BrowseSortValue(
     val row: BrowseCardRow,
     val number: Long = 0,
@@ -146,6 +208,16 @@ private data class BrowseSortValue(
 )
 
 fun List<BrowseCardRow>.sortedForBrowse(sorting: BrowseSorting): List<BrowseCardRow> {
+    if (sorting.field == BrowseSort.Created) {
+        val comparator = compareBy<BrowseCardRow> { it.createdAtMillis == null }.let { knownFirst ->
+            if (sorting.ascending) {
+                knownFirst.thenBy { it.createdAtMillis }.thenBy { it.cardId }
+            } else {
+                knownFirst.thenByDescending { it.createdAtMillis }.thenByDescending { it.cardId }
+            }
+        }
+        return sortedWith(comparator)
+    }
     val values = map { row ->
         val question = row.question.lowercase()
         when (sorting.field) {
@@ -154,6 +226,7 @@ fun List<BrowseCardRow>.sortedForBrowse(sorting: BrowseSorting): List<BrowseCard
             BrowseSort.Deck -> BrowseSortValue(row, primary = row.deck.lowercase(), secondary = question)
             BrowseSort.State -> BrowseSortValue(row, number = row.state.ordinal.toLong(), secondary = question)
             BrowseSort.Due -> BrowseSortValue(row, number = row.dueMillis ?: Long.MAX_VALUE, secondary = question)
+            BrowseSort.Created -> error("Created sorting is handled before projection")
             BrowseSort.Tags -> BrowseSortValue(
                 row,
                 primary = row.tags.joinToString(",").lowercase(),
@@ -194,6 +267,7 @@ internal fun SyncedCollection.browseContentRow(card: SyncCard): BrowseCardRow? {
         state = browseCardState(card.studyState, null),
         dueMillis = null,
         isLocal = card.cardId < 0,
+        createdAtMillis = card.createdAtMillis(),
     )
 }
 

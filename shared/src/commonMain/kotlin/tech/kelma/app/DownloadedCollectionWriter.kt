@@ -129,6 +129,7 @@ internal class DownloadedCollectionWriter(
             card.dueDateOverrideClientModifiedAt,
             card.modifiedAt,
             card.clientModifiedAt,
+            card.createdAt.orEmpty(),
         )
     }
 

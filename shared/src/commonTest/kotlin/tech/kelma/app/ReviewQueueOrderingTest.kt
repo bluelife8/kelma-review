@@ -138,7 +138,11 @@ class ReviewQueueOrderingTest {
 
     @Test
     fun reviewSortChoicesUseSchedulingStateWithoutChangingFsrs() {
-        val cards = listOf(card(10, 2), card(20, 2), card(30, 2))
+        val cards = listOf(
+            card(10, 2, createdAt = "2020-01-02T00:00:00Z"),
+            card(20, 2, createdAt = "2020-01-01T00:00:00Z"),
+            card(30, 2),
+        )
         val schedules = mapOf(
             10L to reviewSchedule(10, interval = 10, difficulty = 7.0, stability = 2.0, dueOffset = -3_000),
             20L to reviewSchedule(20, interval = 2, difficulty = 3.0, stability = 20.0, dueOffset = -1_000),
@@ -152,8 +156,8 @@ class ReviewQueueOrderingTest {
         assertEquals(listOf(10L, 30L, 20L), ordered(ReviewSortOrder.DifficultyDescending))
         assertEquals(listOf(10L, 30L, 20L), ordered(ReviewSortOrder.DueDateThenRandom))
         assertEquals(listOf(10L, 30L, 20L), ordered(ReviewSortOrder.DueDateThenDeck))
-        assertEquals(listOf(10L, 20L, 30L), ordered(ReviewSortOrder.Added))
-        assertEquals(listOf(30L, 20L, 10L), ordered(ReviewSortOrder.LatestAddedFirst))
+        assertEquals(listOf(20L, 10L, 30L), ordered(ReviewSortOrder.Added))
+        assertEquals(listOf(10L, 20L, 30L), ordered(ReviewSortOrder.LatestAddedFirst))
         assertEquals(listOf(10L, 30L, 20L), ordered(ReviewSortOrder.RetrievabilityAscending))
         assertEquals(listOf(20L, 30L, 10L), ordered(ReviewSortOrder.RetrievabilityDescending))
         assertEquals(listOf(20L, 30L, 10L), ordered(ReviewSortOrder.RelativeOverdueness))
@@ -307,6 +311,7 @@ class ReviewQueueOrderingTest {
         ord: Int = 0,
         due: Long = id,
         deck: String = if (id % 2L == 0L) "Deck::B" else "Deck::A",
+        createdAt: String? = null,
     ) = SyncCard(
         cardId = id,
         noteGuid = note,
@@ -317,6 +322,7 @@ class ReviewQueueOrderingTest {
             put("queue", queue)
             put("due", due)
         },
+        createdAt = createdAt,
     )
 
     private fun reviewSchedule(

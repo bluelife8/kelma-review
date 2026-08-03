@@ -53,7 +53,8 @@ internal class AnkiExportMapper(
         }
         val noteIds = selectedNotes.associate { note -> note.guid to allocateId("note:${note.guid}", usedIds) }
         val cardIds = selectedCards.associate { card ->
-            card.cardId to allocateId("card:${card.noteGuid}:${card.ord}", usedIds)
+            val preferredId = card.createdAtMillis(exportedAtMillis) ?: exportedAtMillis
+            card.cardId to allocateTimestampId(preferredId, usedIds)
         }
         val createdAtSeconds = exportedAtMillis / MillisPerDay * (MillisPerDay / 1_000L)
         val modifiedAtSeconds = exportedAtMillis / 1_000L
@@ -436,6 +437,12 @@ private fun noteChecksum(field: String): Long = sha1(field.encodeToByteArray()).
 private fun allocateId(seed: String, used: MutableSet<Long>): Long {
     var candidate = stablePositiveId(seed)
     while (!used.add(candidate)) candidate = if (candidate == Long.MAX_VALUE) 2 else candidate + 1
+    return candidate
+}
+
+private fun allocateTimestampId(preferred: Long, used: MutableSet<Long>): Long {
+    var candidate = preferred.coerceAtLeast(2L)
+    while (!used.add(candidate)) candidate = if (candidate == Long.MAX_VALUE) 2L else candidate + 1L
     return candidate
 }
 

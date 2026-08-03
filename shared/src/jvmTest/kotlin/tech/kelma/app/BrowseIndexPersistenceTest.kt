@@ -124,10 +124,15 @@ class BrowseIndexPersistenceTest {
                 "d" to SyncNote("d", fields = listOf("Gamma", "answer"), tags = listOf("marked")),
             ),
             cards = mapOf(
-                1L to SyncCard(1, "a", "French"),
-                2L to SyncCard(2, "b", "French"),
-                3L to SyncCard(3, "c", "Spanish", studyState = CardStudyState.Suspended),
-                -4L to SyncCard(-4, "d", "French"),
+                1L to SyncCard(1, "a", "French", createdAt = "2024-01-01T00:00:00.000Z"),
+                2L to SyncCard(2, "b", "French", createdAt = "2024-01-02T00:00:00.000Z"),
+                3L to SyncCard(
+                    3,
+                    "c",
+                    "Spanish",
+                    studyState = CardStudyState.Suspended,
+                ),
+                -4L to SyncCard(-4, "d", "French", createdAt = "2024-01-03T00:00:00.000Z"),
             ),
             notetypes = NotetypeCatalog.definitions,
             deckNames = setOf("French", "Spanish"),
@@ -200,6 +205,10 @@ class BrowseIndexPersistenceTest {
             "is:due",
             "is:local",
             "is:unknown",
+            "created:2024-01-02",
+            "created:2024-01-01..2024-01-02",
+            "created:unknown",
+            "created:2024-02-30",
         )
         queries.forEach { query ->
             BrowseSort.entries.forEach { field ->

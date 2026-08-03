@@ -43,8 +43,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.PointerIcon
 import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -151,6 +153,10 @@ internal fun DesktopBrowseScreen(state: BrowseUiState, actions: BrowseActions, s
 
 @Composable
 private fun DesktopBrowseSidebar(state: BrowseUiState, actions: BrowseActions) {
+    var creationDateDialogOpen by remember { mutableStateOf(false) }
+    val selectedCreationDate = selectedBrowseCreationDate(state.query.text)
+    val creationDate = selectedCreationDate ?: formatDueDate(state.nowMillis)
+    val creationFilterActive = parseBrowseQuery(state.query.text).any { it is BrowseTerm.Created }
     Column(
         modifier = Modifier
             .width(210.dp)
@@ -167,12 +173,18 @@ private fun DesktopBrowseSidebar(state: BrowseUiState, actions: BrowseActions) {
                 }
                 SidebarItem(label, count = null, active = active) {
                     if (term.isEmpty()) {
-                        actions.onQueryChange(androidx.compose.ui.text.input.TextFieldValue())
+                        actions.onQueryChange(TextFieldValue())
                     } else {
                         actions.onApplyTerm(term)
                     }
                 }
             }
+            SidebarItem(
+                label = "Created · $creationDate",
+                count = null,
+                active = creationFilterActive,
+                onClick = { creationDateDialogOpen = true },
+            )
         }
         SidebarSection("DECKS") {
             state.decks.forEach { (deck, count) ->
@@ -192,6 +204,17 @@ private fun DesktopBrowseSidebar(state: BrowseUiState, actions: BrowseActions) {
                 }
             }
         }
+    }
+    if (creationDateDialogOpen) {
+        CreationDateFilterDialog(
+            initialDate = creationDate,
+            onDismiss = { creationDateDialogOpen = false },
+            onConfirm = { date ->
+                creationDateDialogOpen = false
+                val updated = setQueryTerm(state.query.text, "created:$date")
+                actions.onQueryChange(TextFieldValue(updated, TextRange(updated.length)))
+            },
+        )
     }
 }
 
@@ -257,7 +280,10 @@ private fun DesktopBrowseSearch(state: BrowseUiState, actions: BrowseActions) {
             onValueChange = actions.onQueryChange,
             modifier = Modifier.weight(1f).testTag("browse-search"),
             placeholder = {
-                Text("Search — try  deck:spanish  tag:verbs  is:due", color = KelmaDesktopColors.TextMuted)
+                Text(
+                    "Search — try  deck:spanish  created:2026-08-01..2026-08-31",
+                    color = KelmaDesktopColors.TextMuted,
+                )
             },
             singleLine = true,
             leadingIcon = {
@@ -271,7 +297,7 @@ private fun DesktopBrowseSearch(state: BrowseUiState, actions: BrowseActions) {
                         tint = KelmaDesktopColors.TextMuted,
                         modifier = Modifier
                             .pointerHoverIcon(PointerIcon.Hand)
-                            .clickable { actions.onQueryChange(androidx.compose.ui.text.input.TextFieldValue()) },
+                            .clickable { actions.onQueryChange(TextFieldValue()) },
                     )
                 }
             },
@@ -294,6 +320,7 @@ private fun DesktopBrowseHeader(state: BrowseUiState, actions: BrowseActions) {
         SortHeader("Deck", BrowseSort.Deck, state, actions, Modifier.weight(1.2f))
         SortHeader("State", BrowseSort.State, state, actions, Modifier.weight(0.9f))
         SortHeader("Due", BrowseSort.Due, state, actions, Modifier.weight(0.9f))
+        SortHeader("Created", BrowseSort.Created, state, actions, Modifier.weight(0.9f))
         SortHeader("Tags", BrowseSort.Tags, state, actions, Modifier.weight(1.2f))
     }
 }
@@ -347,6 +374,7 @@ private fun DesktopBrowseRow(row: BrowseCardRow, selected: Boolean, onClick: () 
             BrowseCell(row.deck, Modifier.weight(1.2f))
             StateChip(row.state, Modifier.weight(0.9f))
             BrowseCell(row.dueMillis?.let(::formatDueDate) ?: "—", Modifier.weight(0.9f))
+            BrowseCell(row.createdAtMillis?.let(::formatDueDate) ?: "Unknown", Modifier.weight(0.9f))
             BrowseCell(row.tags.joinToString(", "), Modifier.weight(1.2f))
         }
     }
@@ -449,6 +477,7 @@ private fun DesktopBrowseDetail(
             DetailLine("Deck", row.deck)
             DetailLine("State", row.state.label)
             DetailLine("Due", row.dueMillis?.let(::formatDueDate) ?: "—")
+            DetailLine("Created", row.createdAtMillis?.let(::formatDueDate) ?: "Unknown")
             DetailLine("Tags", row.tags.joinToString(", ").ifBlank { "—" })
             DetailLine("Card id", row.cardId.toString())
             Spacer(Modifier.height(18.dp))

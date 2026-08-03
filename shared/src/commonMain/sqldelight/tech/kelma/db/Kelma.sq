@@ -36,7 +36,8 @@ CREATE TABLE sync_cards (
     due_date_override_modified_at TEXT NOT NULL DEFAULT '',
     due_date_override_client_modified_at TEXT NOT NULL DEFAULT '',
     modified_at TEXT NOT NULL,
-    client_modified_at TEXT NOT NULL
+    client_modified_at TEXT NOT NULL,
+    created_at TEXT NOT NULL DEFAULT ''
 );
 
 CREATE TABLE sync_reviews (
@@ -434,7 +435,8 @@ CREATE TABLE browse_card_index (
     study_state TEXT NOT NULL CHECK (study_state IN ('active', 'suspended')),
     is_local INTEGER NOT NULL CHECK (is_local IN (0, 1)),
     remote_due_at_ms INTEGER NOT NULL,
-    remote_due_modified_at_ms INTEGER NOT NULL
+    remote_due_modified_at_ms INTEGER NOT NULL,
+    created_at_ms INTEGER
 );
 
 CREATE TABLE browse_card_tags (
@@ -489,7 +491,7 @@ SELECT card_id, note_guid, deck_name, ord, scheduling_json, study_state,
        schedule_reset_through_review_id, schedule_reset_modified_at,
        schedule_reset_client_modified_at, due_date_override_ms,
        due_date_override_modified_at, due_date_override_client_modified_at,
-       modified_at, client_modified_at
+       modified_at, client_modified_at, created_at
 FROM sync_cards;
 
 insertCard:
@@ -499,8 +501,8 @@ INSERT OR REPLACE INTO sync_cards(
     schedule_reset_through_review_id, schedule_reset_modified_at,
     schedule_reset_client_modified_at, due_date_override_ms,
     due_date_override_modified_at, due_date_override_client_modified_at,
-    modified_at, client_modified_at
-) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+    modified_at, client_modified_at, created_at
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
 
 deleteSyncCard:
 DELETE FROM sync_cards WHERE card_id = ?;
@@ -1216,6 +1218,10 @@ WHERE source_name = ? COLLATE NOCASE;
 selectLocalDeckSyncSources:
 SELECT source_name FROM local_deck_sync_outbox;
 
+selectLocalDeckSyncMutations:
+SELECT source_name, operation, target_name, base_checksum
+FROM local_deck_sync_outbox;
+
 selectPendingLocalDeckSync:
 SELECT source_name, operation, target_name, base_checksum, modified_at_ms, force_override
 FROM local_deck_sync_outbox
@@ -1561,8 +1567,8 @@ insertBrowseIndexCard:
 INSERT INTO browse_card_index(
     card_id, note_guid, card_ord, question_sort, answer_sort, deck_name, deck_sort,
     notetype_sort, tags_sort, search_text, study_state, is_local,
-    remote_due_at_ms, remote_due_modified_at_ms
-) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+    remote_due_at_ms, remote_due_modified_at_ms, created_at_ms
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
 
 insertBrowseIndexTag:
 INSERT OR REPLACE INTO browse_card_tags(card_id, tag, normalized_tag) VALUES (?, ?, ?);
@@ -1612,6 +1618,14 @@ WHERE NOT EXISTS (
             WHERE bt.card_id = i.card_id AND bt.normalized_tag = t.value
         ))
         OR (t.kind = 'local' AND i.is_local = 0)
+        OR (t.kind = 'created_unknown' AND i.created_at_ms IS NOT NULL)
+        OR (t.kind = 'created_min' AND (
+            i.created_at_ms IS NULL OR i.created_at_ms < CAST(t.value AS INTEGER)
+        ))
+        OR (t.kind = 'created_max' AND (
+            i.created_at_ms IS NULL OR i.created_at_ms >= CAST(t.value AS INTEGER)
+        ))
+        OR t.kind = 'created_invalid'
         OR (t.kind = 'due' AND (
             i.study_state = 'suspended'
             OR (i.effective_due IS NOT NULL AND i.effective_due > :nowMillis)
@@ -1664,6 +1678,11 @@ ORDER BY
     END DESC,
     CASE WHEN :sortField = 'Due' AND :ascending != 0 THEN i.question_sort END ASC,
     CASE WHEN :sortField = 'Due' AND :ascending = 0 THEN i.question_sort END DESC,
+    CASE WHEN :sortField = 'Created' THEN i.created_at_ms IS NULL END ASC,
+    CASE WHEN :sortField = 'Created' AND :ascending != 0 THEN i.created_at_ms END ASC,
+    CASE WHEN :sortField = 'Created' AND :ascending = 0 THEN i.created_at_ms END DESC,
+    CASE WHEN :sortField = 'Created' AND :ascending != 0 THEN i.question_sort END ASC,
+    CASE WHEN :sortField = 'Created' AND :ascending = 0 THEN i.question_sort END DESC,
     CASE WHEN :sortField = 'Tags' AND :ascending != 0 THEN i.tags_sort END ASC,
     CASE WHEN :sortField = 'Tags' AND :ascending = 0 THEN i.tags_sort END DESC,
     CASE WHEN :sortField = 'Tags' AND :ascending != 0 THEN i.question_sort END ASC,

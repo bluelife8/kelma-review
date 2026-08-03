@@ -57,11 +57,11 @@ class DeckHierarchyLimitsTest {
             ),
         ) ?: error("Missing child deck")
 
-        assertCounts(projected, new = 0, learning = 0, due = 1)
+        assertCounts(projected, new = 1, learning = 0, due = 0)
     }
 
     @Test
-    fun dueReviewsHavePriorityOverNewCardsInSharedReviewCapacity() {
+    fun newCardsHavePriorityThenReviewsFillSharedReviewCapacity() {
         val now = 10L * MillisPerDay
         val cards = listOf(
             SyncCard(1, "new-a", "Deck"),
@@ -81,7 +81,7 @@ class DeckHierarchyLimitsTest {
             deckOptions = mapOf(
                 "Deck" to DeckOptions(
                     newCardsPerDay = 2,
-                    maximumReviewsPerDay = 2,
+                    maximumReviewsPerDay = 3,
                     newReviewMixOrder = QueueMixOrder.BeforeReviews,
                 ),
             ),
@@ -92,14 +92,14 @@ class DeckHierarchyLimitsTest {
             deckOptions = mapOf(
                 "Deck" to DeckOptions(
                     newCardsPerDay = 2,
-                    maximumReviewsPerDay = 2,
+                    maximumReviewsPerDay = 3,
                     newCardsIgnoreReviewLimit = true,
                     newReviewMixOrder = QueueMixOrder.BeforeReviews,
                 ),
             ),
         ).single()
 
-        assertCounts(combined, new = 0, learning = 0, due = 2)
+        assertCounts(combined, new = 2, learning = 0, due = 1)
         assertCounts(independent, new = 2, learning = 0, due = 2)
     }
 

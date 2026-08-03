@@ -85,6 +85,7 @@ internal class SyncOutboxPersistence(
                         clientModifiedAt = it.clientModifiedAt.ifBlank { stateModifiedAt },
                         studyState = pending.state,
                         studyStateClientModifiedAt = stateModifiedAt,
+                        createdAt = it.creationTimestamp(),
                     ),
                 )
             }
@@ -108,6 +109,7 @@ internal class SyncOutboxPersistence(
                         clientModifiedAt = it.clientModifiedAt.ifBlank { resetModifiedAt },
                         scheduleResetThroughReviewId = pending.resetThroughReviewId,
                         scheduleResetClientModifiedAt = resetModifiedAt,
+                        createdAt = it.creationTimestamp(),
                     ),
                 )
             }
@@ -131,6 +133,7 @@ internal class SyncOutboxPersistence(
                         clientModifiedAt = it.clientModifiedAt.ifBlank { dueModifiedAt },
                         dueDateOverrideMillis = pending.dueAtMillis,
                         dueDateOverrideClientModifiedAt = dueModifiedAt,
+                        createdAt = it.creationTimestamp(),
                     ),
                 )
             }
@@ -217,6 +220,7 @@ internal class SyncOutboxPersistence(
 
     fun reconcileUploadedRows() {
         val downloadedCollection = loadCollection()
+        val localDeckOptions = loadLocalContent().deckOptions
         val downloadedMedia = downloadedCollection.media
         queries.selectLocalMedia { filename, _, checksum, _, _, state -> Triple(filename, checksum, state) }
             .executeAsList()
@@ -289,6 +293,21 @@ internal class SyncOutboxPersistence(
         queries.reconcileUploadedLocalNoteSync()
         queries.retryUnconfirmedLocalNoteSync()
         val downloaded = queries.selectDownloadedDeckNames().executeAsList()
+        fun dailyLimitsConfirmed(deckName: String): Boolean {
+            val expected = localDeckOptions.entries
+                .firstOrNull { it.key.equals(deckName, ignoreCase = true) }
+                ?.value ?: return true
+            val remoteConfig = downloadedCollection.deckRecords.entries
+                .firstOrNull { it.key.equals(deckName, ignoreCase = true) }
+                ?.value
+                ?.config ?: return false
+            val actual = remoteConfig.syncedDailyLimits()
+            return actual.newCardsPerDay == expected.newCardsPerDay &&
+                actual.maximumReviewsPerDay == expected.maximumReviewsPerDay
+        }
+        fun dailyLimitTreeConfirmed(rootName: String): Boolean = localDeckOptions.keys
+            .filter { it.isDeckOrDescendantOf(rootName) }
+            .all(::dailyLimitsConfirmed)
         val overrides = queries.selectLocalDeckOverrides { source, _ -> source }.executeAsList()
         queries.selectUploadedLocalDeckSync { source, operation, target -> Triple(source, operation, target) }
             .executeAsList()
@@ -296,8 +315,9 @@ internal class SyncOutboxPersistence(
                 val sourceExists = downloaded.any { it.isDeckOrDescendantOf(source) }
                 val targetExists = target != null && downloaded.any { it.isDeckOrDescendantOf(target) }
                 val reconciled = when (operation) {
-                    "upsert" -> downloaded.any { it.equals(source, ignoreCase = true) }
-                    "rename" -> !sourceExists && targetExists
+                    "upsert" -> downloaded.any { it.equals(source, ignoreCase = true) } &&
+                        dailyLimitsConfirmed(source)
+                    "rename" -> !sourceExists && targetExists && dailyLimitTreeConfirmed(target)
                     "delete" -> !sourceExists
                     else -> false
                 }

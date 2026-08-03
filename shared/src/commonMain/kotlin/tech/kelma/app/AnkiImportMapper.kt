@@ -53,6 +53,7 @@ internal class AnkiImportMapper(
                 noteSourceId = card.noteId,
                 deckName = decks[card.deckId] ?: "Imported",
                 ordinal = card.ordinal,
+                createdAtMillis = inferredAnkiCardCreatedAtMillis(card.id, currentEpochMillis()),
             )
         }
         val cardIds = cards.mapTo(mutableSetOf(), ImportedCard::sourceId)

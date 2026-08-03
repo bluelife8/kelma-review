@@ -11,13 +11,16 @@ internal class DeckPresetPersistence(
     private val queries = database.kelmaQueries
 
     fun saveDeckOptions(deckName: String, options: DeckOptions, nowMillis: Long) {
-        val presetId = queries.selectDeckPresetAssignment(deckName).executeAsOneOrNull()
         database.transaction {
-            if (presetId == null) {
+            val presetId = queries.selectDeckPresetAssignment(deckName).executeAsOneOrNull()
+            val affectedDecks = if (presetId == null) {
                 queries.upsertLocalDeckOptions(deckName, json.encodeToString(options), nowMillis)
+                listOf(deckName)
             } else {
                 queries.updateDeckOptionPreset(json.encodeToString(options), nowMillis, presetId)
+                queries.selectDeckPresetAssignmentsForPreset(presetId).executeAsList()
             }
+            affectedDecks.forEach { queueDailyLimitSync(it, nowMillis) }
             rebuildSchedules()
         }
     }
@@ -34,6 +37,7 @@ internal class DeckPresetPersistence(
             val id = randomUuidString()
             queries.insertDeckOptionPreset(id, name, json.encodeToString(options.validated()), nowMillis, nowMillis)
             queries.upsertDeckPresetAssignment(deckName, id, nowMillis)
+            queueDailyLimitSync(deckName, nowMillis)
             rebuildSchedules()
         }
         return loadLocalContentSnapshot(queries, json)
@@ -53,9 +57,13 @@ internal class DeckPresetPersistence(
         database.transaction {
             if (presetId == null) {
                 queries.deleteDeckPresetAssignment(deckName)
+                if (queries.selectLocalDeckOptionsForDeck(deckName).executeAsOneOrNull() != null) {
+                    queueDailyLimitSync(deckName, nowMillis)
+                }
             } else {
                 require(load(presetId) != null) { "Preset no longer exists" }
                 queries.upsertDeckPresetAssignment(deckName, presetId, nowMillis)
+                queueDailyLimitSync(deckName, nowMillis)
             }
             rebuildSchedules()
         }
@@ -104,4 +112,31 @@ internal class DeckPresetPersistence(
     private fun nameAvailable(name: String): Boolean = queries.selectDeckOptionPresets {
             _, existingName, _, _, _ -> existingName
     }.executeAsList().none { it.equals(name, ignoreCase = true) }
+
+    private fun queueDailyLimitSync(deckName: String, nowMillis: Long) {
+        val existing = queries.selectLocalDeckSyncMutations { source, operation, target, baseChecksum ->
+            DeckSyncMutation(source, operation, target, baseChecksum)
+        }.executeAsList().firstOrNull { mutation ->
+            mutation.sourceName.equals(deckName, ignoreCase = true) ||
+                mutation.targetName?.equals(deckName, ignoreCase = true) == true ||
+                (mutation.operation == "rename" && mutation.targetName != null &&
+                    deckName.isDeckOrDescendantOf(mutation.targetName))
+        }
+        if (existing?.operation == "delete") return
+        queries.upsertLocalDeckSync(
+            sourceName = existing?.sourceName ?: deckName,
+            operation = existing?.operation ?: "upsert",
+            targetName = existing?.targetName,
+            baseChecksum = existing?.baseChecksum
+                ?: queries.selectSyncDeckChecksum(deckName).executeAsOneOrNull().orEmpty(),
+            modifiedAt = nowMillis,
+        )
+    }
 }
+
+private data class DeckSyncMutation(
+    val sourceName: String,
+    val operation: String,
+    val targetName: String?,
+    val baseChecksum: String,
+)

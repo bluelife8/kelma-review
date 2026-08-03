@@ -27,8 +27,9 @@ The corresponding server contract is in
 - Running optimization after every sync or review.
 - Requiring Python, Go, PyTorch, CUDA, or a network connection to schedule
   cards locally.
-- Synchronizing queue ordering, daily limits, burying, or local learning steps
-  as account-wide truth.
+- Synchronizing queue ordering, burying, or local learning steps as
+  account-wide truth. Per-deck New/day and Reviews/day limits synchronize as
+  deck metadata instead.
 - Defining scheduling policy for the maintained Anki plugin or ForkiCards. The
   Anki plugin remains supported for Anki users; ForkiCards may later choose
   local rslib or server scheduling independently.

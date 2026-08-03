@@ -83,8 +83,8 @@ class SyncedDeckOptionsTest {
             studiedTodayByDeck = mapOf("Deck" to DeckStudyCounts(newCards = 1, reviews = 2)),
         ).single()
 
-        assertEquals(0, deck.newCount)
-        assertEquals(1, deck.dueCount)
+        assertEquals(1, deck.newCount)
+        assertEquals(0, deck.dueCount)
     }
 }
 

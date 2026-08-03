@@ -93,7 +93,7 @@ internal fun buildSyncUploadPlan(
         }
         val deckName = localCards.firstOrNull()?.deckName
         val deckPush = deckName?.takeIf { name -> name !in raw.deckRecords }?.let { name ->
-            name to DeckPushBody(deckConfig(displayed, name), modifiedAt, "")
+            name to DeckPushBody(deckConfig(displayed, name, local.deckOptions[name]), modifiedAt, "")
         }
         PendingNoteUpload(
             guid = row.guid,
@@ -108,12 +108,15 @@ internal fun buildSyncUploadPlan(
                     card.ord,
                     JsonObject(emptyMap()),
                     modifiedAt,
+                    createdAt = card.creationTimestamp(),
                 )
             },
             forceOverride = row.forceOverride,
         )
     }
-    val decks = deckRows.map { row -> buildDeckUpload(row, raw, displayed, rawCardsByNote) }
+    val decks = deckRows.map { row ->
+        buildDeckUpload(row, raw, displayed, rawCardsByNote, local.deckOptions)
+    }
     return SyncUploadPlan(reviews = reviews, notes = notes, decks = decks)
 }
 
@@ -122,6 +125,7 @@ private fun buildDeckUpload(
     raw: SyncedCollection,
     displayed: SyncedCollection,
     rawCardsByNote: Map<String, List<SyncCard>>,
+    localOptions: Map<String, DeckOptions>,
 ): PendingDeckUpload {
     val modifiedAt = if (row.operation == "rename") {
         raw.serverTime?.takeIf(String::isNotBlank) ?: epochMillisToRfc3339(row.modifiedAtMillis)
@@ -160,6 +164,7 @@ private fun buildDeckUpload(
                 displayedCard.ord,
                 displayedCard.scheduling,
                 newestTimestamp(modifiedAt, card.clientModifiedAt),
+                createdAt = card.creationTimestamp(),
             )
         }
     } else {
@@ -176,7 +181,7 @@ private fun buildDeckUpload(
         }.map { deck ->
             val renamed = target + deck.name.substring(row.sourceName.length)
             renamed to DeckPushBody(
-                deckConfigFrom(deck.config),
+                deckConfigFrom(deck.config, localOptions[renamed]),
                 modifiedAt,
                 deck.checksum,
             )
@@ -190,9 +195,9 @@ private fun buildDeckUpload(
         targetName = target,
         targetBody = DeckPushBody(
             config = if (row.operation == "rename") {
-                deckConfigFrom(raw.deckRecords[row.sourceName]?.config)
+                deckConfigFrom(raw.deckRecords[row.sourceName]?.config, localOptions[target])
             } else {
-                deckConfig(displayed, target)
+                deckConfig(displayed, target, localOptions[target])
             },
             clientModifiedAt = modifiedAt,
             baseChecksum = row.baseChecksum,
@@ -210,12 +215,19 @@ private fun newestTimestamp(first: String, second: String): String {
     return if (secondMillis > firstMillis) second else first
 }
 
-private fun deckConfig(collection: SyncedCollection, deckName: String): JsonObject =
-    deckConfigFrom(collection.deckRecords[deckName]?.config)
+private fun deckConfig(
+    collection: SyncedCollection,
+    deckName: String,
+    options: DeckOptions? = null,
+): JsonObject = deckConfigFrom(collection.deckRecords[deckName]?.config, options)
 
-private fun deckConfigFrom(source: JsonObject?): JsonObject = buildJsonObject {
+private fun deckConfigFrom(source: JsonObject?, options: DeckOptions? = null): JsonObject = buildJsonObject {
     source?.forEach { (key, value) ->
         if (key != LegacySyncedDeckOptionsKey) put(key, value)
+    }
+    options?.let {
+        put("newLimit", it.newCardsPerDay)
+        put("reviewLimit", it.maximumReviewsPerDay)
     }
 }
 

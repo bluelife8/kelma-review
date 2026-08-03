@@ -11,14 +11,22 @@ internal fun SyncedCollection.effectiveDeckOptions(
 ): DeckOptions = localOptions[deckName]
     ?: fallback.withSyncedAnkiDailyLimits(deckRecords[deckName]?.config)
 
+internal data class SyncedDailyLimits(
+    val newCardsPerDay: Int?,
+    val maximumReviewsPerDay: Int?,
+)
+
+internal fun JsonObject?.syncedDailyLimits(): SyncedDailyLimits = SyncedDailyLimits(
+    newCardsPerDay = this?.validDailyLimit("newLimit"),
+    maximumReviewsPerDay = this?.validDailyLimit("reviewLimit"),
+)
+
 internal fun DeckOptions.withSyncedAnkiDailyLimits(config: JsonObject?): DeckOptions {
-    if (config == null) return this
-    val newLimit = config.validDailyLimit("newLimit")
-    val reviewLimit = config.validDailyLimit("reviewLimit")
-    if (newLimit == null && reviewLimit == null) return this
+    val limits = config.syncedDailyLimits()
+    if (limits.newCardsPerDay == null && limits.maximumReviewsPerDay == null) return this
     return copy(
-        newCardsPerDay = newLimit ?: newCardsPerDay,
-        maximumReviewsPerDay = reviewLimit ?: maximumReviewsPerDay,
+        newCardsPerDay = limits.newCardsPerDay ?: newCardsPerDay,
+        maximumReviewsPerDay = limits.maximumReviewsPerDay ?: maximumReviewsPerDay,
     )
 }
 

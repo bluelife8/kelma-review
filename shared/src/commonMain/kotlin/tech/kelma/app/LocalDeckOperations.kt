@@ -98,7 +98,9 @@ internal class LocalDeckOperations(private val database: KelmaDatabase) {
                 .filter { it.isDeckOrDescendantOf(normalized) }
                 .forEach(queries::deleteDeckPresetAssignment)
             if (affectedCanonical.isNotEmpty()) {
-                queries.selectCards { cardId, _, deckName, _, _, _, _, _, _, _, _, _, _, _, _, _ -> cardId to deckName }
+                queries.selectCards { cardId, _, deckName, _, _, _, _, _, _, _, _, _, _, _, _, _, _ ->
+                    cardId to deckName
+                }
                     .executeAsList()
                     .filter { (_, deckName) ->
                         deckName.remapDownloadedDeckName(overrides)

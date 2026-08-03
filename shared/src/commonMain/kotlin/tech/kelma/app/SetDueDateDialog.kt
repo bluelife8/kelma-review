@@ -71,3 +71,40 @@ internal fun SetDueDateDialog(
         },
     )
 }
+
+@Composable
+internal fun CreationDateFilterDialog(
+    initialDate: String,
+    onDismiss: () -> Unit,
+    onConfirm: (String) -> Unit,
+) {
+    var value by remember(initialDate) { mutableStateOf(initialDate) }
+    val normalized = value.trim()
+    val validDate = parseDueDateMillis(normalized) != null
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Filter by Creation Date") },
+        text = {
+            OutlinedTextField(
+                value = value,
+                onValueChange = { value = it },
+                modifier = Modifier.testTag("created-date-filter-input"),
+                label = { Text("Creation date (YYYY-MM-DD)") },
+                supportingText = {
+                    Text(if (value.isNotBlank() && !validDate) "Enter a valid date" else "Defaults to today")
+                },
+                isError = value.isNotBlank() && !validDate,
+                singleLine = true,
+            )
+        },
+        confirmButton = {
+            TextButton(
+                enabled = validDate,
+                onClick = { onConfirm(normalized) },
+            ) { Text("Filter") }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text("Cancel") }
+        },
+    )
+}

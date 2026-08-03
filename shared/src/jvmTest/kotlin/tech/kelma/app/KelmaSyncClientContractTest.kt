@@ -360,6 +360,7 @@ class KelmaSyncClientContractTest {
                         val batch = ContractJson.decodeFromString<BatchPushRequest>(body)
                         assertEquals(listOf(9L), batch.cards.map(BatchCardPushItem::cardId))
                         assertEquals(123L, batch.cards.single().scheduleResetThroughReviewId)
+                        assertEquals("2020-02-03T04:05:06Z", batch.cards.single().createdAt)
                         respondJson(BatchPushResponse(accepted = mapOf("cards" to 1)))
                     }
                     else -> error("Unexpected batch push")
@@ -389,6 +390,7 @@ class KelmaSyncClientContractTest {
                         "note", "New", 0, JsonObject(emptyMap()), timestamp,
                         scheduleResetThroughReviewId = 123L,
                         scheduleResetClientModifiedAt = timestamp,
+                        createdAt = "2020-02-03T04:05:06Z",
                     ),
                 ),
             ),

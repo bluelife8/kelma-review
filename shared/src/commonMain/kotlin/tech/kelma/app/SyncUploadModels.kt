@@ -26,6 +26,7 @@ data class CardPushBody(
     @SerialName("schedule_reset_client_modified_at") val scheduleResetClientModifiedAt: String? = null,
     @SerialName("due_date_override_ms") val dueDateOverrideMillis: Long? = null,
     @SerialName("due_date_override_client_modified_at") val dueDateOverrideClientModifiedAt: String? = null,
+    @SerialName("created_at") val createdAt: String? = null,
 )
 
 @Serializable
@@ -88,6 +89,7 @@ data class BatchCardPushItem(
     @SerialName("schedule_reset_client_modified_at") val scheduleResetClientModifiedAt: String? = null,
     @SerialName("due_date_override_ms") val dueDateOverrideMillis: Long? = null,
     @SerialName("due_date_override_client_modified_at") val dueDateOverrideClientModifiedAt: String? = null,
+    @SerialName("created_at") val createdAt: String? = null,
 )
 
 @Serializable

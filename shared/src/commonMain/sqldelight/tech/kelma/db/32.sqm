@@ -1,0 +1,12 @@
+ALTER TABLE sync_cards
+ADD COLUMN created_at TEXT NOT NULL DEFAULT '';
+
+UPDATE sync_cards
+SET created_at = strftime('%Y-%m-%dT%H:%M:%fZ', card_id / 1000.0, 'unixepoch')
+WHERE card_id >= 946684800000
+  AND card_id <= CAST(strftime('%s', 'now') AS INTEGER) * 1000 + 300000;
+
+ALTER TABLE browse_card_index
+ADD COLUMN created_at_ms INTEGER;
+
+UPDATE browse_index_state SET dirty = 1 WHERE singleton_id = 1;

@@ -27,7 +27,7 @@ internal fun loadDownloadedCollection(
             cardId, noteGuid, deckName, ord, scheduling, studyState,
             studyStateModified, studyStateClientModified, resetThrough,
             resetModified, resetClientModified, dueOverride, dueModified,
-            dueClientModified, modified, clientModified ->
+            dueClientModified, modified, clientModified, createdAt ->
         cardId to SyncCard(
             cardId = cardId,
             noteGuid = noteGuid,
@@ -45,6 +45,7 @@ internal fun loadDownloadedCollection(
             dueDateOverrideClientModifiedAt = dueClientModified,
             modifiedAt = modified,
             clientModifiedAt = clientModified,
+            createdAt = createdAt.ifBlank { null },
         )
     }.executeAsList().toMap()
     // The immutable review history (revlog) is the largest table by far. Callers that only

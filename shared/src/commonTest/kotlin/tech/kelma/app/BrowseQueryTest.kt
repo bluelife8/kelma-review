@@ -17,7 +17,20 @@ class BrowseQueryTest {
         dueMillis: Long? = null,
         isLocal: Boolean = false,
         notetype: String = "Basic",
-    ) = BrowseCardRow(1L, "guid", question, answer, deck, notetype, tags, state, dueMillis, isLocal)
+        createdAtMillis: Long? = null,
+    ) = BrowseCardRow(
+        1L,
+        "guid",
+        question,
+        answer,
+        deck,
+        notetype,
+        tags,
+        state,
+        dueMillis,
+        isLocal,
+        createdAtMillis,
+    )
 
     private fun matches(query: String, row: BrowseCardRow): Boolean =
         row.matches(parseBrowseQuery(query), now)
@@ -71,6 +84,19 @@ class BrowseQueryTest {
     }
 
     @Test
+    fun createdQualifierSupportsDatesRangesOpenBoundsAndUnknown() {
+        val januarySecond = row(createdAtMillis = 1_704_153_600_000L)
+        assertTrue(matches("created:2024-01-02", januarySecond))
+        assertTrue(matches("created:2024-01-01..2024-01-31", januarySecond))
+        assertTrue(matches("created:..2024-01-02", januarySecond))
+        assertTrue(matches("created:2024-01-02..", januarySecond))
+        assertFalse(matches("created:2024-02-01", januarySecond))
+        assertTrue(matches("created:unknown", row()))
+        assertFalse(matches("created:unknown", januarySecond))
+        assertFalse(matches("created:2024-02-30", januarySecond))
+    }
+
+    @Test
     fun sortingOrdersAndReverses() {
         val rows = listOf(
             row(question = "charlie", deck = "B"),
@@ -81,6 +107,20 @@ class BrowseQueryTest {
         assertEquals(listOf("alpha", "bravo", "charlie"), byQuestion.map { it.question })
         val byDeckDesc = rows.sortedForBrowse(BrowseSorting(BrowseSort.Deck, ascending = false))
         assertEquals(listOf("C", "B", "A"), byDeckDesc.map { it.deck })
+
+        val dated = listOf(
+            row(question = "unknown"),
+            row(question = "newer", createdAtMillis = 2_000L).copy(cardId = 2L),
+            row(question = "older", createdAtMillis = 1_000L).copy(cardId = 3L),
+        )
+        assertEquals(
+            listOf("older", "newer", "unknown"),
+            dated.sortedForBrowse(BrowseSorting(BrowseSort.Created)).map { it.question },
+        )
+        assertEquals(
+            listOf("newer", "older", "unknown"),
+            dated.sortedForBrowse(BrowseSorting(BrowseSort.Created, ascending = false)).map { it.question },
+        )
     }
 
     @Test
@@ -104,6 +144,22 @@ class BrowseQueryTest {
         assertEquals("is:learning", toggleQueryTerm("is:new", "is:learning"))
         assertEquals("is:due deck:French", toggleQueryTerm("is:due deck:Spanish", "deck:French"))
         assertEquals("tag:a note:Cloze", toggleQueryTerm("tag:a note:Basic", "note:Cloze"))
+        assertEquals(
+            "is:new created:2024-02-01",
+            toggleQueryTerm("is:new created:2024-01-01", "created:2024-02-01"),
+        )
+    }
+
+    @Test
+    fun settingCreationDateReplacesTheDateWithoutTogglingItOff() {
+        assertEquals(
+            "is:new created:2024-01-02",
+            setQueryTerm("is:new created:2024-01-01", "created:2024-01-02"),
+        )
+        assertEquals("created:2024-01-02", setQueryTerm("created:2024-01-02", "created:2024-01-02"))
+        assertEquals("2024-01-02", selectedBrowseCreationDate("is:new created:2024-01-02"))
+        assertEquals(null, selectedBrowseCreationDate("created:2024-01-01..2024-01-31"))
+        assertEquals(null, selectedBrowseCreationDate("created:unknown"))
     }
 
     @Test

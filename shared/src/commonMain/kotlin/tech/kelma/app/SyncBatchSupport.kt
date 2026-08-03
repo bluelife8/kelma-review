@@ -74,6 +74,7 @@ internal fun CardPushBody.toBatchItem(cardId: Long) = BatchCardPushItem(
     scheduleResetClientModifiedAt,
     dueDateOverrideMillis,
     dueDateOverrideClientModifiedAt,
+    createdAt,
 )
 
 internal fun NotetypePushBody.toBatchItem(notetypeId: Long) = BatchNotetypePushItem(

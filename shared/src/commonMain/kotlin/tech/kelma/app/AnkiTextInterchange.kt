@@ -116,6 +116,7 @@ private fun AnkiTextTable.toNotesPlan(sourceName: String, fallbackDeck: String):
             noteSourceId = index.toLong() + 1,
             deckName = row.valueAt(special["deck"]).ifBlank { headers["deck"] ?: fallbackDeck },
             ordinal = 0,
+            createdOnImport = true,
         )
     }
     return CollectionImportPlan(
@@ -145,7 +146,7 @@ private fun AnkiTextTable.toCardsPlan(sourceName: String, fallbackDeck: String):
         decks = deckHierarchyNames(fallbackDeck).toSet(),
         notetypes = emptyList(),
         notes = notes,
-        cards = notes.map { ImportedCard(it.sourceId, it.sourceId, fallbackDeck, 0) },
+        cards = notes.map { ImportedCard(it.sourceId, it.sourceId, fallbackDeck, 0, createdOnImport = true) },
         reviews = emptyList(),
         media = emptyList(),
         warnings = listOf(

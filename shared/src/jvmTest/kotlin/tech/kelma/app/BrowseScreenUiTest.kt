@@ -27,7 +27,7 @@ class BrowseScreenUiTest {
         ),
         cards = mapOf(
             1L to SyncCard(1L, "n1", "French"),
-            2L to SyncCard(2L, "n2", "Spanish"),
+            2L to SyncCard(2L, "n2", "Spanish", createdAt = "2024-01-02T00:00:00.000Z"),
         ),
         notetypes = NotetypeCatalog.definitions,
         deckNames = setOf("French", "Spanish"),
@@ -56,6 +56,15 @@ class BrowseScreenUiTest {
         onAllNodesWithTag("browse-row-1", useUnmergedTree = true).assertCountEquals(1)
         onAllNodesWithTag("browse-row-2", useUnmergedTree = true).assertCountEquals(1)
 
+        onNodeWithText("Created · 2024-01-01").performClick()
+        onNodeWithTag("created-date-filter-input").assertTextContains("2024-01-01")
+        onNodeWithText("Filter").performClick()
+        onNodeWithTag("browse-search").assertTextContains("created:2024-01-01")
+        onNodeWithTag("browse-search").performTextClearance()
+        waitUntil(timeoutMillis = 5_000) {
+            onAllNodesWithTag("browse-row-2", useUnmergedTree = true).fetchSemanticsNodes().isNotEmpty()
+        }
+
         onNodeWithTag("browse-search").performTextInput("spanish")
         waitUntil(timeoutMillis = 5_000) {
             onAllNodesWithTag("browse-row-1", useUnmergedTree = true).fetchSemanticsNodes().isEmpty()
@@ -65,6 +74,7 @@ class BrowseScreenUiTest {
         onNodeWithTag("browse-row-2").performClick()
         onNodeWithTag("browse-detail").assertIsDisplayed()
         onNodeWithText("Note type").assertIsDisplayed()
+        onAllNodesWithText("2024-01-02").assertCountEquals(2)
     }
 
     @Test
