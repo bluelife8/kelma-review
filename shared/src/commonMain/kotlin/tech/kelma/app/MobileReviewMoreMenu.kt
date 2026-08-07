@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.dp
 private enum class MobileReviewMenuPage { Actions, Flags }
 
 private val FrequentMobileReviewActions = listOf(
+    ReviewMoreAction.EditNote,
     ReviewMoreAction.SuspendCard,
     ReviewMoreAction.BuryCard,
     ReviewMoreAction.SuspendNote,

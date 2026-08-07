@@ -62,6 +62,7 @@ internal fun CardContent(
     onDeleteNote: () -> Unit = {},
     onOptions: () -> Unit = {},
     onFlag: (ReviewFlag) -> Unit = {},
+    onEditNote: () -> Unit = {},
     menuShortcut: ReviewMenuShortcut? = null,
 ) {
     val preparedCard = rememberPreparedReviewCard(session, desktopLayout, loadMedia)
@@ -126,6 +127,7 @@ internal fun CardContent(
             ReviewMoreAction.BuryCard -> onBuryCard()
             ReviewMoreAction.ResetCard -> resetConfirmationCard = card
             ReviewMoreAction.SetDueDate -> setDueDateCard = card
+            ReviewMoreAction.EditNote -> onEditNote()
             ReviewMoreAction.SuspendCard -> onSuspendCard()
             ReviewMoreAction.MarkNote -> onMarkNote()
             ReviewMoreAction.BuryNote -> onBuryNote()
@@ -189,15 +191,14 @@ internal fun CardContent(
                 modifier = Modifier.weight(1f).fillMaxWidth(),
                 contentAlignment = Alignment.Center,
             ) {
-                if (!moreMenuExpanded) {
-                    StudyCard(
-                        card,
-                        session.showingAnswer,
-                        true,
-                        audioPlayer::play,
-                        preparedCard = preparedCard.documents,
-                    )
-                }
+                StudyCard(
+                    card,
+                    session.showingAnswer,
+                    true,
+                    audioPlayer::play,
+                    preparedCard = preparedCard.documents,
+                    forceFallback = actionSurfaceOpen,
+                )
             }
             (reviewError ?: moreMessage)?.let {
                 Text(it, color = KelmaColors.Bad, fontSize = 12.sp)

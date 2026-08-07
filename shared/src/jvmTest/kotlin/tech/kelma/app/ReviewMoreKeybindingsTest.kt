@@ -18,6 +18,7 @@ class ReviewMoreKeybindingsTest {
             binding(Key.Minus, ReviewMoreAction.BuryCard),
             binding(Key.N, ReviewMoreAction.ResetCard, command = true, alt = true),
             binding(Key.D, ReviewMoreAction.SetDueDate, command = true, shift = true),
+            binding(Key.E, ReviewMoreAction.EditNote),
             binding(Key.Two, ReviewMoreAction.SuspendCard, shift = true),
             binding(Key.O, ReviewMoreAction.Options),
             binding(Key.I, ReviewMoreAction.CardInfo),

@@ -580,6 +580,24 @@ internal fun AppContent(
                 onAdd = openAdd,
                 onBrowse = openBrowse,
                 onOptions = openOptions,
+                noteEditTarget = { cardId -> displayCollection.noteEditTarget(cardId) },
+                onSaveNoteEdit = { edit ->
+                    try {
+                        localContent = withContext(Dispatchers.Default) {
+                            store.updateNoteFields(edit.noteGuid, edit.fields, edit.tags)
+                        }
+                        null
+                    } catch (exception: Exception) {
+                        exception.message ?: "Could not update the note"
+                    }
+                },
+                onEditAttach = { media ->
+                    val saved = withContext(Dispatchers.Default) {
+                        store.saveMediaAttachment(media.filename, media.mimeType, media.bytes)
+                    }
+                    localContent = saved.content
+                    saved.filename
+                },
                 onCardFlagged = { cardId, flag ->
                     try {
                         localContent = withContext(Dispatchers.Default) {

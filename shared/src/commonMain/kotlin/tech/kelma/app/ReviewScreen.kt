@@ -19,16 +19,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.input.key.Key
-import androidx.compose.ui.input.key.KeyEvent
-import androidx.compose.ui.input.key.KeyEventType
-import androidx.compose.ui.input.key.isAltPressed
-import androidx.compose.ui.input.key.isCtrlPressed
-import androidx.compose.ui.input.key.isMetaPressed
-import androidx.compose.ui.input.key.isShiftPressed
-import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
-import androidx.compose.ui.input.key.type
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -52,6 +43,9 @@ fun ReviewScreen(
     onAdd: () -> Unit = {},
     onBrowse: () -> Unit = {},
     onOptions: () -> Unit = {},
+    noteEditTarget: (Long) -> BrowseEditTarget? = { null },
+    onSaveNoteEdit: suspend (BrowseNoteEdit) -> String? = { "Editing is not available." },
+    onEditAttach: suspend (PickedMediaFile) -> String = { it.filename },
     onCardFlagged: suspend (Long, Int) -> String? = { _, _ -> null },
     onCardBuried: suspend (Long) -> String? = { null },
     onCardReset: suspend (Long) -> String? = { null },
@@ -88,6 +82,7 @@ fun ReviewScreen(
     var ratingIntervals by remember(deck.id) { mutableStateOf<Map<Rating, String>>(emptyMap()) }
     var menuShortcutSequence by remember(deck.id) { mutableLongStateOf(0L) }
     var menuShortcut by remember(deck.id) { mutableStateOf<ReviewMenuShortcut?>(null) }
+    var editTarget by remember(deck.id) { mutableStateOf<BrowseEditTarget?>(null) }
     val focusRequester = remember { FocusRequester() }
     val scope = rememberCoroutineScope()
 
@@ -376,6 +371,19 @@ fun ReviewScreen(
         if (savingReview || syncing || !canUndo) return@requestUndo
         if (options.confirmBeforeUndo) showUndoConfirmation = true else undo()
     }
+    val openEditor = open@{
+        if (savingReview || syncing || editTarget != null) return@open
+        val card = session.currentCard ?: return@open
+        val target = noteEditTarget(card.id)
+        if (target == null) {
+            reviewError = "This card's note is not available."
+        } else {
+            reviewError = null
+            // Clear the dispatched menu command so remounting the card surface does not replay it.
+            menuShortcut = null
+            editTarget = target
+        }
+    }
 
     LaunchedEffect(deck.id) {
         if (isDesktopApp) focusRequester.requestFocus()
@@ -427,7 +435,7 @@ fun ReviewScreen(
         modifier = Modifier.fillMaxSize().then(
             if (!isDesktopApp) Modifier else Modifier
                 .onPreviewKeyEvent { event ->
-                    if (savingReview || syncing) return@onPreviewKeyEvent false
+                    if (savingReview || syncing || editTarget != null) return@onPreviewKeyEvent false
                     event.toReviewMenuCommand()?.let { command ->
                         dispatchMenuCommand(command)
                         return@onPreviewKeyEvent true
@@ -482,6 +490,11 @@ fun ReviewScreen(
                     onFlag = setFlag,
                     menuShortcut = menuShortcut,
                     onBack = onBack,
+                    editTarget = editTarget,
+                    onEditNote = openEditor,
+                    onEditAttach = onEditAttach,
+                    onSaveNoteEdit = onSaveNoteEdit,
+                    onEditClosed = { editTarget = null },
                     modifier = Modifier.weight(1f),
                 )
             }
@@ -491,8 +504,8 @@ fun ReviewScreen(
             ) {
                 ReviewHeader(
                     deck = deck,
-                    undoEnabled = canUndo && !savingReview && !syncing,
-                    moreEnabled = session.currentCard != null && !savingReview && !syncing,
+                    undoEnabled = canUndo && !savingReview && !syncing && editTarget == null,
+                    moreEnabled = session.currentCard != null && !savingReview && !syncing && editTarget == null,
                     currentFlag = session.currentCard?.flag ?: 0,
                     currentNoteMarked = session.currentCard?.noteMarked == true,
                     onBack = { if (!savingReview) onBack() },
@@ -528,6 +541,11 @@ fun ReviewScreen(
                     onFlag = setFlag,
                     menuShortcut = menuShortcut,
                     onBack = onBack,
+                    editTarget = editTarget,
+                    onEditNote = openEditor,
+                    onEditAttach = onEditAttach,
+                    onSaveNoteEdit = onSaveNoteEdit,
+                    onEditClosed = { editTarget = null },
                     modifier = Modifier.weight(1f),
                 )
             }
@@ -573,11 +591,23 @@ private fun ReviewBody(
     onFlag: (ReviewFlag) -> Unit,
     menuShortcut: ReviewMenuShortcut?,
     onBack: () -> Unit,
+    editTarget: BrowseEditTarget?,
+    onEditNote: () -> Unit,
+    onEditAttach: suspend (PickedMediaFile) -> String,
+    onSaveNoteEdit: suspend (BrowseNoteEdit) -> String?,
+    onEditClosed: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Box(modifier = modifier.fillMaxWidth()) {
-        if (session.currentCard == null) {
-            CompletionContent(
+        val noteEdit = editTarget
+        when {
+            noteEdit != null -> ReviewNoteEditor(
+                target = noteEdit,
+                onAttach = onEditAttach,
+                onSave = onSaveNoteEdit,
+                onClose = onEditClosed,
+            )
+            session.currentCard == null -> CompletionContent(
                 cardCount = session.reviewedCount,
                 canUndo = canUndo,
                 showUndo = desktopLayout,
@@ -587,8 +617,7 @@ private fun ReviewBody(
                 onUndo = onUndo,
                 onBack = onBack,
             )
-        } else {
-            CardContent(
+            else -> CardContent(
                 session = session,
                 deck = deck,
                 desktopLayout = desktopLayout,
@@ -613,81 +642,8 @@ private fun ReviewBody(
                 onOptions = onOptions,
                 onFlag = onFlag,
                 menuShortcut = menuShortcut,
+                onEditNote = onEditNote,
             )
         }
-    }
-}
-
-private fun ReviewShortcut.answerRating(): Rating = when (this) {
-    ReviewShortcut.Space, ReviewShortcut.Three -> Rating.Good
-    ReviewShortcut.One -> Rating.Again
-    ReviewShortcut.Two -> Rating.Hard
-    ReviewShortcut.Four -> Rating.Easy
-}
-
-private fun KeyEvent.toReviewMenuCommand(): ReviewMenuCommand? {
-    if (type != KeyEventType.KeyUp) return null
-    return reviewMenuCommandForKey(
-        key = key,
-        command = isMetaPressed || isCtrlPressed,
-        alt = isAltPressed,
-        shift = isShiftPressed,
-    )
-}
-
-internal fun reviewMenuCommandForKey(
-    key: Key,
-    command: Boolean = false,
-    alt: Boolean = false,
-    shift: Boolean = false,
-): ReviewMenuCommand? {
-    if (command && !alt && !shift) {
-        val flag = when (key) {
-            Key.Zero -> ReviewFlag.None
-            Key.One -> ReviewFlag.Red
-            Key.Two -> ReviewFlag.Orange
-            Key.Three -> ReviewFlag.Green
-            Key.Four -> ReviewFlag.Blue
-            Key.Five -> ReviewFlag.Pink
-            Key.Six -> ReviewFlag.Turquoise
-            Key.Seven -> ReviewFlag.Purple
-            else -> null
-        }
-        if (flag != null) return ReviewMenuCommand.Flag(flag)
-    }
-    val action = when {
-        command && alt && key == Key.N -> ReviewMoreAction.ResetCard
-        command && shift && key == Key.D -> ReviewMoreAction.SetDueDate
-        command && alt && key == Key.I -> ReviewMoreAction.PreviousCardInfo
-        command && alt && key == Key.E -> ReviewMoreAction.CreateCopy
-        command && key == Key.Backspace -> ReviewMoreAction.DeleteNote
-        !command && !alt && shift && key == Key.Two -> ReviewMoreAction.SuspendCard
-        !command && !alt && shift && key == Key.Eight -> ReviewMoreAction.MarkNote
-        !command && !alt && shift && key == Key.One -> ReviewMoreAction.SuspendNote
-        !command && !alt && shift && key == Key.V -> ReviewMoreAction.RecordOwnVoice
-        !command && !alt && shift && key == Key.A -> ReviewMoreAction.AutoAdvance
-        !command && !alt && !shift && key == Key.Minus -> ReviewMoreAction.BuryCard
-        !command && !alt && !shift && key == Key.Equals -> ReviewMoreAction.BuryNote
-        !command && !alt && !shift && key == Key.O -> ReviewMoreAction.Options
-        !command && !alt && !shift && key == Key.I -> ReviewMoreAction.CardInfo
-        !command && !alt && !shift && key == Key.R -> ReviewMoreAction.ReplayAudio
-        !command && !alt && !shift && key == Key.Five -> ReviewMoreAction.PauseAudio
-        !command && !alt && !shift && key == Key.Six -> ReviewMoreAction.AudioBackFive
-        !command && !alt && !shift && key == Key.Seven -> ReviewMoreAction.AudioForwardFive
-        !command && !alt && !shift && key == Key.V -> ReviewMoreAction.ReplayOwnVoice
-        else -> null
-    }
-    return action?.let(ReviewMenuCommand::Action)
-}
-
-private fun KeyEvent.toReviewShortcut(): ReviewShortcut? {
-    if (type != KeyEventType.KeyUp) return null
-    return when (key) {
-        Key.Spacebar -> ReviewShortcut.Space
-        Key.One -> ReviewShortcut.One
-        Key.Two -> ReviewShortcut.Two
-        Key.Three -> ReviewShortcut.Three
-        Key.Four -> ReviewShortcut.Four
-        else -> null
     }
 }

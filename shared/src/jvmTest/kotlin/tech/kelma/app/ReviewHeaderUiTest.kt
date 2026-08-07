@@ -97,6 +97,32 @@ class ReviewHeaderUiTest {
     }
 
     @Test
+    fun mobileCardOptionsOfferEditAboveSuspend() = runComposeUiTest {
+        val selected = AtomicReference<ReviewMenuCommand?>(null)
+        setContent {
+            KelmaTheme {
+                Box(Modifier.width(360.dp)) {
+                    ReviewHeader(
+                        deck = DeckSummary("Deck", "Deck", emptyList(), 1, 2, 3),
+                        undoEnabled = false,
+                        moreEnabled = true,
+                        onBack = {},
+                        onUndo = {},
+                        onMenuCommand = selected::set,
+                    )
+                }
+            }
+        }
+
+        onNodeWithContentDescription("Card options").performClick()
+        val editTop = onNodeWithTag("mobile-review-more-EditNote").fetchSemanticsNode().boundsInRoot.top
+        val suspendTop = onNodeWithTag("mobile-review-more-SuspendCard").fetchSemanticsNode().boundsInRoot.top
+        assertTrue(editTop < suspendTop, "Edit must sit above Suspend Card in the mobile review menu")
+        onNodeWithTag("mobile-review-more-EditNote").performClick()
+        assertEquals(ReviewMenuCommand.Action(ReviewMoreAction.EditNote), selected.get())
+    }
+
+    @Test
     fun mobileHeaderDisablesUndoWhenNoReviewCanBeUndone() = runComposeUiTest {
         setContent {
             KelmaTheme {

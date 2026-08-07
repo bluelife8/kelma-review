@@ -48,7 +48,7 @@ data class BrowseNoteEdit(
     val tags: List<String>,
 )
 
-internal data class BrowseEditTarget(
+data class BrowseEditTarget(
     val row: BrowseCardRow,
     val fieldNames: List<String>,
     val values: List<String>,
@@ -194,6 +194,36 @@ fun BrowseScreen(
     } else {
         MobileBrowseScreen(state, actions)
     }
+}
+
+/**
+ * Builds the inline editor target for [cardId] from the displayed collection, returning null when
+ * the card or its note is no longer available. The synthetic row carries only what the editor
+ * reads (note identity, tags, and notetype name); faces are not rendered.
+ */
+internal fun SyncedCollection.noteEditTarget(cardId: Long): BrowseEditTarget? {
+    val card = cards[cardId] ?: return null
+    val note = notes[card.noteGuid] ?: return null
+    val notetype = notetypes[note.notetypeId]
+    val definition = notetype?.definition ?: JsonObject(emptyMap())
+    val row = BrowseCardRow(
+        cardId = card.cardId,
+        noteGuid = note.guid,
+        question = "",
+        answer = "",
+        deck = card.deckName,
+        notetype = notetype?.name ?: "Basic",
+        tags = note.tags,
+        state = BrowseCardState.New,
+        dueMillis = null,
+        isLocal = card.cardId < 0,
+        createdAtMillis = card.createdAtMillis(),
+    )
+    return BrowseEditTarget(
+        row = row,
+        fieldNames = definition.fieldNames(note.fields.size),
+        values = note.fields,
+    )
 }
 
 /**
