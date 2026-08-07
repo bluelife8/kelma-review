@@ -18,6 +18,7 @@ import androidx.compose.ui.unit.dp
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 @OptIn(ExperimentalTestApi::class)
 class DesktopReviewMoreMenuUiTest {
@@ -52,6 +53,9 @@ class DesktopReviewMoreMenuUiTest {
         ReviewMoreAction.entries.forEach { action ->
             onNodeWithText(action.label).assertExists()
         }
+        val editTop = onNodeWithText("Edit").fetchSemanticsNode().boundsInRoot.top
+        val suspendTop = onNodeWithText("Suspend Card").fetchSemanticsNode().boundsInRoot.top
+        assertTrue(editTop < suspendTop, "Edit must sit above Suspend Card in the review menu")
         onNodeWithTag("review-more-FlagCard").performClick()
         ReviewFlag.entries.forEach { flag -> onNodeWithText(flag.label).assertExists() }
         onNodeWithTag("review-flag-Blue").performClick()

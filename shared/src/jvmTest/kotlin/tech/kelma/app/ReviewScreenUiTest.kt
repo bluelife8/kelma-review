@@ -2,6 +2,7 @@ package tech.kelma.app
 
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.click
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -28,6 +29,7 @@ import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 import kotlinx.coroutines.CompletableDeferred
 
@@ -751,6 +753,131 @@ class ReviewScreenUiTest {
         waitUntil(timeoutMillis = 5_000) { undoCalled.get() }
         onNodeWithText("front one").assertIsDisplayed()
         onNodeWithText("back one").assertIsDisplayed()
+    }
+
+    @Test
+    fun editActionOpensInlineEditorAndSaveClosesIt() = runComposeUiTest {
+        val saved = AtomicReference<BrowseNoteEdit?>(null)
+        val collection = SyncedCollection(
+            notes = mapOf(
+                "n1" to SyncNote("n1", NotetypeCatalog.BasicId, listOf("bonjour", "hello"), listOf("french")),
+            ),
+            cards = mapOf(1L to SyncCard(1L, "n1", "French")),
+            notetypes = NotetypeCatalog.definitions,
+            deckNames = setOf("French"),
+        )
+        val card = ReviewCard(1, "bonjour", "hello", noteGuid = "n1")
+        setContent {
+            KelmaTheme {
+                ReviewScreen(
+                    deck = DeckSummary("French", "French", listOf(card), 0, 0, 1),
+                    syncing = false,
+                    canUndo = false,
+                    onSync = {},
+                    noteEditTarget = { cardId -> collection.noteEditTarget(cardId) },
+                    onSaveNoteEdit = { edit ->
+                        saved.set(edit)
+                        null
+                    },
+                    onCardReviewed = { _, _, _ -> null },
+                    onUndo = { null },
+                    onBack = {},
+                )
+            }
+        }
+        waitForIdle()
+
+        onNodeWithText("More").performClick()
+        onNodeWithTag("review-more-EditNote").performClick()
+
+        onNodeWithTag("review-note-editor").assertIsDisplayed()
+        onNodeWithText("EDIT NOTE").assertIsDisplayed()
+        onNodeWithText("Show Answer").assertDoesNotExist()
+        onNodeWithTag("browse-edit-field-0").assertTextContains("bonjour")
+        onNodeWithTag("browse-edit-field-1").performTextReplacement("hi")
+        onNodeWithTag("browse-edit-tags").performTextReplacement("french, greetings")
+        onNodeWithTag("browse-edit-save").performClick()
+        waitUntil(timeoutMillis = 5_000) { saved.get() != null }
+
+        assertEquals("n1", saved.get()?.noteGuid)
+        assertEquals(listOf("bonjour", "hi"), saved.get()?.fields)
+        assertEquals(listOf("french", "greetings"), saved.get()?.tags)
+        onNodeWithTag("review-note-editor").assertDoesNotExist()
+        onNodeWithText("Show Answer").assertIsDisplayed()
+    }
+
+    @Test
+    fun editShortcutOpensEditorAndMenuKeysStayQuietWhileEditing() = runComposeUiTest {
+        val optionsOpened = AtomicBoolean(false)
+        val saved = AtomicReference<BrowseNoteEdit?>(null)
+        val collection = SyncedCollection(
+            notes = mapOf(
+                "n1" to SyncNote("n1", NotetypeCatalog.BasicId, listOf("bonjour", "hello"), emptyList()),
+            ),
+            cards = mapOf(1L to SyncCard(1L, "n1", "French")),
+            notetypes = NotetypeCatalog.definitions,
+            deckNames = setOf("French"),
+        )
+        val card = ReviewCard(1, "bonjour", "hello", noteGuid = "n1")
+        setContent {
+            KelmaTheme {
+                ReviewScreen(
+                    deck = DeckSummary("French", "French", listOf(card), 0, 0, 1),
+                    syncing = false,
+                    canUndo = false,
+                    onSync = {},
+                    onOptions = { optionsOpened.set(true) },
+                    noteEditTarget = { cardId -> collection.noteEditTarget(cardId) },
+                    onSaveNoteEdit = { edit ->
+                        saved.set(edit)
+                        null
+                    },
+                    onCardReviewed = { _, _, _ -> null },
+                    onUndo = { null },
+                    onBack = {},
+                )
+            }
+        }
+        waitForIdle()
+
+        onRoot().performKeyInput { keyDown(Key.E); keyUp(Key.E) }
+        onNodeWithTag("review-note-editor").assertIsDisplayed()
+
+        // Plain-letter menu shortcuts must not fire or queue while the editor is open.
+        onRoot().performKeyInput { keyDown(Key.O); keyUp(Key.O) }
+        onNodeWithText("Cancel").performClick()
+        waitForIdle()
+
+        assertFalse(optionsOpened.get())
+        assertEquals(null, saved.get())
+        onNodeWithTag("review-note-editor").assertDoesNotExist()
+        onNodeWithText("Show Answer").assertIsDisplayed()
+    }
+
+    @Test
+    fun editActionWithoutAvailableNoteShowsError() = runComposeUiTest {
+        val card = ReviewCard(1, "front", "back", noteGuid = "missing")
+        setContent {
+            KelmaTheme {
+                ReviewScreen(
+                    deck = DeckSummary("Deck", "Deck", listOf(card), 0, 0, 1),
+                    syncing = false,
+                    canUndo = false,
+                    onSync = {},
+                    noteEditTarget = { null },
+                    onCardReviewed = { _, _, _ -> null },
+                    onUndo = { null },
+                    onBack = {},
+                )
+            }
+        }
+        waitForIdle()
+
+        onNodeWithText("More").performClick()
+        onNodeWithTag("review-more-EditNote").performClick()
+
+        onNodeWithText("This card's note is not available.").assertIsDisplayed()
+        onNodeWithTag("review-note-editor").assertDoesNotExist()
     }
 }
 
