@@ -191,15 +191,15 @@ internal fun CardContent(
                 modifier = Modifier.weight(1f).fillMaxWidth(),
                 contentAlignment = Alignment.Center,
             ) {
-                if (!moreMenuExpanded) {
-                    StudyCard(
-                        card,
-                        session.showingAnswer,
-                        true,
-                        audioPlayer::play,
-                        preparedCard = preparedCard.documents,
-                    )
-                }
+                // The More menu is a separate popup window that layers above the heavyweight
+                // WebView panel, so the card stays rendered while the menu is open.
+                StudyCard(
+                    card,
+                    session.showingAnswer,
+                    true,
+                    audioPlayer::play,
+                    preparedCard = preparedCard.documents,
+                )
             }
             (reviewError ?: moreMessage)?.let {
                 Text(it, color = KelmaColors.Bad, fontSize = 12.sp)

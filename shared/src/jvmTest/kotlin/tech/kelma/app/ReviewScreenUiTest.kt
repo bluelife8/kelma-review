@@ -855,6 +855,30 @@ class ReviewScreenUiTest {
     }
 
     @Test
+    fun desktopCardStaysVisibleWhileMoreMenuIsOpen() = runComposeUiTest {
+        val card = ReviewCard(21, "menu front", "menu back", noteGuid = "n21")
+        setContent {
+            KelmaTheme {
+                ReviewScreen(
+                    deck = DeckSummary("Deck", "Deck", listOf(card), 0, 0, 1),
+                    syncing = false,
+                    canUndo = false,
+                    onSync = {},
+                    onCardReviewed = { _, _, _ -> null },
+                    onUndo = { null },
+                    onBack = {},
+                )
+            }
+        }
+        waitForIdle()
+
+        onNodeWithText("menu front").assertIsDisplayed()
+        onNodeWithText("More").performClick()
+        onNodeWithTag("review-more-menu").assertIsDisplayed()
+        onNodeWithText("menu front").assertIsDisplayed()
+    }
+
+    @Test
     fun editActionWithoutAvailableNoteShowsError() = runComposeUiTest {
         val card = ReviewCard(1, "front", "back", noteGuid = "missing")
         setContent {
