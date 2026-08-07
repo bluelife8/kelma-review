@@ -38,8 +38,12 @@ internal fun StudyCard(
     onCardTap: (Float) -> Unit = {},
     modifier: Modifier = Modifier,
     preparedCard: PreparedStudyCard? = null,
+    forceFallback: Boolean = false,
 ) {
-    if (shouldUseRichReviewCard()) {
+    // Desktop menus and dialogs render in-scene and cannot draw above the heavyweight WebView
+    // panel, so callers force the lightweight renderer while such an overlay is open. The
+    // retained browser keeps its last frame and remounts seamlessly when the overlay closes.
+    if (shouldUseRichReviewCard() && !forceFallback) {
         val prepared = preparedCard?.face(showingAnswer) ?: remember(card, showingAnswer, desktopLayout) {
             prepareStudyCardFace(card, showingAnswer, desktopLayout)
         }

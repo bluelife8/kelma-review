@@ -875,7 +875,33 @@ class ReviewScreenUiTest {
         onNodeWithText("menu front").assertIsDisplayed()
         onNodeWithText("More").performClick()
         onNodeWithTag("review-more-menu").assertIsDisplayed()
+        onNodeWithTag("review-more-SuspendCard").assertIsDisplayed()
         onNodeWithText("menu front").assertIsDisplayed()
+    }
+
+    @Test
+    fun desktopCardStaysVisibleWhileActionDialogIsOpen() = runComposeUiTest {
+        val card = ReviewCard(22, "dialog front", "dialog back", noteGuid = "n22")
+        setContent {
+            KelmaTheme {
+                ReviewScreen(
+                    deck = DeckSummary("Deck", "Deck", listOf(card), 0, 0, 1),
+                    syncing = false,
+                    canUndo = false,
+                    onSync = {},
+                    onCardReviewed = { _, _, _ -> null },
+                    onUndo = { null },
+                    onBack = {},
+                )
+            }
+        }
+        waitForIdle()
+
+        onNodeWithText("More").performClick()
+        onNodeWithTag("review-more-DeleteNote").performClick()
+        onNodeWithText("Delete Note").assertIsDisplayed()
+        onNodeWithText("Delete this note and all of its cards? This action will synchronize.").assertIsDisplayed()
+        onNodeWithText("dialog front").assertIsDisplayed()
     }
 
     @Test

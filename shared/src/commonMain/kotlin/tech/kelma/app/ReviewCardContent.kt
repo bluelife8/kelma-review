@@ -191,14 +191,13 @@ internal fun CardContent(
                 modifier = Modifier.weight(1f).fillMaxWidth(),
                 contentAlignment = Alignment.Center,
             ) {
-                // The More menu is a separate popup window that layers above the heavyweight
-                // WebView panel, so the card stays rendered while the menu is open.
                 StudyCard(
                     card,
                     session.showingAnswer,
                     true,
                     audioPlayer::play,
                     preparedCard = preparedCard.documents,
+                    forceFallback = actionSurfaceOpen,
                 )
             }
             (reviewError ?: moreMessage)?.let {
