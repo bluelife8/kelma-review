@@ -700,7 +700,9 @@ class PersistentCollectionStore(
             schedulerProfiles.clearAccount()
             studyDayPolicies.clearAccount()
             schedulerOptimizer.clear()
+            plugins.clearAll()
             pluginRendererAssignments.clear()
+            queries.clearSyncLogEntries()
         }
         mediaAttachments.clearCache()
     }

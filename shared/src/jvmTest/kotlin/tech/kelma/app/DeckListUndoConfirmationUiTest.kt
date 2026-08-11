@@ -50,6 +50,7 @@ private fun TestDeckList(
     DeckListScreen(
         decks = listOf(DeckSummary("Deck", "Deck", emptyList(), 0, 0, 0)),
         signedIn = false,
+        activeAccountUsername = null,
         syncing = false,
         syncMessage = null,
         syncMessageIsError = false,
@@ -71,6 +72,8 @@ private fun TestDeckList(
         onSignIn = {},
         onSync = {},
         onOpenSync = {},
+        onSwitchAccount = {},
         onSignOut = {},
+        onRemoveFromDevice = {},
     )
 }

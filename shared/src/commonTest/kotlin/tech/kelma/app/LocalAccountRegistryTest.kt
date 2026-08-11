@@ -3,6 +3,7 @@ package tech.kelma.app
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
+import kotlin.test.assertNull
 
 class LocalAccountRegistryTest {
     @Test
@@ -21,6 +22,23 @@ class LocalAccountRegistryTest {
         val restored = LocalAccountRegistry(storage)
         assertEquals(first, restored.activeDatabaseName())
         assertEquals(2, restored.accounts().size)
+    }
+
+    @Test
+    fun removingAnAccountDropsItsRegistryEntryAndDeactivatesIt() {
+        val storage = MemoryAccountRegistryStorage()
+        val registry = LocalAccountRegistry(storage)
+        val aliceDatabase = registry.activate("https://sync2.kelma.tech", "alice@example.com")
+        registry.activate("https://sync2.kelma.tech", "bob@example.com")
+        registry.activate("https://sync2.kelma.tech", "alice@example.com")
+
+        val removed = registry.remove("https://sync2.kelma.tech/", "ALICE@example.com")
+
+        assertEquals(aliceDatabase, removed?.databaseName)
+        assertNull(registry.activeAccount())
+        assertNull(registry.databaseName("https://sync2.kelma.tech", "alice@example.com"))
+        assertEquals(listOf("bob@example.com"), registry.accounts().map(LocalAccountRecord::username))
+        assertEquals(GuestCollectionDatabaseName, LocalAccountRegistry(storage).activeDatabaseName())
     }
 
     @Test

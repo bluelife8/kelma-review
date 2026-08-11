@@ -102,10 +102,19 @@ internal class PluginPersistence(
 
     fun uninstall(pluginId: String) {
         database.transaction {
-            queries.clearPluginLogs(pluginId)
-            queries.clearPluginFiles(pluginId)
-            queries.clearPluginSettings(pluginId)
-            queries.deletePluginInstallation(pluginId)
+            delete(pluginId)
         }
+    }
+
+    fun clearAll() {
+        queries.selectPluginIds().executeAsList().forEach(::delete)
+        queries.setPluginSafeMode(0)
+    }
+
+    private fun delete(pluginId: String) {
+        queries.clearPluginLogs(pluginId)
+        queries.clearPluginFiles(pluginId)
+        queries.clearPluginSettings(pluginId)
+        queries.deletePluginInstallation(pluginId)
     }
 }

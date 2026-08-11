@@ -31,4 +31,22 @@ internal class AppState {
     val syncConflicts = mutableStateOf<List<SyncUploadConflict>>(emptyList())
     val syncLogs = mutableStateOf<List<SyncLogEntry>>(emptyList())
     val restored = mutableStateOf(false)
+
+    fun clearDisplayedAccount() {
+        token.value = null
+        collection.value = SyncedCollection()
+        localContent.value = LocalContentSnapshot()
+        localReviews.value = LocalReviewSnapshot()
+        schedulerProfile.value = SchedulerProfileState()
+        studyDayPolicy.value = AccountStudyDayPolicy.systemDefault()
+        schedulerOptimizer.value = SchedulerOptimizerState()
+        pluginRendererAssignments.value = PluginRendererAssignmentState()
+        pluginRenderedCards.value = emptyMap()
+        studyStats.value = StudyStats()
+        selectedDeck.value = null
+        desktopStudyStarted.value = false
+        destination.value = destination.value.navigate(CollectionNavigationAction.OpenDecks)
+        syncConflicts.value = emptyList()
+        syncLogs.value = emptyList()
+    }
 }

@@ -593,23 +593,6 @@ fun App() {
                 exception.message ?: "Could not save the renderer assignment"
             }
         }
-    fun clearDisplayedAccount() {
-        token = null
-        collection = SyncedCollection()
-        localContent = LocalContentSnapshot()
-        localReviews = LocalReviewSnapshot()
-        schedulerProfile = SchedulerProfileState()
-        studyDayPolicy = AccountStudyDayPolicy.systemDefault()
-        schedulerOptimizer = SchedulerOptimizerState()
-        pluginRendererAssignments = PluginRendererAssignmentState()
-        pluginRenderedCards = emptyMap()
-        studyStats = StudyStats()
-        selectedDeck = null
-        desktopStudyStarted = false
-        destination = destination.navigate(CollectionNavigationAction.OpenDecks)
-        syncConflicts = emptyList()
-        syncLogs = emptyList()
-    }
     val signIn: (String, String) -> Unit = signIn@{ username, password ->
         if (working || !restored) return@signIn
         working = true
@@ -619,7 +602,7 @@ fun App() {
             try {
                 val auth = syncClient.login(username, password)
                 val targetDatabase = accountRegistry.activate(DefaultKelmaSyncEndpoint, username)
-                clearDisplayedAccount()
+                appState.clearDisplayedAccount()
                 token = auth.token
                 pendingAccountSignIn = PendingAccountSignIn(username, auth)
                 showSignIn = false
@@ -645,7 +628,7 @@ fun App() {
         accountRegistry.activate(account.endpoint, account.username)
         pendingAccountSignIn = null
         openingSavedAccount = true
-        clearDisplayedAccount()
+        appState.clearDisplayedAccount()
         showSignIn = true
         restored = false
         databaseName = targetDatabase
@@ -656,7 +639,7 @@ fun App() {
         accountRegistry.deactivate()
         pendingAccountSignIn = null
         openingSavedAccount = false
-        clearDisplayedAccount()
+        appState.clearDisplayedAccount()
         error = null
         syncMessage = null
         showSignIn = true
@@ -681,6 +664,7 @@ fun App() {
     AppContent(
         state = appState,
         store = store,
+        accountRegistry = accountRegistry,
         scope = scope,
         appFocusRequester = appFocusRequester,
         displayCollection = displayCollection,

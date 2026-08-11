@@ -1453,6 +1453,9 @@ selectPluginInstallations:
 SELECT plugin_id, manifest_json, enabled, status, error_message, installed_at_ms, updated_at_ms
 FROM plugin_installations ORDER BY plugin_id;
 
+selectPluginIds:
+SELECT plugin_id FROM plugin_installations ORDER BY plugin_id;
+
 insertPluginInstallation:
 INSERT INTO plugin_installations(
     plugin_id, manifest_json, enabled, status, error_message, installed_at_ms, updated_at_ms

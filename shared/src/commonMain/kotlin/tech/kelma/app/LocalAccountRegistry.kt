@@ -78,6 +78,20 @@ internal class LocalAccountRegistry(
         persist()
     }
 
+    fun activeAccount(): LocalAccountRecord? = state.accounts.firstOrNull { it.key == state.activeKey }
+
+    fun remove(endpoint: String, username: String): LocalAccountRecord? {
+        val key = accountKey(endpoint, username)
+        val removed = state.accounts.firstOrNull { it.key == key } ?: return null
+        state = state.copy(
+            initialized = true,
+            activeKey = state.activeKey.takeUnless { it == key },
+            accounts = state.accounts.filterNot { it.key == key },
+        )
+        persist()
+        return removed
+    }
+
     internal fun accounts(): List<LocalAccountRecord> = state.accounts
 
     private fun persist() {

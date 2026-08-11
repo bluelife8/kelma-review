@@ -16,8 +16,8 @@ import kotlin.test.assertTrue
 @OptIn(ExperimentalTestApi::class)
 class SignInScreenUiTest {
     @Test
-    fun desktopDeckListExposesAccountSwitching() = runComposeUiTest {
-        val switched = AtomicBoolean(false)
+    fun desktopDeckListExposesAccountControls() = runComposeUiTest {
+        val opened = AtomicBoolean(false)
         setContent {
             KelmaTheme {
                 DesktopDeckListScreen(
@@ -45,13 +45,13 @@ class SignInScreenUiTest {
                     onOpenDeck = {},
                     onSignIn = {},
                     onSync = {},
-                    onSignOut = { switched.set(true) },
+                    onAccount = { opened.set(true) },
                 )
             }
         }
 
-        onNodeWithText("Switch Account").assertIsDisplayed().performClick()
-        assertTrue(switched.get())
+        onNodeWithText("Account…").assertIsDisplayed().performClick()
+        assertTrue(opened.get())
     }
 
     @Test

@@ -40,20 +40,20 @@ submission artifacts.
 
 ### Kelma Review privacy policy
 
-- [ ] Publish a dedicated public policy, preferably at `https://kelma.tech/review/privacy`.
-- [ ] Make the policy accessible without signing in, geofencing, or installing the app.
-- [ ] Identify Kelma Tech LLC and provide a working privacy contact address.
-- [ ] Describe email/username and authentication processing.
-- [ ] Describe synced decks, notes, cards, templates, tags, settings, media, and review history.
-- [ ] Describe KelmaSync, database hosting, and Cloudflare/R2 processing.
-- [ ] Distinguish local-only database/cache data from cloud-synced data.
-- [ ] Explain that Record Own Voice creates a temporary on-device recording that is not persisted or synchronized.
-- [ ] Explain native file and document picker behavior.
-- [ ] State retention, backup, and deletion timelines.
-- [ ] State whether data is sold or shared and identify relevant service-provider processing.
-- [ ] State that the current app has no ads, analytics, or cross-app tracking.
-- [ ] Remove or clearly separate unrelated Kelma Immersion AI, payment, and subscription disclosures.
-- [ ] Add Privacy Policy, Terms, Support, and About/Licenses links inside Kelma Review.
+- [x] Publish a dedicated public policy at `https://kelma.tech/review/privacy`.
+- [x] Make the policy accessible without signing in, geofencing, or installing the app.
+- [x] Identify Kelma Tech LLC and provide a working privacy contact address.
+- [x] Describe email/username and authentication processing.
+- [x] Describe synced decks, notes, cards, templates, tags, settings, media, and review history.
+- [x] Describe KelmaSync, database hosting, and Cloudflare/R2 processing.
+- [x] Distinguish local-only database/cache data from cloud-synced data.
+- [x] Explain that Record Own Voice creates a temporary on-device recording that is not persisted or synchronized.
+- [x] Explain native file and document picker behavior.
+- [x] State retention, backup, and deletion timelines.
+- [x] State whether data is sold or shared and identify relevant service-provider processing.
+- [x] State that the current app has no ads, analytics, or cross-app tracking.
+- [x] Remove or clearly separate unrelated Kelma Immersion AI, payment, and subscription disclosures.
+- [x] Add Privacy Policy, Terms, Support, and About/Licenses links inside Kelma Review.
 
 ### Account and data deletion
 
@@ -63,9 +63,10 @@ submission artifacts.
 - [x] Delete the user's complete media prefix from R2 or filesystem storage, including orphaned blobs.
 - [x] Make deletion idempotent and safe to retry after partial failure.
 - [x] Connect shared Kelma account deletion to KelmaSync deletion before deleting the authentication account.
-- [ ] Add an in-app deletion flow with clear consequences and confirmation.
-- [ ] After confirmed cloud deletion, remove local account databases, cached media, registry entries, and Keychain/Keystore credentials.
-- [ ] Keep Sign out, Remove from this device, Delete Review cloud data, and Delete Kelma account semantically distinct.
+- [x] Add an in-app deletion flow with clear consequences and confirmation.
+- [x] Add a separate confirmed Remove from this device action that clears local account data, media, plugins, registry entries, and secure credentials without deleting cloud data.
+- [ ] Automatically remove local account databases and caches after confirmed cloud deletion on the web.
+- [x] Keep Sign out, Remove from this device, Review cloud data, and Delete Kelma account semantically distinct.
 - [x] Publish a direct web deletion page at `https://kelma.tech/review/account-deletion`.
 - [x] Explain what is deleted, what may be retained, why it is retained, and for how long.
 - [ ] Test deletion against Postgres, R2/filesystem storage, Immersion authentication, and every saved client token.
@@ -117,7 +118,7 @@ submission artifacts.
 - [ ] Prepare phone and tablet screenshots from final store builds.
 - [ ] Prepare required Play icon and feature artwork.
 - [ ] Prepare App Store promotional artwork if used.
-- [ ] Publish working Privacy, Support, Terms, and account-deletion URLs.
+- [x] Publish working Privacy, Support, Terms, and account-deletion URLs.
 - [ ] Provide developer contact information and copyright details.
 - [ ] Verify rights to all branding, fonts, screenshots, sample decks, and listing copy.
 - [ ] Avoid claims that cannot be demonstrated during review.
