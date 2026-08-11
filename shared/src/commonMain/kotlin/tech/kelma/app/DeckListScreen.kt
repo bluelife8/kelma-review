@@ -48,6 +48,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 private val MobileCountWidth = 48.dp
+internal const val KelmaAccountDeletionUrl = "https://kelma.tech/review/account-deletion"
 
 @Composable
 fun DeckListScreen(
@@ -134,6 +135,7 @@ fun DeckListScreen(
             onSync = onSync,
             onOpenSync = onOpenSync,
             onSignOut = onSignOut,
+            onDeleteAccount = { uriHandler.openUri(KelmaAccountDeletionUrl) },
         )
     }
     if (showUndoConfirmation) {
@@ -174,6 +176,7 @@ private fun MobileDeckListScreen(
     onSync: () -> Unit,
     onOpenSync: () -> Unit,
     onSignOut: () -> Unit,
+    onDeleteAccount: () -> Unit,
 ) {
     val deckListState = rememberLazyListState()
     Scaffold(
@@ -191,6 +194,7 @@ private fun MobileDeckListScreen(
                 onImportFile,
                 onExportCollection,
                 onGetShared,
+                onDeleteAccount,
             )
         },
         bottomBar = {
@@ -265,6 +269,7 @@ private fun MobileToolbar(
     onImportFile: () -> Unit,
     onExportCollection: () -> Unit,
     onGetShared: () -> Unit,
+    onDeleteAccount: () -> Unit,
 ) {
     var accountMenu by remember { mutableStateOf(false) }
     val onStats = LocalOpenStats.current
@@ -337,6 +342,15 @@ private fun MobileToolbar(
                             if (signedIn) onSignOut() else onSignIn()
                         },
                     )
+                    if (signedIn) {
+                        DropdownMenuItem(
+                            text = { Text("Delete Kelma account…") },
+                            onClick = {
+                                accountMenu = false
+                                onDeleteAccount()
+                            },
+                        )
+                    }
                 }
             }
         }
