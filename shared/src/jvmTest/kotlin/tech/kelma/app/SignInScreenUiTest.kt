@@ -55,6 +55,32 @@ class SignInScreenUiTest {
     }
 
     @Test
+    fun optionalAccountActionsOpenCanonicalWebFlowsOrReturnToLocalUse() = runComposeUiTest {
+        val opened = AtomicReference<String?>(null)
+        val continued = AtomicBoolean(false)
+        setContent {
+            KelmaTheme {
+                SignInScreen(
+                    signingIn = false,
+                    error = null,
+                    onSignIn = { _, _ -> },
+                    onBack = { continued.set(true) },
+                    onOpenUri = opened::set,
+                )
+            }
+        }
+
+        onNodeWithText("In Review, a Kelma account is optional and only needed for KelmaSync.")
+            .assertIsDisplayed()
+        onNodeWithTag("create-kelma-account").performClick()
+        assertEquals(KelmaAccountRegistrationUrl, opened.get())
+        onNodeWithTag("forgot-password").performClick()
+        assertEquals(KelmaPasswordResetUrl, opened.get())
+        onNodeWithTag("continue-without-account").performClick()
+        assertTrue(continued.get())
+    }
+
+    @Test
     fun savedAccountOpensWithoutRequestingItsPassword() = runComposeUiTest {
         val submitted = AtomicReference<Pair<String, String>?>(null)
         val selected = AtomicReference<LocalAccountChoice?>(null)
