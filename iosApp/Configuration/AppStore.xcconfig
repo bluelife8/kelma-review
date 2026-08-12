@@ -1,0 +1,5 @@
+#include "Config.xcconfig"
+
+KELMA_APP_STORE_BUILD=YES
+KOTLIN_FRAMEWORK_BUILD_TYPE=Release
+CODE_SIGN_STYLE=Automatic

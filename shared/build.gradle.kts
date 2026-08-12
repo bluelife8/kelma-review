@@ -19,6 +19,9 @@ val luaNativeSources = fileTree(luaNativeRoot.resolve("src")) {
 val luaNativeHeaders = fileTree(luaNativeRoot) { include("*.h", "src/*.h") }
 val desktopLuaResources = layout.buildDirectory.dir("generated/lua/jvmMain/resources")
 val desktopLuaLibraryName = System.mapLibraryName("kelma_lua")
+val appStoreBuild = providers.gradleProperty("kelmaAppStoreBuild")
+    .map(String::toBooleanStrict)
+    .orElse(false)
 
 val buildDesktopLuaRuntime by tasks.registering(Exec::class) {
     val output = desktopLuaResources.map { it.file("native/$desktopLuaLibraryName") }
@@ -116,15 +119,17 @@ kotlin {
                 """.trimIndent(),
             )
         }
-        iosTarget.compilations.getByName("main").cinterops.create("kelmaLua") {
-            definitionFile.set(project.file("src/nativeInterop/cinterop/kelmaLua.def"))
-            includeDirs(luaNativeRoot)
-            extraOpts(
-                "-libraryPath", outputDirectory.get().asFile.absolutePath,
-                "-staticLibrary", luaLibrary.get().asFile.name,
-            )
+        if (!appStoreBuild.get()) {
+            iosTarget.compilations.getByName("main").cinterops.create("kelmaLua") {
+                definitionFile.set(project.file("src/nativeInterop/cinterop/kelmaLua.def"))
+                includeDirs(luaNativeRoot)
+                extraOpts(
+                    "-libraryPath", outputDirectory.get().asFile.absolutePath,
+                    "-staticLibrary", luaLibrary.get().asFile.name,
+                )
+            }
+            tasks.named("cinteropKelmaLua$targetLabel").configure { dependsOn(buildLuaRuntime) }
         }
-        tasks.named("cinteropKelmaLua$targetLabel").configure { dependsOn(buildLuaRuntime) }
         iosTarget.binaries.framework {
             baseName = "Shared"
             isStatic = true
@@ -156,10 +161,15 @@ kotlin {
     }
     
     sourceSets {
+        if (appStoreBuild.get()) {
+            iosMain {
+                kotlin.exclude("**/PluginLuaRuntime.ios.kt")
+                kotlin.srcDir("src/iosAppStoreMain/kotlin")
+            }
+        }
         androidMain.dependencies {
             implementation(libs.androidx.activity.compose)
             implementation(libs.compose.uiToolingPreview)
-            implementation(libs.compose.uiTooling)
             implementation(libs.ktor.client.okhttp)
             implementation(libs.sqldelight.androidDriver)
         }
@@ -230,8 +240,4 @@ tasks.named("jvmProcessResources").configure { dependsOn(buildDesktopLuaRuntime)
 
 tasks.withType<Test>().configureEach {
     systemProperty("tech.kelma.disable-native-card-renderer", "true")
-}
-
-dependencies {
-    androidRuntimeClasspath(libs.compose.uiTooling)
 }

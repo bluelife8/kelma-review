@@ -10,17 +10,17 @@ internal const val OpenSyncLogCommand = "${KelmaCommandPrefix}open-sync"
 internal const val OpenPluginsCommand = "${KelmaCommandPrefix}open-plugins"
 internal const val SyncNowCommand = "${KelmaCommandPrefix}sync-now"
 
-internal fun PluginCommandRegistry.registerKelmaCommands() {
-    listOf(
-        OpenDecksCommand to "Open Decks",
-        OpenAddCommand to "Add note",
-        OpenBrowseCommand to "Browse cards",
-        OpenOptionsCommand to "Open Options",
-        OpenStatsCommand to "Open Stats",
-        OpenSyncLogCommand to "Open Sync activity",
-        OpenPluginsCommand to "Manage plugins",
-        SyncNowCommand to "Sync now",
-    ).forEach { (id, title) ->
+internal fun PluginCommandRegistry.registerKelmaCommands(externalPluginsEnabled: Boolean = true) {
+    buildList {
+        add(OpenDecksCommand to "Open Decks")
+        add(OpenAddCommand to "Add note")
+        add(OpenBrowseCommand to "Browse cards")
+        add(OpenOptionsCommand to "Open Options")
+        add(OpenStatsCommand to "Open Stats")
+        add(OpenSyncLogCommand to "Open Sync activity")
+        if (externalPluginsEnabled) add(OpenPluginsCommand to "Manage plugins")
+        add(SyncNowCommand to "Sync now")
+    }.forEach { (id, title) ->
         register(
             PluginCommand(
                 pluginId = "tech.kelma.app",

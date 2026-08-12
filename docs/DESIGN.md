@@ -154,7 +154,7 @@ Compose Multiplatform owns application chrome and built-in screens. The current 
 ```text
 Desktop community: Lua enabled; optional JAR plugins
 Android community/F-Droid: Lua enabled
-Android store: decide after store-policy review
+Android Play: Lua enabled under the existing restricted interpreted-code policy
 iOS App Store: external Lua plugins excluded at compile time
 iOS community: Lua enabled, separate bundle ID, user-signed
 ```

@@ -141,7 +141,14 @@ The public JAR SDK must not expose internal database classes. Restart-after-upda
 - Desktop: Lua, workers, processes, and optional native/JAR modules.
 - Android: Lua within the app sandbox; background servers require Android lifecycle/foreground-service support.
 - iOS community: Lua while the app is active; no downloaded native modules or arbitrary processes.
-- iOS App Store: no external plugin runtime in the submitted build.
+- iOS App Store: no external plugin runtime in the submitted build. The dedicated `AppStore` Xcode
+  configuration compiles a plugin-free Kotlin framework, omits the Lua cinterop/library, disables plugin
+  startup and review events, and removes Plugin Manager entry points.
+
+Android Play and community builds currently retain the restricted Lua plugin runtime. Google Play permits
+interpreted code when it does not download or modify executable code contrary to policy, and this product's
+plugin packages are user-selected study extensions rather than a remote app-update mechanism. Revisit that
+decision if Play policy or the plugin API expands; iOS remains strictly plugin-free for App Store review.
 
 ## Compatibility
 

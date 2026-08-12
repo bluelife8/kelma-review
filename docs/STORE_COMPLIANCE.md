@@ -9,34 +9,34 @@ submission artifacts.
 
 ### Store build variants
 
-- [ ] Add an Android Play Store build/release path that produces a signed AAB.
+- [x] Add an Android Play Store build/release path that produces a signed AAB when upload-key secrets are present.
 - [ ] Enroll in Google Play App Signing and create a protected upload key.
-- [ ] Store Android signing credentials only in CI/release secrets.
-- [ ] Add an iOS App Store build configuration separate from the community/AltStore build.
+- [x] Read Android signing credentials only from release-environment secrets; no credentials are committed.
+- [x] Add an iOS App Store build configuration separate from the community/AltStore build.
 - [ ] Produce a signed `.xcarchive` with Apple Distribution signing.
 - [ ] Export and upload an App Store Connect IPA through Xcode, Transporter, or CI.
-- [ ] Store App Store Connect credentials and signing material only in the release environment.
-- [ ] Preserve the existing community APK/IPA release behavior where appropriate; do not replace or rename preview artifacts as store builds.
+- [x] Configure the store workflow to read App Store Connect and signing material only from protected secrets.
+- [x] Preserve the existing community APK/IPA release workflow separately; store artifacts use dedicated paths.
 
 ### iOS identity and signing
 
-- [ ] Change `PRODUCT_BUNDLE_IDENTIFIER` to exactly `tech.kelma.app.KelmaReview`.
-- [ ] Remove `$(TEAM_ID)` from the bundle identifier.
-- [ ] Use `TEAM_ID` only for `DEVELOPMENT_TEAM`.
-- [ ] Remove the explicit `Apple Development` identity from the Release configuration or configure automatic App Store distribution signing.
+- [x] Change `PRODUCT_BUNDLE_IDENTIFIER` to exactly `tech.kelma.app.KelmaReview`.
+- [x] Remove `$(TEAM_ID)` from the bundle identifier.
+- [x] Use `TEAM_ID` only for `DEVELOPMENT_TEAM`.
+- [x] Configure the App Store build for automatic distribution signing without a hard-coded signing identity.
 - [ ] Reserve the exact bundle identifier in the Apple Developer portal and App Store Connect.
 - [ ] Verify `CFBundleIdentifier`, `CFBundleShortVersionString`, and `CFBundleVersion` inside every signed archive/IPA.
 - [ ] Keep App Store, Android, desktop, release-tag, and AltStore versions aligned as required by `docs/RELEASE.md`.
 
 ### External plugin runtime
 
-- [ ] Disable external `.kelmaplugin` installation and execution in the iOS App Store build.
-- [ ] Remove Plugin Manager and plugin-install entry points from the iOS App Store build.
-- [ ] Ensure the App Store build cannot load previously imported plugin packages.
-- [ ] Exclude the external Lua runtime from the App Store artifact where practical.
-- [ ] Keep plugin support available only in the community/AltStore build.
-- [ ] Decide whether the Play Store build will also disable external plugins; disabling them is the lowest-risk policy choice.
-- [ ] Document and test the store/community feature split.
+- [x] Disable external `.kelmaplugin` installation and execution in the iOS App Store build.
+- [x] Remove Plugin Manager and plugin-install entry points from the iOS App Store build.
+- [x] Ensure the App Store build cannot load previously imported plugin packages.
+- [x] Exclude the external Lua runtime and cinterop from the App Store artifact.
+- [x] Keep plugin support available in community/AltStore builds.
+- [x] Retain restricted interpreted Lua plugins in the Play build and document the policy decision.
+- [x] Document and test the store/community feature split.
 
 ### Kelma Review privacy policy
 
@@ -73,38 +73,38 @@ submission artifacts.
 
 ### Apple privacy manifest and export compliance
 
-- [ ] Add `PrivacyInfo.xcprivacy` to the iOS app target.
-- [ ] Declare tracking accurately; the current expected value is no tracking.
-- [ ] Declare `NSUserDefaults` required-reason API access with the appropriate approved reason.
+- [x] Add `PrivacyInfo.xcprivacy` to the iOS app target.
+- [x] Declare tracking accurately as disabled.
+- [x] Declare `NSUserDefaults` required-reason API access with app-specific reason `CA92.1`.
 - [ ] Audit the final archive for other required-reason APIs introduced by Compose, SQLDelight, Ktor, native Lua, or other dependencies.
 - [ ] Ensure dependency privacy manifests are included where required.
-- [ ] Keep App Store Connect privacy labels consistent with the manifest and published privacy policy.
+- [ ] Keep App Store Connect privacy labels consistent with the manifest's account, content, and product-interaction declarations and the published privacy policy.
 - [ ] Complete Apple's encryption/export-compliance questionnaire.
-- [ ] Set `ITSAppUsesNonExemptEncryption` accurately if the app qualifies for the standard HTTPS/OS-cryptography exemption.
+- [x] Set `ITSAppUsesNonExemptEncryption` to false for HTTPS and operating-system cryptography only.
 
 ## P1 — Android production hardening
 
-- [ ] Add Android 12+ `android:dataExtractionRules` that disables cloud backup and device transfer as intended.
-- [ ] Add `<uses-feature android:name="android.hardware.microphone" android:required="false" />` because recording is optional.
-- [ ] Remove `compose.uiTooling` from production dependencies.
-- [ ] Confirm the exported Compose `PreviewActivity` is absent from the final release manifest.
+- [x] Add Android 12+ `android:dataExtractionRules` that disables cloud backup and device transfer.
+- [x] Add `<uses-feature android:name="android.hardware.microphone" android:required="false" />`.
+- [x] Remove `compose.uiTooling` and the preview activity path from production dependencies/source.
+- [x] Remove the Compose preview entry point and verify no exported `PreviewActivity` is packaged.
 - [ ] Fix launcher-icon safe-area/shape lint warnings.
 - [ ] Add adaptive monochrome launcher icons.
 - [ ] Validate that Android app icons meet Play artwork and transparency requirements.
-- [ ] Configure native debug-symbol generation and preserve/upload symbols for Play diagnostics.
+- [x] Configure native symbol-table generation for every Play AAB ABI.
 - [ ] Decide whether to enable R8/minification; add and test rules before enabling it.
 - [ ] Validate the signed AAB with `bundletool`.
 - [ ] Install packages generated from the AAB and run smoke tests on physical devices.
-- [ ] Keep `targetSdk` at or above the current Play requirement; API 36 currently satisfies this.
-- [ ] Keep `arm64-v8a` support in every store artifact.
+- [x] Keep `targetSdk` at or above the current Play requirement; API 36 currently satisfies this.
+- [x] Assert `arm64-v8a`, `armeabi-v7a`, `x86`, and `x86_64` plus matching symbols in every Play AAB.
 
 ## P1 — iOS production hardening
 
-- [ ] Add a dedicated App Store archive/export workflow using `xcodebuild archive` and `-exportArchive`.
+- [x] Add a dedicated App Store scheme/configuration and documented `xcodebuild archive`/`-exportArchive` path.
 - [ ] Validate the signed archive in Xcode/App Store Connect before submission.
 - [ ] Confirm the 1024×1024 App Store icon has no forbidden alpha channel and renders correctly.
 - [ ] Confirm the app name, launch screen, accent color, and icon catalog validate without warnings.
-- [ ] Review whether the iOS 18.2 deployment target is intentional; align it with the shared iOS 15 minimum if broader support is desired.
+- [x] Align the App Store configuration with the shared iOS 15 minimum; community defaults remain unchanged.
 - [ ] Test every declared iPhone and iPad orientation or restrict declarations to orientations the UI supports.
 - [ ] Test microphone denial, restricted permission, interruption, backgrounding, and temporary-file cleanup.
 - [ ] Confirm document picker access does not require unnecessary Photos permissions.

@@ -45,6 +45,7 @@ internal fun AppContent(
     luaPluginHost: LuaPluginHost,
     pluginCommands: PluginCommandRegistry,
     pluginRenderers: PluginRendererRegistry,
+    externalPluginsEnabled: Boolean,
     actions: AppContentActions,
 ) {
     var token by state.token
@@ -109,20 +110,22 @@ internal fun AppContent(
     DisposableEffect(completedReviewEvents) {
         onDispose { completedReviewEvents.close() }
     }
-    LaunchedEffect(completedReviewEvents) {
+    LaunchedEffect(completedReviewEvents, externalPluginsEnabled) {
         for (rating in completedReviewEvents) {
-            try {
-                withContext(Dispatchers.Default) {
-                    luaPluginHost.publish(
-                        PluginEvent(
-                            "review.completed",
-                            mapOf("rating" to PluginValue.StringValue(rating.name)),
-                        ),
-                    )
+            if (externalPluginsEnabled) {
+                try {
+                    withContext(Dispatchers.Default) {
+                        luaPluginHost.publish(
+                            PluginEvent(
+                                "review.completed",
+                                mapOf("rating" to PluginValue.StringValue(rating.name)),
+                            ),
+                        )
+                    }
+                    pluginHostState = luaPluginHost.state()
+                } catch (pluginFailure: Exception) {
+                    error = "Review saved; plugin event failed: ${pluginFailure.message ?: "unknown error"}"
                 }
-                pluginHostState = luaPluginHost.state()
-            } catch (pluginFailure: Exception) {
-                error = "Review saved; plugin event failed: ${pluginFailure.message ?: "unknown error"}"
             }
         }
     }
@@ -391,6 +394,7 @@ internal fun AppContent(
                 onOptions = openOptions,
                 onSync = openSync,
             )
+            !pluginNavigationAvailable(externalPluginsEnabled, destination) -> openOptions()
             destination == CollectionDestination.Plugins -> PluginManagerScreen(
                 state = pluginHostState,
                 busy = pluginWorking || runningCommandId != null,
@@ -466,7 +470,7 @@ internal fun AppContent(
                 onBrowse = openBrowse,
                 onSync = openSync,
                 onCommands = { showCommandPalette = true },
-                onPlugins = openPlugins,
+                onPlugins = openPlugins.takeIf { externalPluginsEnabled },
                 onSave = { deckName, options ->
                     try {
                         val saved = withContext(Dispatchers.Default) {
@@ -507,7 +511,7 @@ internal fun AppContent(
                 onAdd = openAdd,
                 onSyncLog = openSync,
                 onSyncNow = requestSync,
-                onPlugins = openPlugins,
+                onPlugins = openPlugins.takeIf { externalPluginsEnabled },
                 onSave = { deckName, options ->
                     try {
                         val saved = withContext(Dispatchers.Default) {

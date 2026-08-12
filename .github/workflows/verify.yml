@@ -50,10 +50,16 @@ jobs:
           :shared:compileAndroidDeviceTest
           :desktopApp:compileKotlin
           :androidApp:assembleDebug
-      - name: Verify packaged legal notices
-        run: >-
-          python3 scripts/check_packaged_legal_notices.py
-          androidApp/build/outputs/apk/debug/androidApp-debug.apk
+          :androidApp:bundlePlay
+      - name: Verify packaged legal notices and store build policy
+        run: |
+          python3 scripts/check_packaged_legal_notices.py \
+            androidApp/build/outputs/apk/debug/androidApp-debug.apk
+          python3 scripts/check_packaged_legal_notices.py \
+            androidApp/build/outputs/bundle/play/androidApp-play.aab
+          python3 scripts/check_store_build.py \
+            --artifact androidApp/build/outputs/bundle/play/androidApp-play.aab \
+            --kind android-play
 
   ios:
     # Compose 1.11 links UIKit symbols provided by the Xcode 26 SDK.
@@ -71,11 +77,18 @@ jobs:
           distribution: temurin
           java-version: "21"
       - uses: gradle/actions/setup-gradle@v4
-      - name: Compile shared tests for iOS Simulator
-        run: >-
-          ./gradlew
-          -PkelmaFsrsPath=kelma-fsrs-v6
-          :shared:compileTestKotlinIosSimulatorArm64
+      - name: Compile shared tests and plugin-free App Store framework for iOS Simulator
+        run: |
+          ./gradlew \
+            -PkelmaFsrsPath=kelma-fsrs-v6 \
+            :shared:compileTestKotlinIosSimulatorArm64
+          ./gradlew \
+            -PkelmaFsrsPath=kelma-fsrs-v6 \
+            -PkelmaAppStoreBuild=true \
+            :shared:linkReleaseFrameworkIosSimulatorArm64
+          test -z "$(nm -gj shared/build/bin/iosSimulatorArm64/releaseFramework/Shared.framework/Shared | \
+            grep -E 'kelma_lua|luaL_newstate' || true)"
+          python3 scripts/check_store_build.py --check-xcode
       - name: Verify signed Keychain-capable Simulator app
         env:
           IOS_SIMULATOR_BUILD_ONLY: "1"

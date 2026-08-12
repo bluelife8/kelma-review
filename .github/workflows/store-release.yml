@@ -1,0 +1,159 @@
+name: Build store submissions
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Release version without the v prefix
+        required: true
+        type: string
+      build_number:
+        description: Monotonically increasing numeric build
+        required: true
+        type: string
+      upload_ios:
+        description: Upload the exported iOS archive to App Store Connect
+        required: true
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+jobs:
+  android-play:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: bluelife8/kelma-fsrs-v6
+          ref: 19c858e8e46449d50b316ad9937cbc4d5ac91dcc
+          path: kelma-fsrs-v6
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+      - uses: android-actions/setup-android@v3
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Install Android native toolchain
+        run: >-
+          sdkmanager "platforms;android-36" "build-tools;36.0.0"
+          "ndk;28.2.13676358" "cmake;3.22.1"
+      - name: Restore protected Play upload key
+        env:
+          KELMA_ANDROID_KEYSTORE_BASE64: ${{ secrets.KELMA_ANDROID_KEYSTORE_BASE64 }}
+        run: |
+          test -n "$KELMA_ANDROID_KEYSTORE_BASE64"
+          printf '%s' "$KELMA_ANDROID_KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/kelma-upload.jks"
+          chmod 600 "$RUNNER_TEMP/kelma-upload.jks"
+      - name: Build signed Play App Bundle
+        env:
+          KELMA_ANDROID_KEYSTORE_PATH: ${{ runner.temp }}/kelma-upload.jks
+          KELMA_ANDROID_KEYSTORE_PASSWORD: ${{ secrets.KELMA_ANDROID_KEYSTORE_PASSWORD }}
+          KELMA_ANDROID_KEY_ALIAS: ${{ secrets.KELMA_ANDROID_KEY_ALIAS }}
+          KELMA_ANDROID_KEY_PASSWORD: ${{ secrets.KELMA_ANDROID_KEY_PASSWORD }}
+        run: |
+          test -n "$KELMA_ANDROID_KEYSTORE_PASSWORD"
+          test -n "$KELMA_ANDROID_KEY_ALIAS"
+          test -n "$KELMA_ANDROID_KEY_PASSWORD"
+          ./gradlew -PkelmaFsrsPath=kelma-fsrs-v6 :androidApp:bundlePlay
+          jarsigner -verify -verbose -certs \
+            androidApp/build/outputs/bundle/play/androidApp-play.aab
+          python3 scripts/check_packaged_legal_notices.py \
+            androidApp/build/outputs/bundle/play/androidApp-play.aab
+          python3 scripts/check_store_build.py \
+            --artifact androidApp/build/outputs/bundle/play/androidApp-play.aab \
+            --kind android-play
+      - uses: actions/upload-artifact@v4
+        with:
+          name: kelma-review-play-${{ inputs.version }}-${{ inputs.build_number }}
+          path: |
+            androidApp/build/outputs/bundle/play/androidApp-play.aab
+          if-no-files-found: error
+
+  ios-app-store:
+    runs-on: macos-26
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: bluelife8/kelma-fsrs-v6
+          ref: 19c858e8e46449d50b316ad9937cbc4d5ac91dcc
+          path: kelma-fsrs-v6
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Configure App Store Connect API key
+        env:
+          APP_STORE_CONNECT_KEY: ${{ secrets.APP_STORE_CONNECT_KEY }}
+          APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+        run: |
+          test -n "$APP_STORE_CONNECT_KEY"
+          mkdir -p "$HOME/private_keys"
+          printf '%s' "$APP_STORE_CONNECT_KEY" > "$HOME/private_keys/AuthKey_${APP_STORE_CONNECT_KEY_ID}.p8"
+          chmod 600 "$HOME/private_keys/AuthKey_${APP_STORE_CONNECT_KEY_ID}.p8"
+      - name: Archive plugin-free App Store build
+        env:
+          ORG_GRADLE_PROJECT_kelmaFsrsPath: ${{ github.workspace }}/kelma-fsrs-v6
+          APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          test -n "$APP_STORE_CONNECT_KEY_ID"
+          test -n "$APP_STORE_CONNECT_ISSUER_ID"
+          test -n "$APPLE_TEAM_ID"
+          python3 scripts/check_store_build.py --check-xcode
+          xcodebuild \
+            -project iosApp/iosApp.xcodeproj \
+            -scheme iosApp-AppStore \
+            -configuration AppStore \
+            -destination 'generic/platform=iOS' \
+            -archivePath build/KelmaReview.xcarchive \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath "$HOME/private_keys/AuthKey_${APP_STORE_CONNECT_KEY_ID}.p8" \
+            -authenticationKeyID "$APP_STORE_CONNECT_KEY_ID" \
+            -authenticationKeyIssuerID "$APP_STORE_CONNECT_ISSUER_ID" \
+            DEVELOPMENT_TEAM="$APPLE_TEAM_ID" \
+            MARKETING_VERSION='${{ inputs.version }}' \
+            CURRENT_PROJECT_VERSION='${{ inputs.build_number }}' \
+            archive
+          APP_PATH='build/KelmaReview.xcarchive/Products/Applications/Kelma Review.app'
+          test "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$APP_PATH/Info.plist")" = \
+            'tech.kelma.app.KelmaReview'
+          test -f "$APP_PATH/PrivacyInfo.xcprivacy"
+          test -z "$(nm -gj 'build/KelmaReview.xcarchive/Products/Applications/Kelma Review.app/Kelma Review' | \
+            grep -E 'kelma_lua|luaL_newstate' || true)"
+      - name: Export App Store package
+        env:
+          APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+        run: |
+          xcodebuild -exportArchive \
+            -archivePath build/KelmaReview.xcarchive \
+            -exportOptionsPlist iosApp/Configuration/ExportOptions-AppStore.plist \
+            -exportPath build/app-store \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath "$HOME/private_keys/AuthKey_${APP_STORE_CONNECT_KEY_ID}.p8" \
+            -authenticationKeyID "$APP_STORE_CONNECT_KEY_ID" \
+            -authenticationKeyIssuerID "$APP_STORE_CONNECT_ISSUER_ID"
+      - name: Upload to App Store Connect
+        if: inputs.upload_ios
+        env:
+          APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+        run: |
+          xcrun altool --upload-app --type ios --file build/app-store/*.ipa \
+            --apiKey "$APP_STORE_CONNECT_KEY_ID" \
+            --apiIssuer "$APP_STORE_CONNECT_ISSUER_ID"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: kelma-review-app-store-${{ inputs.version }}-${{ inputs.build_number }}
+          path: |
+            build/app-store/*.ipa
+            build/KelmaReview.xcarchive/dSYMs
+          if-no-files-found: error

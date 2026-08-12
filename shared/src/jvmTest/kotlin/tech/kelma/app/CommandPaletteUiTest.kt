@@ -12,6 +12,7 @@ import androidx.compose.ui.test.v2.runComposeUiTest
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 
 @OptIn(ExperimentalTestApi::class)
 class CommandPaletteUiTest {
@@ -42,6 +43,15 @@ class CommandPaletteUiTest {
         onNodeWithTag("command-palette-search").performTextInput("hello")
         onNodeWithText("Say hello").assertIsDisplayed().performClick()
         assertEquals("tech.kelma.sample.hello", invoked.get())
+    }
+
+    @Test
+    fun appStoreBuiltInsExcludePluginManager() {
+        val commands = PluginCommandRegistry().apply {
+            registerKelmaCommands(externalPluginsEnabled = false)
+        }.list()
+
+        assertFalse(commands.any { it.id == OpenPluginsCommand })
     }
 
     @Test
