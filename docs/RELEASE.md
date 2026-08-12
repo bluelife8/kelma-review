@@ -132,6 +132,16 @@ copied into acceptance reports. Run `python3 scripts/check_store_build.py`
 before either store build and run its artifact mode against the resulting AAB
 or IPA before upload.
 
+The first macOS production path is direct distribution, separate from iOS and a
+future Mac App Store path. `.github/workflows/macos-release.yml` imports a
+protected Developer ID Application certificate into an ephemeral keychain,
+builds with hardened-runtime entitlements, notarizes and staples the DMG, then
+checks Gatekeeper, the signature authority, bundle ID, version, legal notices,
+runtime modules, and JVM arguments. Its package version is supplied through
+`-PkelmaPackageVersion=X.Y.Z`; the checked-in default remains aligned with the
+other platform defaults. The workflow requires only protected secrets and must
+never read persistent developer-machine credential directories.
+
 ## Version and AltStore invariants
 
 A release tag is the public product version. Keep these defaults aligned before

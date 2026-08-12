@@ -16,6 +16,7 @@ dependencies {
 }
 
 val jvmArgsFile = project.file("jvm-args.txt")
+val desktopPackageVersion = providers.gradleProperty("kelmaPackageVersion").orElse("1.0.17").get()
 
 /**
  * Reads [desktopApp/jvm-args.txt], the single source of truth shared with
@@ -83,9 +84,12 @@ compose.desktop {
             includeAllModules = true
             modules("java.sql", "jdk.jsobject", "jdk.unsupported.desktop")
             packageName = "KelmaReview"
-            packageVersion = "1.0.17"
+            packageVersion = desktopPackageVersion
             macOS {
                 iconFile.set(project.file("src/main/resources/icon.icns"))
+                bundleID = "tech.kelma.app.KelmaReview.desktop"
+                entitlementsFile.set(project.file("src/main/resources/macos-entitlements.plist"))
+                runtimeEntitlementsFile.set(project.file("src/main/resources/macos-entitlements.plist"))
                 // packageName stays "KelmaReview" so the bundle path, the DMG
                 // file name, and the published quarantine instructions keep
                 // working. Only the user-visible name changes.
@@ -100,6 +104,8 @@ compose.desktop {
                     extraKeysRawXml = """
                         <key>CFBundleName</key><string>Kelma Review</string>
                         <key>CFBundleDisplayName</key><string>Kelma Review</string>
+                        <key>NSMicrophoneUsageDescription</key>
+                        <string>Kelma Review records your voice for temporary review playback when you choose Record Own Voice.</string>
                     """.trimIndent()
                 }
             }

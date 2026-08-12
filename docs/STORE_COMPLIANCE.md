@@ -24,7 +24,7 @@ submission artifacts.
 - [x] Remove `$(TEAM_ID)` from the bundle identifier.
 - [x] Use `TEAM_ID` only for `DEVELOPMENT_TEAM`.
 - [x] Configure the App Store build for automatic distribution signing without a hard-coded signing identity.
-- [ ] Reserve the exact bundle identifier in the Apple Developer portal and App Store Connect.
+- [x] Reserve the exact bundle identifier in Apple Developer and create the App Store Connect record.
 - [ ] Verify `CFBundleIdentifier`, `CFBundleShortVersionString`, and `CFBundleVersion` inside every signed archive/IPA.
 - [ ] Keep App Store, Android, desktop, release-tag, and AltStore versions aligned as required by `docs/RELEASE.md`.
 
@@ -109,6 +109,15 @@ submission artifacts.
 - [ ] Test microphone denial, restricted permission, interruption, backgrounding, and temporary-file cleanup.
 - [ ] Confirm document picker access does not require unnecessary Photos permissions.
 
+## Direct macOS distribution
+
+- [x] Add a Developer ID Application signing and notarization workflow separate from iOS App Store signing.
+- [x] Enable hardened runtime with the JVM/plugin entitlements required by the current desktop architecture.
+- [x] Validate the signed app bundle ID/version, Developer ID authority, notarization ticket, stapled DMG, and Gatekeeper acceptance.
+- [ ] Create and protect the Developer ID Application certificate and CI secrets.
+- [ ] Run the signed workflow and smoke-test the stapled DMG on a clean macOS account/machine.
+- [ ] Treat any future Mac App Store build as a third path requiring sandbox, entitlement, plugin, and store-policy review.
+
 ## Store listing and console work
 
 ### Shared assets and metadata
@@ -126,7 +135,7 @@ submission artifacts.
 
 ### Google Play Console
 
-- [ ] Create/reserve application ID `tech.kelma.app` before public release.
+- [x] Create/reserve application ID `tech.kelma.app`.
 - [ ] Enable Play App Signing and register the upload certificate.
 - [ ] Complete the Data Safety form from the final production behavior.
 - [ ] Declare optional account identifiers, user content/media, and study activity used for app functionality as applicable.
@@ -143,7 +152,7 @@ submission artifacts.
 
 ### App Store Connect
 
-- [ ] Create the app record for bundle ID `tech.kelma.app.KelmaReview`.
+- [x] Create the App Store Connect app record for bundle ID `tech.kelma.app.KelmaReview` (SKU `kelma-review-ios`).
 - [ ] Complete App Privacy nutrition labels from final production behavior.
 - [ ] Expected categories to assess include email/user ID, user content/media, and product interaction/study history for app functionality.
 - [ ] Do not declare temporary on-device voice recording as collected if it never leaves the device or persists; verify this against final behavior.
