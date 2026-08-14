@@ -142,6 +142,34 @@ runtime modules, and JVM arguments. Its package version is supplied through
 other platform defaults. The workflow requires only protected secrets and must
 never read persistent developer-machine credential directories.
 
+## Rolling physical-device previews
+
+The `rolling` branch is an explicitly non-production iOS test channel. A push
+to that branch builds the community configuration as a fresh unsigned IPA for
+AltStore to re-sign. It uses bundle ID
+`tech.kelma.app.KelmaReview.Rolling`, display name `Kelma Rolling`, and a
+distinct gold `R` icon badge, so it can coexist with the stable app and cannot
+replace its data container. Every workflow run verifies the embedded identity,
+version/build, legal notices, and rolling policy before replacing the assets on
+the mutable `rolling` GitHub prerelease.
+
+The rolling channel deliberately does **not** create or modify an AltStore
+source. The canonical source URL, source identifier, app metadata, and stable
+IPA remain untouched. Download `KelmaReview-Rolling.ipa` from the rolling
+prerelease on the device and open the file with AltStore. Treat all rolling data
+as disposable; rolling builds may be broken and receive no migration support.
+Only user-reviewed changes merged or pushed to `rolling` trigger publication.
+
+Run the source policy locally with:
+
+```bash
+python3 scripts/check_rolling_build.py
+```
+
+The `rolling` release tag is a fixed channel anchor. Its assets and release
+notes are intentionally mutable, but the tag itself is never moved or
+recreated. Normal `vX.Y.Z` tags and their release assets remain immutable.
+
 ## Version and AltStore invariants
 
 A release tag is the public product version. Keep these defaults aligned before

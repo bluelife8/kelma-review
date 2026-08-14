@@ -33,10 +33,11 @@ jobs:
           ./scripts/generate-sbom.sh
           python3 scripts/check_dependency_policy.py
           git diff --exit-code -- sbom.cdx.json
-      - name: Verify desktop JVM arguments and macOS distribution policy
+      - name: Verify desktop, macOS distribution, and rolling-build policies
         run: |
           python3 scripts/check_desktop_jvm_args.py
           python3 scripts/check_macos_distribution.py
+          python3 scripts/check_rolling_build.py
       - name: Test JVM core and desktop UI
         run: >-
           xvfb-run --auto-servernum
