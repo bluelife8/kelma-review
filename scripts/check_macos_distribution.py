@@ -28,7 +28,7 @@ def check_source(root: Path) -> None:
     entitlements_path = root / "desktopApp/src/main/resources/macos-entitlements.plist"
     required = (
         f'bundleID = "{EXPECTED_BUNDLE_ID}"',
-        'providers.gradleProperty("kelmaPackageVersion").orElse("1.0.17")',
+        'providers.gradleProperty("kelmaPackageVersion").orElse("1.0.18")',
         'entitlementsFile.set(project.file("src/main/resources/macos-entitlements.plist"))',
         'runtimeEntitlementsFile.set(project.file("src/main/resources/macos-entitlements.plist"))',
         "<key>NSMicrophoneUsageDescription</key>",
