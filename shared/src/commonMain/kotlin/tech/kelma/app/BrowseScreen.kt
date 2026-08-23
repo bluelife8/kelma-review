@@ -9,6 +9,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.OutlinedTextField
@@ -30,10 +32,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -302,6 +306,9 @@ internal fun BrowseInlineEditor(
     var error by remember(target.row.noteGuid) { mutableStateOf<String?>(null) }
     val scope = rememberCoroutineScope()
     val mediaPicker = rememberMediaPicker()
+    val focusManager = LocalFocusManager.current
+    val doneKeyboardOptions = KeyboardOptions(imeAction = ImeAction.Done)
+    val doneKeyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() })
 
     fun attach(kind: AttachmentKind) {
         if (saving) return
@@ -403,6 +410,8 @@ internal fun BrowseInlineEditor(
                             .testTag("browse-edit-field-$index"),
                         label = { Text(name) },
                         minLines = 3,
+                        keyboardOptions = doneKeyboardOptions,
+                        keyboardActions = doneKeyboardActions,
                     )
                 }
                 OutlinedTextField(
@@ -411,6 +420,8 @@ internal fun BrowseInlineEditor(
                     modifier = Modifier.fillMaxWidth().padding(top = 10.dp).testTag("browse-edit-tags"),
                     label = { Text("Tags") },
                     singleLine = true,
+                    keyboardOptions = doneKeyboardOptions,
+                    keyboardActions = doneKeyboardActions,
                 )
                 error?.let {
                     Text(it, modifier = Modifier.padding(top = 8.dp), color = KelmaColors.Bad, fontSize = 12.sp)
