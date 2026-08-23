@@ -16,7 +16,7 @@ dependencies {
 }
 
 val jvmArgsFile = project.file("jvm-args.txt")
-val desktopPackageVersion = providers.gradleProperty("kelmaPackageVersion").orElse("1.0.17").get()
+val desktopPackageVersion = providers.gradleProperty("kelmaPackageVersion").orElse("1.0.18").get()
 
 /**
  * Reads [desktopApp/jvm-args.txt], the single source of truth shared with
