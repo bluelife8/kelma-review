@@ -290,6 +290,7 @@ internal fun BrowseInlineEditor(
     onSave: suspend (BrowseNoteEdit) -> String?,
     onSaved: () -> Unit,
     onCancel: () -> Unit,
+    onInputFocusChanged: (Boolean) -> Unit = {},
 ) {
     var values by remember(target.row.noteGuid) {
         mutableStateOf(
@@ -303,12 +304,21 @@ internal fun BrowseInlineEditor(
     }
     var saving by remember(target.row.noteGuid) { mutableStateOf(false) }
     var focusedField by remember(target.row.noteGuid) { mutableStateOf(0) }
+    var focusedInput by remember(target.row.noteGuid) { mutableStateOf<Int?>(null) }
     var error by remember(target.row.noteGuid) { mutableStateOf<String?>(null) }
     val scope = rememberCoroutineScope()
     val mediaPicker = rememberMediaPicker()
     val focusManager = LocalFocusManager.current
     val doneKeyboardOptions = KeyboardOptions(imeAction = ImeAction.Done)
     val doneKeyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() })
+
+    LaunchedEffect(focusedInput) {
+        onInputFocusChanged(focusedInput != null)
+    }
+
+    fun updateInputFocus(input: Int, focused: Boolean) {
+        if (focused) focusedInput = input else if (focusedInput == input) focusedInput = null
+    }
 
     fun attach(kind: AttachmentKind) {
         if (saving) return
@@ -406,18 +416,23 @@ internal fun BrowseInlineEditor(
                             .fillMaxWidth()
                             .padding(top = 10.dp)
                             .heightIn(min = 96.dp)
-                            .onFocusChanged { if (it.isFocused) focusedField = index }
+                            .onFocusChanged {
+                                if (it.isFocused) focusedField = index
+                                updateInputFocus(index, it.isFocused)
+                            }
                             .testTag("browse-edit-field-$index"),
                         label = { Text(name) },
                         minLines = 3,
-                        keyboardOptions = doneKeyboardOptions,
-                        keyboardActions = doneKeyboardActions,
                     )
                 }
                 OutlinedTextField(
                     value = tags,
                     onValueChange = { tags = it; error = null },
-                    modifier = Modifier.fillMaxWidth().padding(top = 10.dp).testTag("browse-edit-tags"),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 10.dp)
+                        .onFocusChanged { updateInputFocus(-1, it.isFocused) }
+                        .testTag("browse-edit-tags"),
                     label = { Text("Tags") },
                     singleLine = true,
                     keyboardOptions = doneKeyboardOptions,
