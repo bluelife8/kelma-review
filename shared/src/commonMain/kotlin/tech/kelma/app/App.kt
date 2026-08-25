@@ -16,8 +16,17 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import tech.kelma.db.KelmaDatabase
 
+@Suppress("UNUSED_PARAMETER")
+private fun disabledPluginRuntimeFactory(
+    pluginId: String,
+    capabilities: Set<PluginCapability>,
+    files: Map<String, ByteArray>,
+    entrypoint: String,
+    limits: PluginRuntimeLimits,
+): PlatformLuaRuntime = error("External plugins are unavailable in this build")
+
 @Composable
-fun App() {
+fun App(externalPluginsEnabled: Boolean = true) {
     val accountRegistryStorage = rememberLocalAccountRegistryStorage()
     val accountRegistry = remember(accountRegistryStorage) { LocalAccountRegistry(accountRegistryStorage) }
     var databaseName by remember { mutableStateOf(accountRegistry.activeDatabaseName()) }
@@ -38,11 +47,22 @@ fun App() {
             mediaCache = mediaCache,
         )
     }
-    val pluginCommands = remember { PluginCommandRegistry().apply { registerKelmaCommands() } }
+    val pluginCommands = remember(externalPluginsEnabled) {
+        PluginCommandRegistry().apply { registerKelmaCommands(externalPluginsEnabled) }
+    }
     val pluginEvents = remember { PluginEventRegistry() }
     val pluginRenderers = remember { PluginRendererRegistry() }
-    val luaPluginHost = remember(store, pluginCommands, pluginEvents, pluginRenderers) {
-        store.createLuaPluginHost(pluginCommands, pluginEvents, pluginRenderers)
+    val luaPluginHost = remember(store, pluginCommands, pluginEvents, pluginRenderers, externalPluginsEnabled) {
+        store.createLuaPluginHost(
+            pluginCommands,
+            pluginEvents,
+            pluginRenderers,
+            runtimeFactory = if (externalPluginsEnabled) {
+                ::createPlatformLuaRuntime
+            } else {
+                ::disabledPluginRuntimeFactory
+            },
+        )
     }
     val scope = rememberCoroutineScope()
     val appFocusRequester = remember { FocusRequester() }
@@ -113,9 +133,10 @@ fun App() {
                 schedulerOptimizer = saved.schedulerOptimizer
                 syncConflicts = withContext(Dispatchers.Default) { store.loadSyncConflicts() }
                 syncLogs = withContext(Dispatchers.Default) { store.loadSyncLog() }
-                pluginRendererAssignments = withContext(Dispatchers.Default) {
-                    store.loadPluginRendererAssignments()
-                }
+                pluginRendererAssignments = pluginRendererAssignmentsForBuild(
+                    externalPluginsEnabled,
+                    withContext(Dispatchers.Default) { store.loadPluginRendererAssignments() },
+                )
                 saved.auth?.let { auth ->
                     accountRegistry.registerCurrent(auth.endpoint, auth.username, databaseName)
                     showSignIn = false
@@ -162,10 +183,12 @@ fun App() {
                 syncMessage = initialized.syncMessage
                 error = initialized.error
             }
-            try {
-                pluginHostState = withContext(Dispatchers.Default) { luaPluginHost.reload() }
-            } catch (pluginFailure: Exception) {
-                error = "Collection opened; plugins did not start: ${pluginFailure.message ?: "unknown error"}"
+            if (externalPluginsEnabled) {
+                try {
+                    pluginHostState = withContext(Dispatchers.Default) { luaPluginHost.reload() }
+                } catch (pluginFailure: Exception) {
+                    error = "Collection opened; plugins did not start: ${pluginFailure.message ?: "unknown error"}"
+                }
             }
         } catch (exception: Exception) {
             error = exception.message ?: if (pending == null) {
@@ -415,9 +438,11 @@ fun App() {
         destination = destination.navigate(CollectionNavigationAction.OpenOptions)
     }
     val openPlugins: () -> Unit = {
-        destination = destination.navigate(CollectionNavigationAction.OpenPlugins)
-        selectedDeck = null
-        desktopStudyStarted = false
+        if (externalPluginsEnabled) {
+            destination = destination.navigate(CollectionNavigationAction.OpenPlugins)
+            selectedDeck = null
+            desktopStudyStarted = false
+        }
     }
     val openStats: () -> Unit = {
         destination = destination.navigate(CollectionNavigationAction.OpenStats)
@@ -593,23 +618,6 @@ fun App() {
                 exception.message ?: "Could not save the renderer assignment"
             }
         }
-    fun clearDisplayedAccount() {
-        token = null
-        collection = SyncedCollection()
-        localContent = LocalContentSnapshot()
-        localReviews = LocalReviewSnapshot()
-        schedulerProfile = SchedulerProfileState()
-        studyDayPolicy = AccountStudyDayPolicy.systemDefault()
-        schedulerOptimizer = SchedulerOptimizerState()
-        pluginRendererAssignments = PluginRendererAssignmentState()
-        pluginRenderedCards = emptyMap()
-        studyStats = StudyStats()
-        selectedDeck = null
-        desktopStudyStarted = false
-        destination = destination.navigate(CollectionNavigationAction.OpenDecks)
-        syncConflicts = emptyList()
-        syncLogs = emptyList()
-    }
     val signIn: (String, String) -> Unit = signIn@{ username, password ->
         if (working || !restored) return@signIn
         working = true
@@ -619,7 +627,7 @@ fun App() {
             try {
                 val auth = syncClient.login(username, password)
                 val targetDatabase = accountRegistry.activate(DefaultKelmaSyncEndpoint, username)
-                clearDisplayedAccount()
+                appState.clearDisplayedAccount()
                 token = auth.token
                 pendingAccountSignIn = PendingAccountSignIn(username, auth)
                 showSignIn = false
@@ -645,7 +653,7 @@ fun App() {
         accountRegistry.activate(account.endpoint, account.username)
         pendingAccountSignIn = null
         openingSavedAccount = true
-        clearDisplayedAccount()
+        appState.clearDisplayedAccount()
         showSignIn = true
         restored = false
         databaseName = targetDatabase
@@ -656,7 +664,7 @@ fun App() {
         accountRegistry.deactivate()
         pendingAccountSignIn = null
         openingSavedAccount = false
-        clearDisplayedAccount()
+        appState.clearDisplayedAccount()
         error = null
         syncMessage = null
         showSignIn = true
@@ -681,6 +689,7 @@ fun App() {
     AppContent(
         state = appState,
         store = store,
+        accountRegistry = accountRegistry,
         scope = scope,
         appFocusRequester = appFocusRequester,
         displayCollection = displayCollection,
@@ -693,6 +702,7 @@ fun App() {
         luaPluginHost = luaPluginHost,
         pluginCommands = pluginCommands,
         pluginRenderers = pluginRenderers,
+        externalPluginsEnabled = externalPluginsEnabled,
         actions = AppContentActions(
             undoReview = undoReview,
             requestSync = requestSync,

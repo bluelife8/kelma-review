@@ -9,6 +9,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.OutlinedTextField
@@ -30,10 +32,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -286,6 +290,7 @@ internal fun BrowseInlineEditor(
     onSave: suspend (BrowseNoteEdit) -> String?,
     onSaved: () -> Unit,
     onCancel: () -> Unit,
+    onInputFocusChanged: (Boolean) -> Unit = {},
 ) {
     var values by remember(target.row.noteGuid) {
         mutableStateOf(
@@ -299,9 +304,21 @@ internal fun BrowseInlineEditor(
     }
     var saving by remember(target.row.noteGuid) { mutableStateOf(false) }
     var focusedField by remember(target.row.noteGuid) { mutableStateOf(0) }
+    var focusedInput by remember(target.row.noteGuid) { mutableStateOf<Int?>(null) }
     var error by remember(target.row.noteGuid) { mutableStateOf<String?>(null) }
     val scope = rememberCoroutineScope()
     val mediaPicker = rememberMediaPicker()
+    val focusManager = LocalFocusManager.current
+    val doneKeyboardOptions = KeyboardOptions(imeAction = ImeAction.Done)
+    val doneKeyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() })
+
+    LaunchedEffect(focusedInput) {
+        onInputFocusChanged(focusedInput != null)
+    }
+
+    fun updateInputFocus(input: Int, focused: Boolean) {
+        if (focused) focusedInput = input else if (focusedInput == input) focusedInput = null
+    }
 
     fun attach(kind: AttachmentKind) {
         if (saving) return
@@ -399,7 +416,10 @@ internal fun BrowseInlineEditor(
                             .fillMaxWidth()
                             .padding(top = 10.dp)
                             .heightIn(min = 96.dp)
-                            .onFocusChanged { if (it.isFocused) focusedField = index }
+                            .onFocusChanged {
+                                if (it.isFocused) focusedField = index
+                                updateInputFocus(index, it.isFocused)
+                            }
                             .testTag("browse-edit-field-$index"),
                         label = { Text(name) },
                         minLines = 3,
@@ -408,9 +428,15 @@ internal fun BrowseInlineEditor(
                 OutlinedTextField(
                     value = tags,
                     onValueChange = { tags = it; error = null },
-                    modifier = Modifier.fillMaxWidth().padding(top = 10.dp).testTag("browse-edit-tags"),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 10.dp)
+                        .onFocusChanged { updateInputFocus(-1, it.isFocused) }
+                        .testTag("browse-edit-tags"),
                     label = { Text("Tags") },
                     singleLine = true,
+                    keyboardOptions = doneKeyboardOptions,
+                    keyboardActions = doneKeyboardActions,
                 )
                 error?.let {
                     Text(it, modifier = Modifier.padding(top = 8.dp), color = KelmaColors.Bad, fontSize = 12.sp)

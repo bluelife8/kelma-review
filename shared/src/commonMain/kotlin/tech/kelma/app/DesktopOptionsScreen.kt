@@ -62,7 +62,7 @@ fun DesktopOptionsScreen(
     onBrowse: () -> Unit,
     onSync: () -> Unit,
     onCommands: () -> Unit = {},
-    onPlugins: () -> Unit = {},
+    onPlugins: (() -> Unit)? = null,
     onSave: suspend (String, DeckOptions) -> String?,
     onApplyAccountProfile: suspend (DeckOptions, Boolean) -> String? = { _, _ -> null },
     onApplyCloudProfile: suspend () -> String? = { null },
@@ -101,8 +101,10 @@ fun DesktopOptionsScreen(
                 Button(onClick = onCommands, modifier = Modifier.testTag("desktop-command-palette")) {
                     Text("Commands")
                 }
-                Button(onClick = onPlugins, modifier = Modifier.testTag("desktop-plugin-manager")) {
-                    Text("Plugins")
+                onPlugins?.let { openPlugins ->
+                    Button(onClick = openPlugins, modifier = Modifier.testTag("desktop-plugin-manager")) {
+                        Text("Plugins")
+                    }
                 }
             }
             if (selectedDeck.isBlank()) {

@@ -700,7 +700,9 @@ class PersistentCollectionStore(
             schedulerProfiles.clearAccount()
             studyDayPolicies.clearAccount()
             schedulerOptimizer.clear()
+            plugins.clearAll()
             pluginRendererAssignments.clear()
+            queries.clearSyncLogEntries()
         }
         mediaAttachments.clearCache()
     }
@@ -863,7 +865,14 @@ class PersistentCollectionStore(
         commands: PluginCommandRegistry,
         events: PluginEventRegistry,
         renderers: PluginRendererRegistry,
-    ): LuaPluginHost = LuaPluginHost(plugins, json, commands, events, renderers)
+        runtimeFactory: (
+            String,
+            Set<PluginCapability>,
+            Map<String, ByteArray>,
+            String,
+            PluginRuntimeLimits,
+        ) -> PlatformLuaRuntime = ::createPlatformLuaRuntime,
+    ): LuaPluginHost = LuaPluginHost(plugins, json, commands, events, renderers, runtimeFactory = runtimeFactory)
 
     fun installPluginManifest(
         manifest: PluginManifest,

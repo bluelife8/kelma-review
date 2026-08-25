@@ -61,7 +61,7 @@ internal fun MobileOptionsScreen(
     onAdd: () -> Unit,
     onSyncLog: () -> Unit,
     onSyncNow: () -> Unit,
-    onPlugins: () -> Unit = {},
+    onPlugins: (() -> Unit)? = null,
     onSave: suspend (String, DeckOptions) -> String?,
     onApplyAccountProfile: suspend (DeckOptions, Boolean) -> String? = { _, _ -> null },
     onApplyCloudProfile: suspend () -> String? = { null },
@@ -138,7 +138,7 @@ internal fun MobileOptionsScreen(
 private fun MobileOptionsTopBar(
     syncing: Boolean,
     onSync: () -> Unit,
-    onPlugins: () -> Unit,
+    onPlugins: (() -> Unit)?,
 ) {
     Surface(modifier = Modifier.statusBarsPadding(), color = KelmaColors.Background) {
         Row(
@@ -147,8 +147,10 @@ private fun MobileOptionsTopBar(
         ) {
             Text("Options", Modifier.weight(1f), color = KelmaColors.TextPrimary,
                 fontSize = 22.sp, fontWeight = FontWeight.ExtraBold)
-            IconButton(onClick = onPlugins) {
-                Icon(Icons.Rounded.Extension, contentDescription = "Plugins", tint = KelmaColors.GoldSoft)
+            onPlugins?.let { openPlugins ->
+                IconButton(onClick = openPlugins) {
+                    Icon(Icons.Rounded.Extension, contentDescription = "Plugins", tint = KelmaColors.GoldSoft)
+                }
             }
             IconButton(onClick = onSync, enabled = !syncing) {
                 if (syncing) CircularProgressIndicator(Modifier.size(22.dp), color = KelmaColors.Gold, strokeWidth = 2.dp)

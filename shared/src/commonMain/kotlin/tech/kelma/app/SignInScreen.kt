@@ -30,6 +30,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -41,6 +42,9 @@ data class LocalAccountChoice(
     val endpoint: String,
 )
 
+internal const val KelmaAccountRegistrationUrl = "https://kelma.tech/signup"
+internal const val KelmaPasswordResetUrl = "https://kelma.tech/signin?reset=1"
+
 @Composable
 fun SignInScreen(
     signingIn: Boolean,
@@ -49,7 +53,10 @@ fun SignInScreen(
     onBack: () -> Unit,
     accounts: List<LocalAccountChoice> = emptyList(),
     onSelectAccount: (LocalAccountChoice) -> Unit = {},
+    onOpenUri: ((String) -> Unit)? = null,
 ) {
+    val uriHandler = LocalUriHandler.current
+    val openUri = onOpenUri ?: { uri: String -> uriHandler.openUri(uri) }
     var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var selectedAccount by remember(accounts) { mutableStateOf<LocalAccountChoice?>(null) }
@@ -77,6 +84,8 @@ fun SignInScreen(
             onUsernameChange = updateUsername,
             onPasswordChange = { password = it },
             onSubmit = submit,
+            onCreateAccount = { openUri(KelmaAccountRegistrationUrl) },
+            onForgotPassword = { openUri(KelmaPasswordResetUrl) },
             onBack = onBack,
         )
     } else {
@@ -91,6 +100,8 @@ fun SignInScreen(
             onUsernameChange = updateUsername,
             onPasswordChange = { password = it },
             onSubmit = submit,
+            onCreateAccount = { openUri(KelmaAccountRegistrationUrl) },
+            onForgotPassword = { openUri(KelmaPasswordResetUrl) },
             onBack = onBack,
         )
     }
@@ -108,6 +119,8 @@ private fun DesktopSignInScreen(
     onUsernameChange: (String) -> Unit,
     onPasswordChange: (String) -> Unit,
     onSubmit: () -> Unit,
+    onCreateAccount: () -> Unit,
+    onForgotPassword: () -> Unit,
     onBack: () -> Unit,
 ) {
     Surface(modifier = Modifier.fillMaxSize(), color = KelmaDesktopColors.Background) {
@@ -149,6 +162,9 @@ private fun DesktopSignInScreen(
                             onUsernameChange,
                             onPasswordChange,
                             onSubmit,
+                            onCreateAccount,
+                            onForgotPassword,
+                            onBack,
                             desktop = true,
                         )
                     }
@@ -170,6 +186,8 @@ private fun MobileSignInScreen(
     onUsernameChange: (String) -> Unit,
     onPasswordChange: (String) -> Unit,
     onSubmit: () -> Unit,
+    onCreateAccount: () -> Unit,
+    onForgotPassword: () -> Unit,
     onBack: () -> Unit,
 ) {
     Surface(modifier = Modifier.fillMaxSize(), color = KelmaColors.Background) {
@@ -228,6 +246,9 @@ private fun MobileSignInScreen(
                     onUsernameChange,
                     onPasswordChange,
                     onSubmit,
+                    onCreateAccount,
+                    onForgotPassword,
+                    onBack,
                     desktop = false,
                 )
             }
@@ -324,6 +345,9 @@ private fun SignInFields(
     onUsernameChange: (String) -> Unit,
     onPasswordChange: (String) -> Unit,
     onSubmit: () -> Unit,
+    onCreateAccount: () -> Unit,
+    onForgotPassword: () -> Unit,
+    onContinueWithoutAccount: () -> Unit,
     desktop: Boolean,
 ) {
     val canSubmit = username.isNotBlank() && password.isNotEmpty() && !signingIn
@@ -371,5 +395,32 @@ private fun SignInFields(
         } else {
             Text("Sign in", fontWeight = FontWeight.Bold)
         }
+    }
+    Text(
+        text = "In Review, a Kelma account is optional and only needed for KelmaSync.",
+        modifier = Modifier.padding(top = 18.dp),
+        color = if (desktop) KelmaDesktopColors.TextSecondary else KelmaColors.TextSecondary,
+        style = MaterialTheme.typography.bodySmall,
+    )
+    TextButton(
+        onClick = onCreateAccount,
+        modifier = Modifier.fillMaxWidth().testTag("create-kelma-account"),
+        enabled = !signingIn,
+    ) {
+        Text("Create a free Kelma account", fontWeight = FontWeight.Bold)
+    }
+    TextButton(
+        onClick = onForgotPassword,
+        modifier = Modifier.fillMaxWidth().testTag("forgot-password"),
+        enabled = !signingIn,
+    ) {
+        Text("Forgot password?")
+    }
+    OutlinedButton(
+        onClick = onContinueWithoutAccount,
+        modifier = Modifier.fillMaxWidth().testTag("continue-without-account"),
+        enabled = !signingIn,
+    ) {
+        Text("Continue without an account", fontWeight = FontWeight.Bold)
     }
 }

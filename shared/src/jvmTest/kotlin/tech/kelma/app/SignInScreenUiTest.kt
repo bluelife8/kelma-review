@@ -16,8 +16,8 @@ import kotlin.test.assertTrue
 @OptIn(ExperimentalTestApi::class)
 class SignInScreenUiTest {
     @Test
-    fun desktopDeckListExposesAccountSwitching() = runComposeUiTest {
-        val switched = AtomicBoolean(false)
+    fun desktopDeckListExposesAccountControls() = runComposeUiTest {
+        val opened = AtomicBoolean(false)
         setContent {
             KelmaTheme {
                 DesktopDeckListScreen(
@@ -45,13 +45,39 @@ class SignInScreenUiTest {
                     onOpenDeck = {},
                     onSignIn = {},
                     onSync = {},
-                    onSignOut = { switched.set(true) },
+                    onAccount = { opened.set(true) },
                 )
             }
         }
 
-        onNodeWithText("Switch Account").assertIsDisplayed().performClick()
-        assertTrue(switched.get())
+        onNodeWithText("Account…").assertIsDisplayed().performClick()
+        assertTrue(opened.get())
+    }
+
+    @Test
+    fun optionalAccountActionsOpenCanonicalWebFlowsOrReturnToLocalUse() = runComposeUiTest {
+        val opened = AtomicReference<String?>(null)
+        val continued = AtomicBoolean(false)
+        setContent {
+            KelmaTheme {
+                SignInScreen(
+                    signingIn = false,
+                    error = null,
+                    onSignIn = { _, _ -> },
+                    onBack = { continued.set(true) },
+                    onOpenUri = opened::set,
+                )
+            }
+        }
+
+        onNodeWithText("In Review, a Kelma account is optional and only needed for KelmaSync.")
+            .assertIsDisplayed()
+        onNodeWithTag("create-kelma-account").performClick()
+        assertEquals(KelmaAccountRegistrationUrl, opened.get())
+        onNodeWithTag("forgot-password").performClick()
+        assertEquals(KelmaPasswordResetUrl, opened.get())
+        onNodeWithTag("continue-without-account").performClick()
+        assertTrue(continued.get())
     }
 
     @Test

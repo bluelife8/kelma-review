@@ -766,62 +766,6 @@
           }
         }
       ],
-      "name": "ui-tooling",
-      "purl": "pkg:maven/androidx.compose.ui/ui-tooling@1.11.2",
-      "type": "library",
-      "version": "1.11.2"
-    },
-    {
-      "group": "androidx.compose.ui",
-      "licenses": [
-        {
-          "license": {
-            "id": "Apache-2.0"
-          }
-        }
-      ],
-      "name": "ui-tooling-android",
-      "purl": "pkg:maven/androidx.compose.ui/ui-tooling-android@1.11.2",
-      "type": "library",
-      "version": "1.11.2"
-    },
-    {
-      "group": "androidx.compose.ui",
-      "licenses": [
-        {
-          "license": {
-            "id": "Apache-2.0"
-          }
-        }
-      ],
-      "name": "ui-tooling-data",
-      "purl": "pkg:maven/androidx.compose.ui/ui-tooling-data@1.11.2",
-      "type": "library",
-      "version": "1.11.2"
-    },
-    {
-      "group": "androidx.compose.ui",
-      "licenses": [
-        {
-          "license": {
-            "id": "Apache-2.0"
-          }
-        }
-      ],
-      "name": "ui-tooling-data-android",
-      "purl": "pkg:maven/androidx.compose.ui/ui-tooling-data-android@1.11.2",
-      "type": "library",
-      "version": "1.11.2"
-    },
-    {
-      "group": "androidx.compose.ui",
-      "licenses": [
-        {
-          "license": {
-            "id": "Apache-2.0"
-          }
-        }
-      ],
       "name": "ui-tooling-preview",
       "purl": "pkg:maven/androidx.compose.ui/ui-tooling-preview@1.11.2",
       "type": "library",
@@ -4128,34 +4072,6 @@
       ],
       "name": "ui-text-iossimulatorarm64",
       "purl": "pkg:maven/org.jetbrains.compose.ui/ui-text-iossimulatorarm64@1.11.1",
-      "type": "library",
-      "version": "1.11.1"
-    },
-    {
-      "group": "org.jetbrains.compose.ui",
-      "licenses": [
-        {
-          "license": {
-            "id": "Apache-2.0"
-          }
-        }
-      ],
-      "name": "ui-tooling",
-      "purl": "pkg:maven/org.jetbrains.compose.ui/ui-tooling@1.11.1",
-      "type": "library",
-      "version": "1.11.1"
-    },
-    {
-      "group": "org.jetbrains.compose.ui",
-      "licenses": [
-        {
-          "license": {
-            "id": "Apache-2.0"
-          }
-        }
-      ],
-      "name": "ui-tooling-data",
-      "purl": "pkg:maven/org.jetbrains.compose.ui/ui-tooling-data@1.11.1",
       "type": "library",
       "version": "1.11.1"
     },

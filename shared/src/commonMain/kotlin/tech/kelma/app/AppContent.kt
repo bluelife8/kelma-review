@@ -28,40 +28,11 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.JsonObject
 
-internal data class AppContentActions(
-    val undoReview: suspend (String) -> ReviewCard?,
-    val requestSync: () -> Unit,
-    val redownloadCollection: () -> Unit,
-    val signIn: (String, String) -> Unit,
-    val selectAccount: (LocalAccountChoice) -> Unit,
-    val signOut: () -> Unit,
-    val openDecks: () -> Unit,
-    val openAdd: () -> Unit,
-    val openBrowse: () -> Unit,
-    val openOptions: () -> Unit,
-    val openPlugins: () -> Unit,
-    val openStats: () -> Unit,
-    val openSync: () -> Unit,
-    val assignPreset: suspend (String, String?) -> String?,
-    val createPreset: suspend (String, String, DeckOptions) -> String?,
-    val clonePreset: suspend (String, String, String) -> String?,
-    val renamePreset: suspend (String, String) -> String?,
-    val deletePreset: suspend (String) -> String?,
-    val applyAccountSchedulerProfile: suspend (DeckOptions, Boolean) -> String?,
-    val applyCloudSchedulerProfile: suspend () -> String?,
-    val saveStudyDayPolicy: suspend (String, Int) -> String?,
-    val startSchedulerOptimization: () -> Unit,
-    val cancelSchedulerOptimization: () -> Unit,
-    val applySchedulerOptimizerCandidate: suspend (Boolean) -> String?,
-    val discardSchedulerOptimizerCandidate: suspend () -> String?,
-    val setPluginRendererAssignment: suspend (PluginRendererScope, String, String?) -> String?,
-    val resolveSyncConflict: (SyncUploadConflict, Boolean) -> Unit,
-)
-
 @Composable
 internal fun AppContent(
     state: AppState,
     store: PersistentCollectionStore,
+    accountRegistry: LocalAccountRegistry,
     scope: CoroutineScope,
     appFocusRequester: FocusRequester,
     displayCollection: SyncedCollection,
@@ -74,6 +45,7 @@ internal fun AppContent(
     luaPluginHost: LuaPluginHost,
     pluginCommands: PluginCommandRegistry,
     pluginRenderers: PluginRendererRegistry,
+    externalPluginsEnabled: Boolean,
     actions: AppContentActions,
 ) {
     var token by state.token
@@ -138,20 +110,22 @@ internal fun AppContent(
     DisposableEffect(completedReviewEvents) {
         onDispose { completedReviewEvents.close() }
     }
-    LaunchedEffect(completedReviewEvents) {
+    LaunchedEffect(completedReviewEvents, externalPluginsEnabled) {
         for (rating in completedReviewEvents) {
-            try {
-                withContext(Dispatchers.Default) {
-                    luaPluginHost.publish(
-                        PluginEvent(
-                            "review.completed",
-                            mapOf("rating" to PluginValue.StringValue(rating.name)),
-                        ),
-                    )
+            if (externalPluginsEnabled) {
+                try {
+                    withContext(Dispatchers.Default) {
+                        luaPluginHost.publish(
+                            PluginEvent(
+                                "review.completed",
+                                mapOf("rating" to PluginValue.StringValue(rating.name)),
+                            ),
+                        )
+                    }
+                    pluginHostState = luaPluginHost.state()
+                } catch (pluginFailure: Exception) {
+                    error = "Review saved; plugin event failed: ${pluginFailure.message ?: "unknown error"}"
                 }
-                pluginHostState = luaPluginHost.state()
-            } catch (pluginFailure: Exception) {
-                error = "Review saved; plugin event failed: ${pluginFailure.message ?: "unknown error"}"
             }
         }
     }
@@ -260,6 +234,18 @@ internal fun AppContent(
         }
     }
 
+    val accountDeviceActions = accountDeviceActions(
+        accountRegistry = accountRegistry,
+        store = store,
+        luaPluginHost = luaPluginHost,
+        scope = scope,
+        isWorking = { working },
+        isRestored = { restored },
+        setWorking = { working = it },
+        setError = { error = it },
+        setPluginHostState = { pluginHostState = it },
+        leaveAccount = actions.signOut,
+    )
     CompositionLocalProvider(
         LocalOpenStats provides openStats,
         LocalBrowsePageLoader provides browsePageLoader,
@@ -408,6 +394,7 @@ internal fun AppContent(
                 onOptions = openOptions,
                 onSync = openSync,
             )
+            !pluginNavigationAvailable(externalPluginsEnabled, destination) -> openOptions()
             destination == CollectionDestination.Plugins -> PluginManagerScreen(
                 state = pluginHostState,
                 busy = pluginWorking || runningCommandId != null,
@@ -483,7 +470,7 @@ internal fun AppContent(
                 onBrowse = openBrowse,
                 onSync = openSync,
                 onCommands = { showCommandPalette = true },
-                onPlugins = openPlugins,
+                onPlugins = openPlugins.takeIf { externalPluginsEnabled },
                 onSave = { deckName, options ->
                     try {
                         val saved = withContext(Dispatchers.Default) {
@@ -524,7 +511,7 @@ internal fun AppContent(
                 onAdd = openAdd,
                 onSyncLog = openSync,
                 onSyncNow = requestSync,
-                onPlugins = openPlugins,
+                onPlugins = openPlugins.takeIf { externalPluginsEnabled },
                 onSave = { deckName, options ->
                     try {
                         val saved = withContext(Dispatchers.Default) {
@@ -879,7 +866,10 @@ internal fun AppContent(
                 },
                 onSync = requestSync,
                 onOpenSync = openSync,
-                onSignOut = actions.signOut,
+                onSwitchAccount = actions.signOut,
+                onSignOut = accountDeviceActions.signOut,
+                onRemoveFromDevice = accountDeviceActions.removeFromDevice,
+                activeAccountUsername = accountDeviceActions.username,
             )
         }
         CollectionInterchangeHost(

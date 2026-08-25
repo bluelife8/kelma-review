@@ -1641,10 +1641,11 @@ class PersistentCollectionStoreTest {
     }
 
     @Test
-    fun signOutClearsCredentialsDownloadedDataAndReviews() {
+    fun clearAllRemovesCredentialsCollectionPluginsAndDiagnostics() {
         val driver = JdbcSqliteDriver(JdbcSqliteDriver.IN_MEMORY)
         KelmaDatabase.Schema.create(driver)
-        val store = PersistentCollectionStore(KelmaDatabase(driver))
+        val database = KelmaDatabase(driver)
+        val store = PersistentCollectionStore(database)
         val card = SyncCard(20, "note-1", "Deck")
         store.saveSignedInState(
             StoredSyncAuth("token", "client", DefaultKelmaSyncEndpoint, "user"),
@@ -1659,6 +1660,25 @@ class PersistentCollectionStoreTest {
             AddNoteDraft("Local", "front", "back"),
             noteGuid = "local-signout-test",
         )
+        store.installPluginManifest(
+            PluginManifest(
+                id = "tech.kelma.local-cleanup-test",
+                name = "Cleanup Test",
+                version = "1.0.0",
+                apiVersion = KelmaPluginApiVersion,
+                entrypoint = "plugin/cleanup.lua",
+            ),
+        )
+        store.appendSyncLog(SyncProgress(phase = "TEST", message = "content-free diagnostic"))
+        database.kelmaQueries.insertPluginInstallation(
+            pluginId = "tech.kelma.corrupt-plugin",
+            manifestJson = "not-json",
+            enabled = 0,
+            status = "disabled",
+            errorMessage = "corrupt",
+            installedAt = 1,
+            updatedAt = 1,
+        )
 
         store.clearAll()
         val restored = store.load()
@@ -1672,6 +1692,8 @@ class PersistentCollectionStoreTest {
         assertTrue(restored.localReviews.schedules.isEmpty())
         assertEquals(0, restored.localReviews.reviewedToday)
         assertNull(restored.localReviews.lastReviewDeck)
+        assertTrue(store.listInstalledPlugins().isEmpty())
+        assertTrue(store.loadSyncLog().isEmpty())
         driver.close()
     }
 }

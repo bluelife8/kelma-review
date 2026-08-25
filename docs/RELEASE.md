@@ -105,9 +105,70 @@ application bytecode.
 Tagged GitHub releases include a developer-signed Android preview APK and an
 unsigned device IPA intended for AltStore to re-sign with the user's Apple ID.
 These are direct-install previews, not Play Store or App Store packages.
-Store distribution still requires project-owned signing identities supplied by
-the release environment. Signing credentials must never be committed, printed,
-or copied into acceptance reports.
+
+The Android Play path is `:androidApp:bundlePlay`. It reads the upload key only
+from `KELMA_ANDROID_KEYSTORE_PATH`, `KELMA_ANDROID_KEYSTORE_PASSWORD`,
+`KELMA_ANDROID_KEY_ALIAS`, and `KELMA_ANDROID_KEY_PASSWORD`. It emits native
+symbol tables for every packaged ABI. A local build without those variables is
+unsigned and exists only for policy and package verification.
+
+The iOS App Store path uses the shared `iosApp-AppStore` scheme and `AppStore`
+configuration. That configuration requests `-PkelmaAppStoreBuild=true`, omits
+the iOS Lua cinterop and static runtime, compiles out plugin startup, and removes
+plugin entry points. Archive with Apple-managed distribution signing:
+
+```bash
+xcodebuild -project iosApp/iosApp.xcodeproj -scheme iosApp-AppStore \
+  -configuration AppStore -destination 'generic/platform=iOS' \
+  -archivePath build/KelmaReview.xcarchive archive
+xcodebuild -exportArchive -archivePath build/KelmaReview.xcarchive \
+  -exportOptionsPlist iosApp/Configuration/ExportOptions-AppStore.plist \
+  -exportPath build/app-store
+```
+
+Store distribution requires project-owned signing identities supplied by the
+release environment. Signing credentials must never be committed, printed, or
+copied into acceptance reports. Run `python3 scripts/check_store_build.py`
+before either store build and run its artifact mode against the resulting AAB
+or IPA before upload.
+
+The first macOS production path is direct distribution, separate from iOS and a
+future Mac App Store path. `.github/workflows/macos-release.yml` imports a
+protected Developer ID Application certificate into an ephemeral keychain,
+builds with hardened-runtime entitlements, notarizes and staples the DMG, then
+checks Gatekeeper, the signature authority, bundle ID, version, legal notices,
+runtime modules, and JVM arguments. Its package version is supplied through
+`-PkelmaPackageVersion=X.Y.Z`; the checked-in default remains aligned with the
+other platform defaults. The workflow requires only protected secrets and must
+never read persistent developer-machine credential directories.
+
+## Rolling physical-device previews
+
+The `rolling` branch is an explicitly non-production iOS test channel. A push
+to that branch builds the community configuration as a fresh unsigned IPA for
+AltStore to re-sign. It uses bundle ID
+`tech.kelma.app.KelmaReview.Rolling`, display name `Kelma Rolling`, and a
+distinct gold `R` icon badge, so it can coexist with the stable app and cannot
+replace its data container. Every workflow run verifies the embedded identity,
+version/build, legal notices, and rolling policy before replacing the assets on
+the mutable `rolling` GitHub prerelease.
+
+The rolling channel deliberately does **not** create or modify an AltStore
+source. The canonical source URL, source identifier, app metadata, and stable
+IPA remain untouched. Download `KelmaReview-Rolling.ipa` from the rolling
+prerelease on the device and open the file with AltStore. Treat all rolling data
+as disposable; rolling builds may be broken and receive no migration support.
+Only user-reviewed changes merged or pushed to `rolling` trigger publication.
+
+Run the source policy locally with:
+
+```bash
+python3 scripts/check_rolling_build.py
+```
+
+The `rolling` release tag is a fixed channel anchor. Its assets and release
+notes are intentionally mutable, but the tag itself is never moved or
+recreated. Normal `vX.Y.Z` tags and their release assets remain immutable.
 
 ## Version and AltStore invariants
 

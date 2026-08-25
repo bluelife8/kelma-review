@@ -48,13 +48,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 private val MobileCountWidth = 48.dp
-internal const val KelmaAccountDeletionUrl = "https://kelma.tech/review/account-deletion"
 
 @Composable
 fun DeckListScreen(
     decks: List<DeckSummary>,
     loading: Boolean = false,
     signedIn: Boolean,
+    activeAccountUsername: String?,
     syncing: Boolean,
     syncMessage: String?,
     syncMessageIsError: Boolean,
@@ -76,10 +76,13 @@ fun DeckListScreen(
     onSignIn: () -> Unit,
     onSync: () -> Unit,
     onOpenSync: () -> Unit,
+    onSwitchAccount: () -> Unit,
     onSignOut: () -> Unit,
+    onRemoveFromDevice: () -> Unit,
 ) {
     var showGetShared by remember { mutableStateOf(false) }
     var showUndoConfirmation by remember { mutableStateOf(false) }
+    var showAccountControls by remember { mutableStateOf(false) }
     val requestUndo = {
         if (canUndo && !syncing) {
             if (confirmBeforeUndo) showUndoConfirmation = true else onUndo()
@@ -112,7 +115,7 @@ fun DeckListScreen(
             onSignIn = onSignIn,
             onSync = onOpenSync,
             onSyncNow = onSync,
-            onSignOut = onSignOut,
+            onAccount = { showAccountControls = true },
         )
     } else {
         MobileDeckListScreen(
@@ -134,8 +137,7 @@ fun DeckListScreen(
             onSignIn = onSignIn,
             onSync = onSync,
             onOpenSync = onOpenSync,
-            onSignOut = onSignOut,
-            onDeleteAccount = { uriHandler.openUri(KelmaAccountDeletionUrl) },
+            onOpenAccount = { showAccountControls = true },
         )
     }
     if (showUndoConfirmation) {
@@ -151,6 +153,31 @@ fun DeckListScreen(
         GetSharedDecksDialog(
             onOpenUri = uriHandler::openUri,
             onDismiss = { showGetShared = false },
+        )
+    }
+    if (showAccountControls) {
+        AccountLegalControlsDialog(
+            signedIn = signedIn,
+            username = activeAccountUsername.takeIf { signedIn },
+            working = syncing,
+            onChooseAccount = {
+                showAccountControls = false
+                onSignIn()
+            },
+            onSwitchAccount = {
+                showAccountControls = false
+                onSwitchAccount()
+            },
+            onSignOut = {
+                showAccountControls = false
+                onSignOut()
+            },
+            onRemoveFromDevice = {
+                showAccountControls = false
+                onRemoveFromDevice()
+            },
+            onOpenUri = uriHandler::openUri,
+            onDismiss = { showAccountControls = false },
         )
     }
 }
@@ -175,8 +202,7 @@ private fun MobileDeckListScreen(
     onSignIn: () -> Unit,
     onSync: () -> Unit,
     onOpenSync: () -> Unit,
-    onSignOut: () -> Unit,
-    onDeleteAccount: () -> Unit,
+    onOpenAccount: () -> Unit,
 ) {
     val deckListState = rememberLazyListState()
     Scaffold(
@@ -189,12 +215,11 @@ private fun MobileDeckListScreen(
                 canUndo,
                 onSignIn,
                 onSync,
-                onSignOut,
+                onOpenAccount,
                 onUndo,
                 onImportFile,
                 onExportCollection,
                 onGetShared,
-                onDeleteAccount,
             )
         },
         bottomBar = {
@@ -264,12 +289,11 @@ private fun MobileToolbar(
     canUndo: Boolean,
     onSignIn: () -> Unit,
     onSync: () -> Unit,
-    onSignOut: () -> Unit,
+    onOpenAccount: () -> Unit,
     onUndo: () -> Unit,
     onImportFile: () -> Unit,
     onExportCollection: () -> Unit,
     onGetShared: () -> Unit,
-    onDeleteAccount: () -> Unit,
 ) {
     var accountMenu by remember { mutableStateOf(false) }
     val onStats = LocalOpenStats.current
@@ -336,21 +360,12 @@ private fun MobileToolbar(
                         },
                     )
                     DropdownMenuItem(
-                        text = { Text(if (signedIn) "Switch account" else "Choose account") },
+                        text = { Text("Account & privacy") },
                         onClick = {
                             accountMenu = false
-                            if (signedIn) onSignOut() else onSignIn()
+                            onOpenAccount()
                         },
                     )
-                    if (signedIn) {
-                        DropdownMenuItem(
-                            text = { Text("Delete Kelma account…") },
-                            onClick = {
-                                accountMenu = false
-                                onDeleteAccount()
-                            },
-                        )
-                    }
                 }
             }
         }

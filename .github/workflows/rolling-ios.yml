@@ -1,0 +1,142 @@
+name: Publish rolling iOS preview
+
+on:
+  push:
+    branches:
+      - rolling
+  pull_request:
+    branches:
+      - rolling
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: rolling-ios-preview
+  cancel-in-progress: true
+
+jobs:
+  ios:
+    if: github.ref == 'refs/heads/rolling' || github.base_ref == 'rolling'
+    runs-on: macos-26
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: bluelife8/kelma-fsrs-v6
+          ref: 19c858e8e46449d50b316ad9937cbc4d5ac91dcc
+          path: kelma-fsrs-v6
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Build distinct unsigned rolling IPA
+        env:
+          ORG_GRADLE_PROJECT_kelmaFsrsPath: ${{ github.workspace }}/kelma-fsrs-v6
+        run: |
+          BASE_VERSION="$(awk -F= '/^MARKETING_VERSION=/{print $2}' iosApp/Configuration/Config.xcconfig)"
+          BUILD_VERSION="$GITHUB_RUN_NUMBER"
+          test -n "$BASE_VERSION"
+          xcodebuild \
+            -project iosApp/iosApp.xcodeproj \
+            -scheme iosApp \
+            -configuration Release \
+            -sdk iphoneos \
+            -destination 'generic/platform=iOS' \
+            -derivedDataPath build/ios-rolling \
+            MARKETING_VERSION="$BASE_VERSION" \
+            CURRENT_PROJECT_VERSION="$BUILD_VERSION" \
+            PRODUCT_BUNDLE_IDENTIFIER='tech.kelma.app.KelmaReview.Rolling' \
+            INFOPLIST_KEY_CFBundleDisplayName='Kelma Rolling' \
+            ASSETCATALOG_COMPILER_APPICON_NAME='AppIcon-Rolling' \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            DEVELOPMENT_TEAM= \
+            build
+          APP_PATH='build/ios-rolling/Build/Products/Release-iphoneos/Kelma Review.app'
+          INFO_PLIST="$APP_PATH/Info.plist"
+          test -d "$APP_PATH"
+          python3 scripts/check_packaged_legal_notices.py "$APP_PATH"
+          test "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$INFO_PLIST")" = \
+            'tech.kelma.app.KelmaReview.Rolling'
+          test "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleDisplayName' "$INFO_PLIST")" = \
+            'Kelma Rolling'
+          test "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$INFO_PLIST")" = \
+            "$BASE_VERSION"
+          test "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' "$INFO_PLIST")" = \
+            "$BUILD_VERSION"
+          mkdir -p mobile-release/Payload
+          cp -R "$APP_PATH" mobile-release/Payload/
+          (
+            cd mobile-release
+            zip -qry KelmaReview-Rolling.ipa Payload
+            rm -rf Payload
+            shasum -a 256 KelmaReview-Rolling.ipa > SHA256SUMS.txt
+          )
+          python3 scripts/check_rolling_build.py --ipa mobile-release/KelmaReview-Rolling.ipa
+          IPA_SHA256="$(shasum -a 256 mobile-release/KelmaReview-Rolling.ipa | awk '{print $1}')"
+          IPA_SIZE="$(stat -f '%z' mobile-release/KelmaReview-Rolling.ipa)"
+          python3 - "$BASE_VERSION" "$BUILD_VERSION" "$IPA_SHA256" "$IPA_SIZE" <<'PY'
+          import json
+          import os
+          import sys
+          from datetime import datetime, timezone
+          from pathlib import Path
+
+          version, build, sha256, size = sys.argv[1:]
+          metadata = {
+              "channel": "rolling",
+              "version": version,
+              "buildVersion": build,
+              "bundleIdentifier": "tech.kelma.app.KelmaReview.Rolling",
+              "commit": os.environ["GITHUB_SHA"],
+              "builtAt": datetime.now(timezone.utc).isoformat(),
+              "size": int(size),
+              "sha256": sha256,
+              "run": f"https://github.com/{os.environ['GITHUB_REPOSITORY']}/actions/runs/{os.environ['GITHUB_RUN_ID']}",
+          }
+          Path("mobile-release/rolling-build.json").write_text(json.dumps(metadata, indent=2) + "\n")
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: kelma-review-ios-rolling-${{ github.run_number }}
+          path: mobile-release/*
+          retention-days: 14
+          if-no-files-found: error
+      - name: Update mutable rolling prerelease
+        if: github.event_name != 'pull_request'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cat > rolling-release-notes.md <<EOF
+          This prerelease is a mutable test channel built from the rolling branch.
+
+          Commit: \`${GITHUB_SHA}\`
+          Workflow run: https://github.com/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}
+
+          Download \`KelmaReview-Rolling.ipa\` on your iPhone or iPad and open it with AltStore. It uses a separate bundle ID and a gold R icon badge, so it can coexist with the stable app. This is not an App Store submission or a production release.
+          EOF
+          if gh release view rolling --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release edit rolling \
+              --repo "$GITHUB_REPOSITORY" \
+              --title 'Kelma Review Rolling' \
+              --notes-file rolling-release-notes.md \
+              --prerelease
+          else
+            gh release create rolling \
+              --repo "$GITHUB_REPOSITORY" \
+              --target rolling \
+              --title 'Kelma Review Rolling' \
+              --notes-file rolling-release-notes.md \
+              --prerelease \
+              --latest=false
+          fi
+          gh release upload rolling \
+            mobile-release/KelmaReview-Rolling.ipa \
+            mobile-release/rolling-build.json \
+            mobile-release/SHA256SUMS.txt \
+            --repo "$GITHUB_REPOSITORY" \
+            --clobber

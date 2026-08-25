@@ -1,0 +1,95 @@
+name: Build notarized macOS release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Release version without the v prefix
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  macos-developer-id:
+    runs-on: macos-26
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: bluelife8/kelma-fsrs-v6
+          ref: 19c858e8e46449d50b316ad9937cbc4d5ac91dcc
+          path: kelma-fsrs-v6
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Import Developer ID Application certificate
+        env:
+          KELMA_MAC_CERTIFICATE_P12_BASE64: ${{ secrets.KELMA_MAC_CERTIFICATE_P12_BASE64 }}
+          KELMA_MAC_CERTIFICATE_PASSWORD: ${{ secrets.KELMA_MAC_CERTIFICATE_PASSWORD }}
+        run: |
+          test -n "$KELMA_MAC_CERTIFICATE_P12_BASE64"
+          test -n "$KELMA_MAC_CERTIFICATE_PASSWORD"
+          KEYCHAIN="$RUNNER_TEMP/kelma-signing.keychain-db"
+          CERTIFICATE="$RUNNER_TEMP/kelma-developer-id.p12"
+          KEYCHAIN_PASSWORD="$(openssl rand -hex 24)"
+          printf '%s' "$KELMA_MAC_CERTIFICATE_P12_BASE64" | base64 --decode > "$CERTIFICATE"
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN"
+          security import "$CERTIFICATE" -k "$KEYCHAIN" \
+            -P "$KELMA_MAC_CERTIFICATE_PASSWORD" -T /usr/bin/codesign -T /usr/bin/productsign
+          security set-key-partition-list -S apple-tool:,apple:,codesign: \
+            -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN"
+          security list-keychains -d user -s "$KEYCHAIN" login.keychain-db
+          rm -f "$CERTIFICATE"
+          echo "KELMA_MAC_KEYCHAIN=$KEYCHAIN" >> "$GITHUB_ENV"
+      - name: Build, sign, and notarize DMG
+        env:
+          KELMA_MAC_DEVELOPER_IDENTITY: ${{ secrets.KELMA_MAC_DEVELOPER_IDENTITY }}
+          KELMA_MAC_NOTARIZATION_APPLE_ID: ${{ secrets.KELMA_MAC_NOTARIZATION_APPLE_ID }}
+          KELMA_MAC_NOTARIZATION_PASSWORD: ${{ secrets.KELMA_MAC_NOTARIZATION_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          test -n "$KELMA_MAC_DEVELOPER_IDENTITY"
+          test -n "$KELMA_MAC_NOTARIZATION_APPLE_ID"
+          test -n "$KELMA_MAC_NOTARIZATION_PASSWORD"
+          test -n "$APPLE_TEAM_ID"
+          python3 scripts/check_macos_distribution.py
+          export KELMA_PACKAGE_VERSION='${{ inputs.version }}'
+          ./gradlew \
+            -PkelmaFsrsPath=kelma-fsrs-v6 \
+            -PkelmaPackageVersion="$KELMA_PACKAGE_VERSION" \
+            -Pcompose.desktop.mac.sign=true \
+            -Pcompose.desktop.mac.signing.identity="$KELMA_MAC_DEVELOPER_IDENTITY" \
+            -Pcompose.desktop.mac.signing.keychain="$KELMA_MAC_KEYCHAIN" \
+            :desktopApp:packageDmg
+          DMG="$(find desktopApp/build/compose/binaries/main/dmg -maxdepth 1 -name '*.dmg' -print -quit)"
+          test -n "$DMG"
+          xcrun notarytool submit "$DMG" --wait \
+            --apple-id "$KELMA_MAC_NOTARIZATION_APPLE_ID" \
+            --team-id "$APPLE_TEAM_ID" \
+            --password "$KELMA_MAC_NOTARIZATION_PASSWORD"
+          xcrun stapler staple "$DMG"
+          python3 scripts/check_packaged_legal_notices.py desktopApp/build/compose/binaries/main/app
+          python3 scripts/check_desktop_runtime_modules.py
+          python3 scripts/check_desktop_jvm_args.py desktopApp/build/compose/binaries/main/app
+          python3 scripts/check_macos_distribution.py --dmg "$DMG" --version "$KELMA_PACKAGE_VERSION"
+          mkdir -p macos-release
+          cp "$DMG" "macos-release/KelmaReview-${KELMA_PACKAGE_VERSION}-macOS.dmg"
+          shasum -a 256 macos-release/*.dmg > macos-release/SHA256SUMS.txt
+      - name: Remove ephemeral signing keychain
+        if: always()
+        run: |
+          if [ -n "${KELMA_MAC_KEYCHAIN:-}" ]; then
+            security delete-keychain "$KELMA_MAC_KEYCHAIN" || true
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: kelma-review-macos-${{ inputs.version }}
+          path: macos-release/*
+          if-no-files-found: error

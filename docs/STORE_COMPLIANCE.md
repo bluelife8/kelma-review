@@ -9,51 +9,51 @@ submission artifacts.
 
 ### Store build variants
 
-- [ ] Add an Android Play Store build/release path that produces a signed AAB.
+- [x] Add an Android Play Store build/release path that produces a signed AAB when upload-key secrets are present.
 - [ ] Enroll in Google Play App Signing and create a protected upload key.
-- [ ] Store Android signing credentials only in CI/release secrets.
-- [ ] Add an iOS App Store build configuration separate from the community/AltStore build.
+- [x] Read Android signing credentials only from release-environment secrets; no credentials are committed.
+- [x] Add an iOS App Store build configuration separate from the community/AltStore build.
 - [ ] Produce a signed `.xcarchive` with Apple Distribution signing.
 - [ ] Export and upload an App Store Connect IPA through Xcode, Transporter, or CI.
-- [ ] Store App Store Connect credentials and signing material only in the release environment.
-- [ ] Preserve the existing community APK/IPA release behavior where appropriate; do not replace or rename preview artifacts as store builds.
+- [x] Configure the store workflow to read App Store Connect and signing material only from protected secrets.
+- [x] Preserve the existing community APK/IPA release workflow separately; store artifacts use dedicated paths.
 
 ### iOS identity and signing
 
-- [ ] Change `PRODUCT_BUNDLE_IDENTIFIER` to exactly `tech.kelma.app.KelmaReview`.
-- [ ] Remove `$(TEAM_ID)` from the bundle identifier.
-- [ ] Use `TEAM_ID` only for `DEVELOPMENT_TEAM`.
-- [ ] Remove the explicit `Apple Development` identity from the Release configuration or configure automatic App Store distribution signing.
-- [ ] Reserve the exact bundle identifier in the Apple Developer portal and App Store Connect.
+- [x] Change `PRODUCT_BUNDLE_IDENTIFIER` to exactly `tech.kelma.app.KelmaReview`.
+- [x] Remove `$(TEAM_ID)` from the bundle identifier.
+- [x] Use `TEAM_ID` only for `DEVELOPMENT_TEAM`.
+- [x] Configure the App Store build for automatic distribution signing without a hard-coded signing identity.
+- [x] Reserve the exact bundle identifier in Apple Developer and create the App Store Connect record.
 - [ ] Verify `CFBundleIdentifier`, `CFBundleShortVersionString`, and `CFBundleVersion` inside every signed archive/IPA.
 - [ ] Keep App Store, Android, desktop, release-tag, and AltStore versions aligned as required by `docs/RELEASE.md`.
 
 ### External plugin runtime
 
-- [ ] Disable external `.kelmaplugin` installation and execution in the iOS App Store build.
-- [ ] Remove Plugin Manager and plugin-install entry points from the iOS App Store build.
-- [ ] Ensure the App Store build cannot load previously imported plugin packages.
-- [ ] Exclude the external Lua runtime from the App Store artifact where practical.
-- [ ] Keep plugin support available only in the community/AltStore build.
-- [ ] Decide whether the Play Store build will also disable external plugins; disabling them is the lowest-risk policy choice.
-- [ ] Document and test the store/community feature split.
+- [x] Disable external `.kelmaplugin` installation and execution in the iOS App Store build.
+- [x] Remove Plugin Manager and plugin-install entry points from the iOS App Store build.
+- [x] Ensure the App Store build cannot load previously imported plugin packages.
+- [x] Exclude the external Lua runtime and cinterop from the App Store artifact.
+- [x] Keep plugin support available in community/AltStore builds.
+- [x] Retain restricted interpreted Lua plugins in the Play build and document the policy decision.
+- [x] Document and test the store/community feature split.
 
 ### Kelma Review privacy policy
 
-- [ ] Publish a dedicated public policy, preferably at `https://kelma.tech/review/privacy`.
-- [ ] Make the policy accessible without signing in, geofencing, or installing the app.
-- [ ] Identify Kelma Tech LLC and provide a working privacy contact address.
-- [ ] Describe email/username and authentication processing.
-- [ ] Describe synced decks, notes, cards, templates, tags, settings, media, and review history.
-- [ ] Describe KelmaSync, database hosting, and Cloudflare/R2 processing.
-- [ ] Distinguish local-only database/cache data from cloud-synced data.
-- [ ] Explain that Record Own Voice creates a temporary on-device recording that is not persisted or synchronized.
-- [ ] Explain native file and document picker behavior.
-- [ ] State retention, backup, and deletion timelines.
-- [ ] State whether data is sold or shared and identify relevant service-provider processing.
-- [ ] State that the current app has no ads, analytics, or cross-app tracking.
-- [ ] Remove or clearly separate unrelated Kelma Immersion AI, payment, and subscription disclosures.
-- [ ] Add Privacy Policy, Terms, Support, and About/Licenses links inside Kelma Review.
+- [x] Publish a dedicated public policy at `https://kelma.tech/review/privacy`.
+- [x] Make the policy accessible without signing in, geofencing, or installing the app.
+- [x] Identify Kelma Tech LLC and provide a working privacy contact address.
+- [x] Describe email/username and authentication processing.
+- [x] Describe synced decks, notes, cards, templates, tags, settings, media, and review history.
+- [x] Describe KelmaSync, database hosting, and Cloudflare/R2 processing.
+- [x] Distinguish local-only database/cache data from cloud-synced data.
+- [x] Explain that Record Own Voice creates a temporary on-device recording that is not persisted or synchronized.
+- [x] Explain native file and document picker behavior.
+- [x] State retention, backup, and deletion timelines.
+- [x] State whether data is sold or shared and identify relevant service-provider processing.
+- [x] State that the current app has no ads, analytics, or cross-app tracking.
+- [x] Remove or clearly separate unrelated Kelma Immersion AI, payment, and subscription disclosures.
+- [x] Add Privacy Policy, Terms, Support, and About/Licenses links inside Kelma Review.
 
 ### Account and data deletion
 
@@ -63,50 +63,60 @@ submission artifacts.
 - [x] Delete the user's complete media prefix from R2 or filesystem storage, including orphaned blobs.
 - [x] Make deletion idempotent and safe to retry after partial failure.
 - [x] Connect shared Kelma account deletion to KelmaSync deletion before deleting the authentication account.
-- [ ] Add an in-app deletion flow with clear consequences and confirmation.
-- [ ] After confirmed cloud deletion, remove local account databases, cached media, registry entries, and Keychain/Keystore credentials.
-- [ ] Keep Sign out, Remove from this device, Delete Review cloud data, and Delete Kelma account semantically distinct.
+- [x] Add an in-app deletion flow with clear consequences and confirmation.
+- [x] Add a separate confirmed Remove from this device action that clears local account data, media, plugins, registry entries, and secure credentials without deleting cloud data.
+- [ ] Automatically remove local account databases and caches after confirmed cloud deletion on the web.
+- [x] Keep Sign out, Remove from this device, Review cloud data, and Delete Kelma account semantically distinct.
 - [x] Publish a direct web deletion page at `https://kelma.tech/review/account-deletion`.
 - [x] Explain what is deleted, what may be retained, why it is retained, and for how long.
 - [ ] Test deletion against Postgres, R2/filesystem storage, Immersion authentication, and every saved client token.
 
 ### Apple privacy manifest and export compliance
 
-- [ ] Add `PrivacyInfo.xcprivacy` to the iOS app target.
-- [ ] Declare tracking accurately; the current expected value is no tracking.
-- [ ] Declare `NSUserDefaults` required-reason API access with the appropriate approved reason.
+- [x] Add `PrivacyInfo.xcprivacy` to the iOS app target.
+- [x] Declare tracking accurately as disabled.
+- [x] Declare `NSUserDefaults` required-reason API access with app-specific reason `CA92.1`.
 - [ ] Audit the final archive for other required-reason APIs introduced by Compose, SQLDelight, Ktor, native Lua, or other dependencies.
 - [ ] Ensure dependency privacy manifests are included where required.
-- [ ] Keep App Store Connect privacy labels consistent with the manifest and published privacy policy.
+- [ ] Keep App Store Connect privacy labels consistent with the manifest's account, content, and product-interaction declarations and the published privacy policy.
 - [ ] Complete Apple's encryption/export-compliance questionnaire.
-- [ ] Set `ITSAppUsesNonExemptEncryption` accurately if the app qualifies for the standard HTTPS/OS-cryptography exemption.
+- [x] Set `ITSAppUsesNonExemptEncryption` to false for HTTPS and operating-system cryptography only.
 
 ## P1 — Android production hardening
 
-- [ ] Add Android 12+ `android:dataExtractionRules` that disables cloud backup and device transfer as intended.
-- [ ] Add `<uses-feature android:name="android.hardware.microphone" android:required="false" />` because recording is optional.
-- [ ] Remove `compose.uiTooling` from production dependencies.
-- [ ] Confirm the exported Compose `PreviewActivity` is absent from the final release manifest.
+- [x] Add Android 12+ `android:dataExtractionRules` that disables cloud backup and device transfer.
+- [x] Add `<uses-feature android:name="android.hardware.microphone" android:required="false" />`.
+- [x] Remove `compose.uiTooling` and the preview activity path from production dependencies/source.
+- [x] Remove the Compose preview entry point and verify no exported `PreviewActivity` is packaged.
 - [ ] Fix launcher-icon safe-area/shape lint warnings.
 - [ ] Add adaptive monochrome launcher icons.
 - [ ] Validate that Android app icons meet Play artwork and transparency requirements.
-- [ ] Configure native debug-symbol generation and preserve/upload symbols for Play diagnostics.
+- [x] Configure native symbol-table generation for every Play AAB ABI.
 - [ ] Decide whether to enable R8/minification; add and test rules before enabling it.
 - [ ] Validate the signed AAB with `bundletool`.
 - [ ] Install packages generated from the AAB and run smoke tests on physical devices.
-- [ ] Keep `targetSdk` at or above the current Play requirement; API 36 currently satisfies this.
-- [ ] Keep `arm64-v8a` support in every store artifact.
+- [x] Keep `targetSdk` at or above the current Play requirement; API 36 currently satisfies this.
+- [x] Assert `arm64-v8a`, `armeabi-v7a`, `x86`, and `x86_64` plus matching symbols in every Play AAB.
 
 ## P1 — iOS production hardening
 
-- [ ] Add a dedicated App Store archive/export workflow using `xcodebuild archive` and `-exportArchive`.
+- [x] Add a dedicated App Store scheme/configuration and documented `xcodebuild archive`/`-exportArchive` path.
 - [ ] Validate the signed archive in Xcode/App Store Connect before submission.
 - [ ] Confirm the 1024×1024 App Store icon has no forbidden alpha channel and renders correctly.
 - [ ] Confirm the app name, launch screen, accent color, and icon catalog validate without warnings.
-- [ ] Review whether the iOS 18.2 deployment target is intentional; align it with the shared iOS 15 minimum if broader support is desired.
+- [x] Align the App Store configuration with the shared iOS 15 minimum; community defaults remain unchanged.
 - [ ] Test every declared iPhone and iPad orientation or restrict declarations to orientations the UI supports.
 - [ ] Test microphone denial, restricted permission, interruption, backgrounding, and temporary-file cleanup.
 - [ ] Confirm document picker access does not require unnecessary Photos permissions.
+
+## Direct macOS distribution
+
+- [x] Add a Developer ID Application signing and notarization workflow separate from iOS App Store signing.
+- [x] Enable hardened runtime with the JVM/plugin entitlements required by the current desktop architecture.
+- [x] Validate the signed app bundle ID/version, Developer ID authority, notarization ticket, stapled DMG, and Gatekeeper acceptance.
+- [ ] Create and protect the Developer ID Application certificate and CI secrets.
+- [ ] Run the signed workflow and smoke-test the stapled DMG on a clean macOS account/machine.
+- [ ] Treat any future Mac App Store build as a third path requiring sandbox, entitlement, plugin, and store-policy review.
 
 ## Store listing and console work
 
@@ -117,7 +127,7 @@ submission artifacts.
 - [ ] Prepare phone and tablet screenshots from final store builds.
 - [ ] Prepare required Play icon and feature artwork.
 - [ ] Prepare App Store promotional artwork if used.
-- [ ] Publish working Privacy, Support, Terms, and account-deletion URLs.
+- [x] Publish working Privacy, Support, Terms, and account-deletion URLs.
 - [ ] Provide developer contact information and copyright details.
 - [ ] Verify rights to all branding, fonts, screenshots, sample decks, and listing copy.
 - [ ] Avoid claims that cannot be demonstrated during review.
@@ -125,7 +135,7 @@ submission artifacts.
 
 ### Google Play Console
 
-- [ ] Create/reserve application ID `tech.kelma.app` before public release.
+- [x] Create/reserve application ID `tech.kelma.app`.
 - [ ] Enable Play App Signing and register the upload certificate.
 - [ ] Complete the Data Safety form from the final production behavior.
 - [ ] Declare optional account identifiers, user content/media, and study activity used for app functionality as applicable.
@@ -142,7 +152,7 @@ submission artifacts.
 
 ### App Store Connect
 
-- [ ] Create the app record for bundle ID `tech.kelma.app.KelmaReview`.
+- [x] Create the App Store Connect app record for bundle ID `tech.kelma.app.KelmaReview` (SKU `kelma-review-ios`).
 - [ ] Complete App Privacy nutrition labels from final production behavior.
 - [ ] Expected categories to assess include email/user ID, user content/media, and product interaction/study history for app functionality.
 - [ ] Do not declare temporary on-device voice recording as collected if it never leaves the device or persists; verify this against final behavior.

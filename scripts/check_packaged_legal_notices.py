@@ -14,7 +14,7 @@ EXPECTED = {
     "THIRD_PARTY_NOTICES.md": (ROOT / "THIRD_PARTY_NOTICES.md").read_bytes(),
     "LUA_LICENSE.txt": (ROOT / "native/lua/LICENSE").read_bytes(),
 }
-ARCHIVE_SUFFIXES = {".apk", ".ipa", ".jar", ".zip"}
+ARCHIVE_SUFFIXES = {".aab", ".apk", ".ipa", ".jar", ".zip"}
 
 
 def collect_from_archive(path: Path, found: dict[str, bytes]) -> None:

@@ -83,7 +83,7 @@ fun DesktopDeckListScreen(
     onSignIn: () -> Unit,
     onSync: () -> Unit,
     onSyncNow: () -> Unit = onSync,
-    onSignOut: () -> Unit = {},
+    onAccount: () -> Unit = {},
 ) {
     val syncAction = if (signedIn) onSync else onSignIn
     val panelHeight = (70 + decks.size.coerceAtMost(8) * 48).coerceIn(166, 440).dp
@@ -178,10 +178,7 @@ fun DesktopDeckListScreen(
                             syncing = syncing,
                             onClick = if (signedIn) onSyncNow else onSignIn,
                         )
-                        DesktopUtilityButton(
-                            if (signedIn) "Switch Account" else "Accounts",
-                            onClick = if (signedIn) onSignOut else onSignIn,
-                        )
+                        DesktopUtilityButton("Account…", onClick = onAccount)
                         DesktopUtilityButton("Get Shared", onClick = onGetShared)
                         DesktopUtilityButton("Create Deck", onClick = { showCreateDeck = true })
                         DesktopUtilityButton("Import File", onClick = onImportFile)
