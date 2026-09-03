@@ -6,6 +6,7 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.v2.runComposeUiTest
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicReference
@@ -29,6 +30,7 @@ class AccountLegalControlsUiTest {
                     onSwitchAccount = {},
                     onSignOut = { signedOut.set(true) },
                     onRemoveFromDevice = { removed.set(true) },
+                    onDeleteKelmaAccount = {},
                     onOpenUri = {},
                     onDismiss = {},
                 )
@@ -46,7 +48,8 @@ class AccountLegalControlsUiTest {
     }
 
     @Test
-    fun deletionRequiresConsequencesConfirmationBeforeOpeningThePublicFlow() = runComposeUiTest {
+    fun deletionRequiresPasswordConfirmationAndStaysInApp() = runComposeUiTest {
+        val deletedWithPassword = AtomicReference<String?>(null)
         val opened = AtomicReference<String?>(null)
         setContent {
             KelmaTheme {
@@ -58,6 +61,7 @@ class AccountLegalControlsUiTest {
                     onSwitchAccount = {},
                     onSignOut = {},
                     onRemoveFromDevice = {},
+                    onDeleteKelmaAccount = deletedWithPassword::set,
                     onOpenUri = opened::set,
                     onDismiss = {},
                 )
@@ -65,10 +69,11 @@ class AccountLegalControlsUiTest {
         }
 
         onNodeWithTag("account-delete-kelma").performScrollTo().performClick()
-        onNodeWithText("Continue to account deletion?").assertIsDisplayed()
-        assertEquals(null, opened.get())
+        onNodeWithText("Permanently delete account?").assertIsDisplayed()
+        onNodeWithTag("delete-account-password").performTextInput("secret1")
         onNodeWithTag("confirm-delete-kelma").performClick()
-        assertEquals(KelmaAccountDeletionUrl, opened.get())
+        assertEquals("secret1", deletedWithPassword.get())
+        assertEquals(null, opened.get())
     }
 
     @Test
@@ -84,6 +89,7 @@ class AccountLegalControlsUiTest {
                     onSwitchAccount = {},
                     onSignOut = {},
                     onRemoveFromDevice = {},
+                    onDeleteKelmaAccount = {},
                     onOpenUri = opened::set,
                     onDismiss = {},
                 )

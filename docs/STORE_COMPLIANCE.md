@@ -55,17 +55,18 @@ submission artifacts.
 - [x] Remove or clearly separate unrelated Kelma Immersion AI, payment, and subscription disclosures.
 - [x] Add Privacy Policy, Terms, Support, and About/Licenses links inside Kelma Review.
 
-### Account and data deletion
+### Account access and data deletion
 
+- [x] Keep sign-in, registration, and password-reset requests inside the app through first-party Fastify endpoints; never send credential entry to the system browser.
 - [x] Add an authenticated KelmaSync account/data deletion service.
 - [x] Revoke all KelmaSync tokens and clients during deletion.
 - [x] Delete the user's KelmaSync database records and verify all foreign-key cascades.
 - [x] Delete the user's complete media prefix from R2 or filesystem storage, including orphaned blobs.
 - [x] Make deletion idempotent and safe to retry after partial failure.
 - [x] Connect shared Kelma account deletion to KelmaSync deletion before deleting the authentication account.
-- [x] Add an in-app deletion flow with clear consequences and confirmation.
+- [x] Add an in-app deletion flow with clear consequences, password reauthentication, and direct first-party API deletion.
 - [x] Add a separate confirmed Remove from this device action that clears local account data, media, plugins, registry entries, and secure credentials without deleting cloud data.
-- [ ] Automatically remove local account databases and caches after confirmed cloud deletion on the web.
+- [x] Automatically remove local account databases and caches after confirmed in-app cloud deletion.
 - [x] Keep Sign out, Remove from this device, Review cloud data, and Delete Kelma account semantically distinct.
 - [x] Publish a direct web deletion page at `https://kelma.tech/review/account-deletion`.
 - [x] Explain what is deleted, what may be retained, why it is retained, and for how long.
@@ -163,7 +164,7 @@ submission artifacts.
 - [ ] Supply required iPhone screenshots.
 - [ ] Supply required iPad screenshots because the app targets iPad.
 - [ ] Upload to TestFlight and resolve processing/validation warnings before review.
-- [ ] Confirm first-party email/password authentication does not trigger a Sign in with Apple requirement; re-evaluate if social login is added later.
+- [x] Keep first-party email/password sign-in and registration native to Review; no social login is offered, so Sign in with Apple is not required.
 
 ## Data inventory to keep consistent
 

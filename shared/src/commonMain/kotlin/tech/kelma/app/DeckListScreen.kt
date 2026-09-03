@@ -79,6 +79,7 @@ fun DeckListScreen(
     onSwitchAccount: () -> Unit,
     onSignOut: () -> Unit,
     onRemoveFromDevice: () -> Unit,
+    onDeleteKelmaAccount: (String) -> Unit,
 ) {
     var showGetShared by remember { mutableStateOf(false) }
     var showUndoConfirmation by remember { mutableStateOf(false) }
@@ -175,6 +176,10 @@ fun DeckListScreen(
             onRemoveFromDevice = {
                 showAccountControls = false
                 onRemoveFromDevice()
+            },
+            onDeleteKelmaAccount = { password ->
+                showAccountControls = false
+                onDeleteKelmaAccount(password)
             },
             onOpenUri = uriHandler::openUri,
             onDismiss = { showAccountControls = false },

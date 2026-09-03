@@ -54,6 +54,9 @@ def check_source(check_xcode: bool) -> None:
     project = read("iosApp/iosApp.xcodeproj/project.pbxproj")
     shared_build = read("shared/build.gradle.kts")
     content_view = read("iosApp/iosApp/ContentView.swift")
+    sign_in_screen = read("shared/src/commonMain/kotlin/tech/kelma/app/SignInScreen.kt")
+    account_client = read("shared/src/commonMain/kotlin/tech/kelma/app/KelmaAccountClient.kt")
+    account_controls = read("shared/src/commonMain/kotlin/tech/kelma/app/AccountLegalControls.kt")
     manifest = plistlib.loads((ROOT / "iosApp/iosApp/PrivacyInfo.xcprivacy").read_bytes())
 
     if f"PRODUCT_BUNDLE_IDENTIFIER={IOS_BUNDLE_ID}" not in config:
@@ -80,6 +83,21 @@ def check_source(check_xcode: bool) -> None:
         fail("App Store builds do not exclude the community iOS Lua runtime")
     if "externalPluginsEnabled: !BuildChannel.isAppStore" not in content_view:
         fail("The App Store app does not disable external plugin behavior")
+    for external_account_url in (
+        "https://kelma.tech/signup",
+        "https://kelma.tech/signin?reset=1",
+        "https://kelma.tech/review/account-deletion",
+    ):
+        if external_account_url in sign_in_screen + account_controls:
+            fail("Account credentials or deletion still leave the app")
+    for account_path in (
+        "/anon/sign_up",
+        "/anon/request_password_reset",
+        "/anon/log_in",
+        "/user/delete-account",
+    ):
+        if account_path not in account_client:
+            fail(f"In-app account client is missing {account_path}")
     if check_xcode:
         settings = xcode_settings("AppStore")
         expected = {
