@@ -75,5 +75,6 @@ private fun TestDeckList(
         onSwitchAccount = {},
         onSignOut = {},
         onRemoveFromDevice = {},
+        onDeleteKelmaAccount = {},
     )
 }

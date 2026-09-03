@@ -14,6 +14,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -26,6 +27,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -33,7 +35,6 @@ import androidx.compose.ui.unit.sp
 internal const val KelmaReviewPrivacyUrl = "https://kelma.tech/review/privacy"
 internal const val KelmaReviewTermsUrl = "https://kelma.tech/review/terms"
 internal const val KelmaReviewSupportUrl = "https://kelma.tech/review/support"
-internal const val KelmaAccountDeletionUrl = "https://kelma.tech/review/account-deletion"
 internal const val KelmaReviewSourceUrl = "https://github.com/bluelife8/kelma-review"
 internal const val KelmaReviewLicenseUrl = "https://github.com/bluelife8/kelma-review/blob/main/LICENSE"
 internal const val KelmaReviewNoticesUrl =
@@ -54,6 +55,7 @@ internal fun AccountLegalControlsDialog(
     onSwitchAccount: () -> Unit,
     onSignOut: () -> Unit,
     onRemoveFromDevice: () -> Unit,
+    onDeleteKelmaAccount: (String) -> Unit,
     onOpenUri: (String) -> Unit,
     onDismiss: () -> Unit,
 ) {
@@ -68,9 +70,11 @@ internal fun AccountLegalControlsDialog(
             onBack = { confirmation = null },
         )
         AccountConfirmation.DeleteKelmaAccount -> DeleteKelmaAccountConfirmation(
-            onConfirm = {
+            username = username,
+            working = working,
+            onConfirm = { password ->
                 confirmation = null
-                onOpenUri(KelmaAccountDeletionUrl)
+                onDeleteKelmaAccount(password)
             },
             onBack = { confirmation = null },
         )
@@ -176,7 +180,7 @@ private fun AccountLegalOverview(
                     Spacer(Modifier.height(10.dp))
                     AccountAction(
                         title = "Delete Kelma account",
-                        description = "Review the permanent shared-account deletion consequences before continuing.",
+                        description = "Permanently delete the shared account here after password confirmation.",
                         testTag = "account-delete-kelma",
                         enabled = !working,
                         destructive = true,
@@ -317,25 +321,46 @@ private fun RemoveFromDeviceConfirmation(username: String?, onConfirm: () -> Uni
 }
 
 @Composable
-private fun DeleteKelmaAccountConfirmation(onConfirm: () -> Unit, onBack: () -> Unit) {
+private fun DeleteKelmaAccountConfirmation(
+    username: String?,
+    working: Boolean,
+    onConfirm: (String) -> Unit,
+    onBack: () -> Unit,
+) {
+    var password by remember { mutableStateOf("") }
     AlertDialog(
         onDismissRequest = onBack,
         containerColor = MaterialTheme.colorScheme.surfaceVariant,
-        title = { Text("Continue to account deletion?", fontWeight = FontWeight.ExtraBold) },
+        title = { Text("Permanently delete account?", fontWeight = FontWeight.ExtraBold) },
         text = {
-            Text(
-                "Deleting your Kelma account permanently removes authentication, KelmaSync decks, cards, " +
-                    "review history, settings, cloud media, and Immersion cloud data. Active Kelma subscriptions " +
-                    "are canceled. Offline collections, exports, and cards copied to Anki remain until you remove " +
-                    "them separately. The secure web flow may ask you to sign in again.",
-                lineHeight = 21.sp,
-            )
-        },
-        confirmButton = {
-            TextButton(onClick = onConfirm, modifier = Modifier.testTag("confirm-delete-kelma")) {
-                Text("Open deletion page", color = MaterialTheme.colorScheme.error, fontWeight = FontWeight.Bold)
+            Column {
+                Text(
+                    "Deleting ${username ?: "this Kelma account"} permanently removes authentication, KelmaSync " +
+                        "decks, cards, review history, settings, cloud media, and Immersion cloud data. Active Kelma " +
+                        "subscriptions are canceled. Offline exports remain until you remove them separately.",
+                    lineHeight = 21.sp,
+                )
+                Spacer(Modifier.height(16.dp))
+                OutlinedTextField(
+                    value = password,
+                    onValueChange = { password = it },
+                    modifier = Modifier.fillMaxWidth().testTag("delete-account-password"),
+                    enabled = !working,
+                    label = { Text("Account password") },
+                    singleLine = true,
+                    visualTransformation = PasswordVisualTransformation(),
+                )
             }
         },
-        dismissButton = { TextButton(onClick = onBack) { Text("Cancel") } },
+        confirmButton = {
+            TextButton(
+                onClick = { onConfirm(password) },
+                modifier = Modifier.testTag("confirm-delete-kelma"),
+                enabled = password.isNotEmpty() && !working,
+            ) {
+                Text("Delete permanently", color = MaterialTheme.colorScheme.error, fontWeight = FontWeight.Bold)
+            }
+        },
+        dismissButton = { TextButton(onClick = onBack, enabled = !working) { Text("Cancel") } },
     )
 }

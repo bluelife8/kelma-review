@@ -6,6 +6,7 @@ import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.v2.runComposeUiTest
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicReference
@@ -55,8 +56,10 @@ class SignInScreenUiTest {
     }
 
     @Test
-    fun optionalAccountActionsOpenCanonicalWebFlowsOrReturnToLocalUse() = runComposeUiTest {
+    fun optionalAccountActionsStayInAppOrReturnToLocalUse() = runComposeUiTest {
         val opened = AtomicReference<String?>(null)
+        val registered = AtomicReference<Pair<String, String>?>(null)
+        val reset = AtomicReference<String?>(null)
         val continued = AtomicBoolean(false)
         setContent {
             KelmaTheme {
@@ -64,6 +67,8 @@ class SignInScreenUiTest {
                     signingIn = false,
                     error = null,
                     onSignIn = { _, _ -> },
+                    onRegister = { email, password -> registered.set(email to password) },
+                    onRequestPasswordReset = reset::set,
                     onBack = { continued.set(true) },
                     onOpenUri = opened::set,
                 )
@@ -73,9 +78,24 @@ class SignInScreenUiTest {
         onNodeWithText("In Review, a Kelma account is optional and only needed for KelmaSync.")
             .assertIsDisplayed()
         onNodeWithTag("create-kelma-account").performClick()
-        assertEquals(KelmaAccountRegistrationUrl, opened.get())
+        onNodeWithText("Create your Kelma account").assertIsDisplayed()
+        onNodeWithTag("registration-email").performTextInput("NEW@Example.com")
+        onNodeWithTag("registration-password").performTextInput("secret1")
+        onNodeWithTag("registration-confirm-password").performTextInput("secret1")
+        onNodeWithTag("registration-legal-consent").performClick()
+        onNodeWithTag("registration-submit").performClick()
+        assertEquals("new@example.com" to "secret1", registered.get())
+        assertEquals(null, opened.get())
+
+        onNodeWithText("Back to sign in").performClick()
         onNodeWithTag("forgot-password").performClick()
-        assertEquals(KelmaPasswordResetUrl, opened.get())
+        onNodeWithText("Reset your password").assertIsDisplayed()
+        onNodeWithTag("password-reset-email").performTextInput("person@example.com")
+        onNodeWithTag("password-reset-submit").performClick()
+        assertEquals("person@example.com", reset.get())
+        assertEquals(null, opened.get())
+
+        onNodeWithText("Back to sign in").performClick()
         onNodeWithTag("continue-without-account").performClick()
         assertTrue(continued.get())
     }
