@@ -42,14 +42,21 @@ data class LocalAccountChoice(
     val endpoint: String,
 )
 
-internal const val KelmaAccountRegistrationUrl = "https://kelma.tech/signup"
-internal const val KelmaPasswordResetUrl = "https://kelma.tech/signin?reset=1"
+private enum class AccountAccessMode {
+    SignIn,
+    Register,
+    ResetPassword,
+}
 
 @Composable
 fun SignInScreen(
     signingIn: Boolean,
     error: String?,
+    message: String? = null,
     onSignIn: (username: String, password: String) -> Unit,
+    onRegister: (email: String, password: String) -> Unit = { _, _ -> },
+    onRequestPasswordReset: (email: String) -> Unit = {},
+    onClearFeedback: () -> Unit = {},
     onBack: () -> Unit,
     accounts: List<LocalAccountChoice> = emptyList(),
     onSelectAccount: (LocalAccountChoice) -> Unit = {},
@@ -57,9 +64,40 @@ fun SignInScreen(
 ) {
     val uriHandler = LocalUriHandler.current
     val openUri = onOpenUri ?: { uri: String -> uriHandler.openUri(uri) }
+    var mode by remember { mutableStateOf(AccountAccessMode.SignIn) }
     var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var selectedAccount by remember(accounts) { mutableStateOf<LocalAccountChoice?>(null) }
+    val showMode: (AccountAccessMode) -> Unit = {
+        onClearFeedback()
+        mode = it
+    }
+    when (mode) {
+        AccountAccessMode.Register -> {
+            AccountRegistrationScreen(
+                working = signingIn,
+                error = error,
+                message = message,
+                onRegister = onRegister,
+                onOpenUri = openUri,
+                onBack = { showMode(AccountAccessMode.SignIn) },
+                onContinueWithoutAccount = onBack,
+            )
+            return
+        }
+        AccountAccessMode.ResetPassword -> {
+            AccountPasswordResetScreen(
+                working = signingIn,
+                error = error,
+                message = message,
+                initialEmail = username,
+                onRequestReset = onRequestPasswordReset,
+                onBack = { showMode(AccountAccessMode.SignIn) },
+            )
+            return
+        }
+        AccountAccessMode.SignIn -> Unit
+    }
     val submit = { onSignIn(username, password) }
     val selectAccount: (LocalAccountChoice) -> Unit = {
         selectedAccount = it
@@ -84,8 +122,8 @@ fun SignInScreen(
             onUsernameChange = updateUsername,
             onPasswordChange = { password = it },
             onSubmit = submit,
-            onCreateAccount = { openUri(KelmaAccountRegistrationUrl) },
-            onForgotPassword = { openUri(KelmaPasswordResetUrl) },
+            onCreateAccount = { showMode(AccountAccessMode.Register) },
+            onForgotPassword = { showMode(AccountAccessMode.ResetPassword) },
             onBack = onBack,
         )
     } else {
@@ -100,8 +138,8 @@ fun SignInScreen(
             onUsernameChange = updateUsername,
             onPasswordChange = { password = it },
             onSubmit = submit,
-            onCreateAccount = { openUri(KelmaAccountRegistrationUrl) },
-            onForgotPassword = { openUri(KelmaPasswordResetUrl) },
+            onCreateAccount = { showMode(AccountAccessMode.Register) },
+            onForgotPassword = { showMode(AccountAccessMode.ResetPassword) },
             onBack = onBack,
         )
     }

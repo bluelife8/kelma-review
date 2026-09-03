@@ -33,6 +33,7 @@ internal fun AppContent(
     state: AppState,
     store: PersistentCollectionStore,
     accountRegistry: LocalAccountRegistry,
+    accountService: KelmaAccountService,
     scope: CoroutineScope,
     appFocusRequester: FocusRequester,
     displayCollection: SyncedCollection,
@@ -69,6 +70,7 @@ internal fun AppContent(
     var showSignIn by state.showSignIn
     var working by state.working
     var error by state.error
+    val accountAccessMessage by state.accountAccessMessage
     var syncMessage by state.syncMessage
     var syncConflicts by state.syncConflicts
     var syncLogs by state.syncLogs
@@ -236,6 +238,7 @@ internal fun AppContent(
 
     val accountDeviceActions = accountDeviceActions(
         accountRegistry = accountRegistry,
+        accountService = accountService,
         store = store,
         luaPluginHost = luaPluginHost,
         scope = scope,
@@ -276,13 +279,17 @@ internal fun AppContent(
             showSignIn -> SignInScreen(
                 signingIn = working,
                 error = error,
+                message = accountAccessMessage,
                 accounts = savedAccounts,
                 onSelectAccount = actions.selectAccount,
                 onBack = {
                     showSignIn = false
-                    error = null
+                    actions.clearAccountAccessFeedback()
                 },
                 onSignIn = actions.signIn,
+                onRegister = actions.registerAccount,
+                onRequestPasswordReset = actions.requestPasswordReset,
+                onClearFeedback = actions.clearAccountAccessFeedback,
             )
             destination == CollectionDestination.Sync -> SyncScreen(
                 entries = syncLogs,
@@ -869,6 +876,7 @@ internal fun AppContent(
                 onSwitchAccount = actions.signOut,
                 onSignOut = accountDeviceActions.signOut,
                 onRemoveFromDevice = accountDeviceActions.removeFromDevice,
+                onDeleteKelmaAccount = accountDeviceActions.deleteKelmaAccount,
                 activeAccountUsername = accountDeviceActions.username,
             )
         }

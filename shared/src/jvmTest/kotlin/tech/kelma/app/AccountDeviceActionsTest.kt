@@ -19,6 +19,7 @@ class AccountDeviceActionsTest {
         var leftAccount = false
         val actions = accountDeviceActions(
             accountRegistry = fixture.registry,
+            accountService = RecordingAccountService(),
             store = fixture.store,
             luaPluginHost = fixture.pluginHost,
             scope = this,
@@ -50,6 +51,7 @@ class AccountDeviceActionsTest {
         var pluginState: PluginHostState? = null
         val actions = accountDeviceActions(
             accountRegistry = fixture.registry,
+            accountService = RecordingAccountService(),
             store = fixture.store,
             luaPluginHost = fixture.pluginHost,
             scope = this,
@@ -75,6 +77,52 @@ class AccountDeviceActionsTest {
         assertTrue(pluginState?.running.orEmpty().isEmpty())
         fixture.close()
     }
+
+    @Test
+    fun deleteAccountReauthenticatesThenClearsLocalAndCloudIdentity() = runBlocking {
+        val fixture = accountFixture()
+        val accountService = RecordingAccountService()
+        var working = false
+        var leftAccount = false
+        val actions = accountDeviceActions(
+            accountRegistry = fixture.registry,
+            accountService = accountService,
+            store = fixture.store,
+            luaPluginHost = fixture.pluginHost,
+            scope = this,
+            isWorking = { working },
+            isRestored = { true },
+            setWorking = { working = it },
+            setError = { error(it) },
+            setPluginHostState = {},
+            leaveAccount = { leftAccount = true },
+        )
+
+        actions.deleteKelmaAccount("secret1")
+        coroutineContext[Job]?.children?.toList().orEmpty().joinAll()
+
+        assertEquals("person@example.com" to "secret1", accountService.deleted)
+        assertFalse(working)
+        assertTrue(leftAccount)
+        assertTrue(fixture.registry.accounts().isEmpty())
+        assertTrue(fixture.store.loadLocalContent().notes.isEmpty())
+        assertNull(fixture.vault.read("client"))
+        fixture.close()
+    }
+}
+
+private class RecordingAccountService : KelmaAccountService {
+    var deleted: Pair<String, String>? = null
+
+    override suspend fun register(email: String, password: String) = "Verification email sent"
+
+    override suspend fun requestPasswordReset(email: String) = "Reset email sent"
+
+    override suspend fun deleteAccount(email: String, password: String) {
+        deleted = email to password
+    }
+
+    override fun close() = Unit
 }
 
 private data class AccountActionFixture(

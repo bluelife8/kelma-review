@@ -27,6 +27,7 @@ internal class AppState {
     val showSignIn = mutableStateOf(false)
     val working = mutableStateOf(false)
     val error = mutableStateOf<String?>(null)
+    val accountAccessMessage = mutableStateOf<String?>(null)
     val syncMessage = mutableStateOf<String?>(null)
     val syncConflicts = mutableStateOf<List<SyncUploadConflict>>(emptyList())
     val syncLogs = mutableStateOf<List<SyncLogEntry>>(emptyList())
@@ -46,6 +47,7 @@ internal class AppState {
         selectedDeck.value = null
         desktopStudyStarted.value = false
         destination.value = destination.value.navigate(CollectionNavigationAction.OpenDecks)
+        accountAccessMessage.value = null
         syncConflicts.value = emptyList()
         syncLogs.value = emptyList()
     }

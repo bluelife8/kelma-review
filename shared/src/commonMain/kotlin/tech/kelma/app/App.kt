@@ -36,6 +36,7 @@ fun App(externalPluginsEnabled: Boolean = true) {
     val credentialVault = rememberCredentialVault()
     val mediaCache = rememberMediaCache(databaseName.substringBeforeLast('.'))
     val syncClient = remember(mediaCache) { KelmaSyncClient(mediaCache = mediaCache) }
+    val accountClient = remember { KelmaAccountClient() }
     val interchangePlatform = rememberCollectionInterchangePlatform()
     val interchangeService = remember(interchangePlatform.sqliteFiles) {
         CollectionInterchangeService(interchangePlatform.sqliteFiles)
@@ -93,8 +94,11 @@ fun App(externalPluginsEnabled: Boolean = true) {
     var syncLogs by appState.syncLogs
     var restored by appState.restored
 
-    DisposableEffect(syncClient) {
-        onDispose { syncClient.close() }
+    DisposableEffect(syncClient, accountClient) {
+        onDispose {
+            syncClient.close()
+            accountClient.close()
+        }
     }
     DisposableEffect(databaseDriver, luaPluginHost) {
         onDispose {
@@ -618,59 +622,16 @@ fun App(externalPluginsEnabled: Boolean = true) {
                 exception.message ?: "Could not save the renderer assignment"
             }
         }
-    val signIn: (String, String) -> Unit = signIn@{ username, password ->
-        if (working || !restored) return@signIn
-        working = true
-        error = null
-        syncMessage = null
-        scope.launch {
-            try {
-                val auth = syncClient.login(username, password)
-                val targetDatabase = accountRegistry.activate(DefaultKelmaSyncEndpoint, username)
-                appState.clearDisplayedAccount()
-                token = auth.token
-                pendingAccountSignIn = PendingAccountSignIn(username, auth)
-                showSignIn = false
-                destination = CollectionDestination.Sync
-                restored = false
-                databaseName = targetDatabase
-            } catch (exception: Exception) {
-                error = exception.message ?: "Could not connect to KelmaSync"
-                working = false
-            }
-        }
-    }
-    val selectAccount: (LocalAccountChoice) -> Unit = selectAccount@{ account ->
-        if (working || !restored) return@selectAccount
-        val targetDatabase = accountRegistry.databaseName(account.endpoint, account.username)
-        if (targetDatabase == null) {
-            error = "This saved account is no longer available on this device."
-            return@selectAccount
-        }
-        working = true
-        error = null
-        syncMessage = null
-        accountRegistry.activate(account.endpoint, account.username)
-        pendingAccountSignIn = null
-        openingSavedAccount = true
-        appState.clearDisplayedAccount()
-        showSignIn = true
-        restored = false
-        databaseName = targetDatabase
-    }
-    val signOut: () -> Unit = signOut@{
-        if (working || !restored) return@signOut
-        working = true
-        accountRegistry.deactivate()
-        pendingAccountSignIn = null
-        openingSavedAccount = false
-        appState.clearDisplayedAccount()
-        error = null
-        syncMessage = null
-        showSignIn = true
-        restored = false
-        databaseName = GuestCollectionDatabaseName
-    }
+    val accountAccess = accountAccessCallbacks(
+        state = appState,
+        accountRegistry = accountRegistry,
+        syncClient = syncClient,
+        accountService = accountClient,
+        scope = scope,
+        setPendingSignIn = { pendingAccountSignIn = it },
+        setOpeningSavedAccount = { openingSavedAccount = it },
+        setDatabaseName = { databaseName = it },
+    )
     val resolveSyncConflict: (SyncUploadConflict, Boolean) -> Unit = { conflict, keepLocal ->
         scope.launch {
             try {
@@ -690,6 +651,7 @@ fun App(externalPluginsEnabled: Boolean = true) {
         state = appState,
         store = store,
         accountRegistry = accountRegistry,
+        accountService = accountClient,
         scope = scope,
         appFocusRequester = appFocusRequester,
         displayCollection = displayCollection,
@@ -707,9 +669,12 @@ fun App(externalPluginsEnabled: Boolean = true) {
             undoReview = undoReview,
             requestSync = requestSync,
             redownloadCollection = redownloadCollection,
-            signIn = signIn,
-            selectAccount = selectAccount,
-            signOut = signOut,
+            signIn = accountAccess.signIn,
+            registerAccount = accountAccess.registerAccount,
+            requestPasswordReset = accountAccess.requestPasswordReset,
+            clearAccountAccessFeedback = accountAccess.clearFeedback,
+            selectAccount = accountAccess.selectAccount,
+            signOut = accountAccess.leaveAccount,
             openDecks = openDecks,
             openAdd = openAdd,
             openBrowse = openBrowse,
