@@ -31,8 +31,8 @@ android {
         applicationId = "tech.kelma.app"
         minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = libs.versions.android.targetSdk.get().toInt()
-        versionCode = 18
-        versionName = "1.0.18"
+        versionCode = 19
+        versionName = "1.0.19"
         externalNativeBuild {
             cmake {
                 arguments += "-DANDROID_STL=none"
