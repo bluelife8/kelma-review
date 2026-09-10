@@ -48,8 +48,8 @@ internal fun MobileDeckRow(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Spacer(Modifier.width((depth * 16).dp))
-                Box(modifier = Modifier.size(48.dp), contentAlignment = Alignment.Center) {
-                    if (hasChildren) {
+                if (hasChildren) {
+                    Box(modifier = Modifier.size(48.dp), contentAlignment = Alignment.Center) {
                         IconButton(
                             modifier = Modifier.size(48.dp),
                             onClick = onToggleCollapsed,

@@ -11,8 +11,9 @@ internal fun deckListRows(
     decks: List<DeckSummary>,
     collapsedDeckIds: Set<String>,
 ): List<DeckListRow> {
+    val normalizedCollapsedIds = collapsedDeckIds.mapTo(mutableSetOf(), String::lowercase)
     val collapsedNames = decks
-        .filter { it.id in collapsedDeckIds }
+        .filter { it.id.lowercase() in normalizedCollapsedIds }
         .mapTo(mutableSetOf()) { it.name.lowercase() }
     val parentNames = decks
         .flatMap { deckHierarchyNames(it.name).dropLast(1) }
@@ -28,7 +29,7 @@ internal fun deckListRows(
                 deck = deck,
                 depth = hierarchy.lastIndex,
                 hasChildren = deck.name.lowercase() in parentNames,
-                isCollapsed = deck.id in collapsedDeckIds,
+                isCollapsed = deck.id.lowercase() in normalizedCollapsedIds,
             )
         }
     }

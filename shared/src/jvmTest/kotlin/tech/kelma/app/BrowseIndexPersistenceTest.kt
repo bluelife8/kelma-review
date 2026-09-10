@@ -125,7 +125,7 @@ class BrowseIndexPersistenceTest {
             ),
             cards = mapOf(
                 1L to SyncCard(1, "a", "French", createdAt = "2024-01-01T00:00:00.000Z"),
-                2L to SyncCard(2, "b", "French", createdAt = "2024-01-02T00:00:00.000Z"),
+                2L to SyncCard(2, "b", "French::Verbs", createdAt = "2024-01-02T00:00:00.000Z"),
                 3L to SyncCard(
                     3,
                     "c",
@@ -135,7 +135,7 @@ class BrowseIndexPersistenceTest {
                 -4L to SyncCard(-4, "d", "French", createdAt = "2024-01-03T00:00:00.000Z"),
             ),
             notetypes = NotetypeCatalog.definitions,
-            deckNames = setOf("French", "Spanish"),
+            deckNames = setOf("French", "French::Verbs", "Spanish"),
         )
         val schedules = mapOf(
             1L to LocalCardSchedule(

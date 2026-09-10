@@ -60,6 +60,7 @@ internal fun AppContent(
     var pluginRendererAssignments by state.pluginRendererAssignments
     var pluginRenderedCards by state.pluginRenderedCards
     var studyStats by state.studyStats
+    var collapsedDeckIds by state.collapsedDeckIds
     val nowMillis by state.nowMillis
     var selectedDeck by state.selectedDeck
     var desktopStudyStarted by state.desktopStudyStarted
@@ -88,8 +89,11 @@ internal fun AppContent(
         collection.media.values.sumOf(SyncMediaFile::sizeBytes)
     }
     val availableDeckNames = remember(ProjectionIdentity(displayCollection)) {
-        (displayCollection.deckNames + displayCollection.deckRecords.keys)
-            .sortedWith(String.CASE_INSENSITIVE_ORDER)
+        deckPickerNames(
+            displayCollection.deckNames +
+                displayCollection.deckRecords.keys +
+                displayCollection.cards.values.map(SyncCard::deckName),
+        )
     }
     val accountDeckOptions = schedulerProfile.local.settings.asDeckOptions()
     val effectiveOptionsByDeck = remember(
@@ -400,6 +404,8 @@ internal fun AppContent(
                 onBrowse = openBrowse,
                 onOptions = openOptions,
                 onSync = openSync,
+                deckNames = availableDeckNames,
+                loadDeckStats = { deckName -> store.loadStudyStats(nowMillis, deckName) },
             )
             !pluginNavigationAvailable(externalPluginsEnabled, destination) -> openOptions()
             destination == CollectionDestination.Plugins -> PluginManagerScreen(
@@ -784,6 +790,19 @@ internal fun AppContent(
                 localCardCount = localContent.cardCount,
                 syncedMediaBytes = syncedMediaBytes,
                 canUndo = localReviews.canUndo,
+                collapsedDeckIds = collapsedDeckIds,
+                onDeckCollapsedChange = { deckId, collapsed ->
+                    val otherDeckIds = collapsedDeckIds.filterNot { it.equals(deckId, ignoreCase = true) }.toSet()
+                    collapsedDeckIds = if (collapsed) otherDeckIds + deckId else otherDeckIds
+                    scope.launch {
+                        try {
+                            withContext(Dispatchers.Default) { store.setDeckCollapsed(deckId, collapsed) }
+                        } catch (exception: Exception) {
+                            collapsedDeckIds = withContext(Dispatchers.Default) { store.loadCollapsedDeckIds() }
+                            error = exception.message ?: "Could not save the deck-list layout"
+                        }
+                    }
+                },
                 confirmBeforeUndo = localReviews.lastReviewDeck?.let { deckName ->
                     effectiveOptionsByDeck[deckName]?.confirmBeforeUndo
                 } ?: true,

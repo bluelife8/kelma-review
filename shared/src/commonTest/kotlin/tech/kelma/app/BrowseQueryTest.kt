@@ -52,8 +52,11 @@ class BrowseQueryTest {
 
     @Test
     fun deckTagAndNoteQualifiersFilterPrecisely() {
-        assertTrue(matches("deck:fren", row()))
-        assertFalse(matches("deck:spanish", row()))
+        assertTrue(matches("deck:French", row()))
+        assertTrue(matches("deck:French", row(deck = "French::Verbs")))
+        assertFalse(matches("deck:Fren", row()))
+        assertFalse(matches("deck:French", row(deck = "French vocabulary")))
+        assertFalse(matches("deck:Spanish", row()))
         assertTrue(matches("tag:verbs", row()))
         assertFalse(matches("tag:nouns", row()))
         assertTrue(matches("note:basic", row()))
@@ -148,6 +151,16 @@ class BrowseQueryTest {
             "is:new created:2024-02-01",
             toggleQueryTerm("is:new created:2024-01-01", "created:2024-02-01"),
         )
+    }
+
+    @Test
+    fun deckPickerSelectionReplacesOrClearsTheDeckQualifier() {
+        assertEquals(
+            "is:new deck:Languages::French",
+            setBrowseDeckQuery("deck:Science is:new", "Languages::French"),
+        )
+        assertEquals("is:new", setBrowseDeckQuery("is:new deck:Languages::French", null))
+        assertEquals("Languages::French", selectedBrowseDeck("is:new deck:Languages::French"))
     }
 
     @Test

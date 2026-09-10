@@ -17,6 +17,7 @@ internal class AppState {
     val pluginRendererAssignments = mutableStateOf(PluginRendererAssignmentState())
     val pluginRenderedCards = mutableStateOf<Map<Long, PluginRenderedCard>>(emptyMap())
     val studyStats = mutableStateOf(StudyStats())
+    val collapsedDeckIds = mutableStateOf<Set<String>>(emptySet())
     val nowMillis = mutableLongStateOf(currentEpochMillis())
     val selectedDeck = mutableStateOf<DeckSummary?>(null)
     val desktopStudyStarted = mutableStateOf(false)
@@ -44,6 +45,7 @@ internal class AppState {
         pluginRendererAssignments.value = PluginRendererAssignmentState()
         pluginRenderedCards.value = emptyMap()
         studyStats.value = StudyStats()
+        collapsedDeckIds.value = emptySet()
         selectedDeck.value = null
         desktopStudyStarted.value = false
         destination.value = destination.value.navigate(CollectionNavigationAction.OpenDecks)

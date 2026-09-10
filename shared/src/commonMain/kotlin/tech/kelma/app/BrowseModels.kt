@@ -129,6 +129,19 @@ fun setQueryTerm(query: String, term: String): String {
     return (base + term).joinToString(" ")
 }
 
+internal fun setBrowseDeckQuery(query: String, deckName: String?): String {
+    if (deckName != null) return setQueryTerm(query, browseQualifier("deck", deckName))
+    return QueryToken.findAll(query.trim())
+        .map { it.value }
+        .filterNot { it.startsWith("deck:", ignoreCase = true) }
+        .joinToString(" ")
+}
+
+internal fun selectedBrowseDeck(query: String): String? = parseBrowseQuery(query)
+    .filterIsInstance<BrowseTerm.Deck>()
+    .firstOrNull()
+    ?.value
+
 internal fun selectedBrowseCreationDate(query: String): String? = parseBrowseQuery(query)
     .filterIsInstance<BrowseTerm.Created>()
     .map(BrowseTerm.Created::value)
@@ -138,7 +151,7 @@ fun BrowseCardRow.matches(terms: List<BrowseTerm>, nowMillis: Long): Boolean = t
     when (term) {
         is BrowseTerm.Text -> (listOf(question, answer, deck, notetype) + tags)
             .any { it.contains(term.value, ignoreCase = true) }
-        is BrowseTerm.Deck -> deck.contains(term.value, ignoreCase = true)
+        is BrowseTerm.Deck -> deck.isDeckOrDescendantOf(term.value)
         is BrowseTerm.Tag -> tags.any { it.equals(term.value, ignoreCase = true) }
         is BrowseTerm.Notetype -> notetype.contains(term.value, ignoreCase = true)
         is BrowseTerm.Flag -> matchesFlag(term.value, nowMillis)

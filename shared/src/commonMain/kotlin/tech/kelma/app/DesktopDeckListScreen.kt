@@ -72,6 +72,8 @@ fun DesktopDeckListScreen(
     localCardCount: Int,
     syncedMediaBytes: Long,
     canUndo: Boolean,
+    collapsedDeckIds: Set<String> = emptySet(),
+    onDeckCollapsedChange: (String, Boolean) -> Unit = { _, _ -> },
     onUndo: () -> Unit,
     onAdd: () -> Unit,
     onCreateDeck: suspend (String) -> String?,
@@ -88,7 +90,6 @@ fun DesktopDeckListScreen(
     onAccount: () -> Unit = {},
 ) {
     val syncAction = if (signedIn) onSync else onSignIn
-    var collapsedDeckIds by remember { mutableStateOf(emptySet<String>()) }
     val rows = remember(decks, collapsedDeckIds) { deckListRows(decks, collapsedDeckIds) }
     val panelHeight = (70 + rows.size.coerceAtMost(8) * 48).coerceIn(166, 440).dp
     var showCreateDeck by remember { mutableStateOf(false) }
@@ -151,11 +152,7 @@ fun DesktopDeckListScreen(
                                             hasChildren = row.hasChildren,
                                             isCollapsed = row.isCollapsed,
                                             onToggleCollapsed = {
-                                                collapsedDeckIds = if (deck.id in collapsedDeckIds) {
-                                                    collapsedDeckIds - deck.id
-                                                } else {
-                                                    collapsedDeckIds + deck.id
-                                                }
+                                                onDeckCollapsedChange(deck.id, !row.isCollapsed)
                                             },
                                             onOpenDeck = onOpenDeck,
                                             onAddCards = { deckManagement.onAddCards(deck.name) },

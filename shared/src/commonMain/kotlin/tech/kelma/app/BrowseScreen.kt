@@ -79,6 +79,7 @@ internal data class BrowseUiState(
 internal class BrowseActions(
     val onQueryChange: (TextFieldValue) -> Unit,
     val onApplyTerm: (String) -> Unit,
+    val onSelectDeck: (String?) -> Unit,
     val onSort: (BrowseSort) -> Unit,
     val onSelect: (Long?) -> Unit,
     val onLoadMore: () -> Unit,
@@ -151,6 +152,14 @@ fun BrowseScreen(
             )
         }
     }
+    val browseDecks = remember(ProjectionIdentity(collection), projection.decks) {
+        deckPickerOptions(
+            deckNames = collection.deckNames +
+                collection.deckRecords.keys +
+                collection.cards.values.map(SyncCard::deckName),
+            directCardCounts = projection.decks,
+        ).map { it.name to it.cardCount }
+    }
     val state = BrowseUiState(
         rows = projection.rows,
         totalCount = projection.totalCount,
@@ -159,7 +168,7 @@ fun BrowseScreen(
         selected = selected,
         selectedCard = selectedCard,
         selectedEdit = selectedEdit,
-        decks = projection.decks,
+        decks = browseDecks,
         tags = projection.tags,
         nowMillis = nowMillis,
         loading = projection.loading,
@@ -171,6 +180,10 @@ fun BrowseScreen(
         onApplyTerm = { term ->
             val merged = toggleQueryTerm(query.text, term)
             query = TextFieldValue(merged, TextRange(merged.length))
+        },
+        onSelectDeck = { deckName ->
+            val updated = setBrowseDeckQuery(query.text, deckName)
+            query = TextFieldValue(updated, TextRange(updated.length))
         },
         onSort = { field ->
             sorting = if (sorting.field == field) {

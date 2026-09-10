@@ -59,6 +59,8 @@ fun DeckListScreen(
     localCardCount: Int,
     syncedMediaBytes: Long,
     canUndo: Boolean,
+    collapsedDeckIds: Set<String> = emptySet(),
+    onDeckCollapsedChange: (String, Boolean) -> Unit = { _, _ -> },
     confirmBeforeUndo: Boolean = true,
     onUndo: () -> Unit,
     onAdd: () -> Unit,
@@ -99,6 +101,8 @@ fun DeckListScreen(
             localCardCount = localCardCount,
             syncedMediaBytes = syncedMediaBytes,
             canUndo = canUndo && !syncing,
+            collapsedDeckIds = collapsedDeckIds,
+            onDeckCollapsedChange = onDeckCollapsedChange,
             onUndo = requestUndo,
             onAdd = onAdd,
             onCreateDeck = onCreateDeck,
@@ -123,6 +127,8 @@ fun DeckListScreen(
             syncMessage = syncMessage,
             syncMessageIsError = syncMessageIsError,
             canUndo = canUndo,
+            collapsedDeckIds = collapsedDeckIds,
+            onDeckCollapsedChange = onDeckCollapsedChange,
             onUndo = requestUndo,
             onAdd = onAdd,
             onBrowse = onBrowse,
@@ -192,6 +198,8 @@ private fun MobileDeckListScreen(
     syncMessage: String?,
     syncMessageIsError: Boolean,
     canUndo: Boolean,
+    collapsedDeckIds: Set<String>,
+    onDeckCollapsedChange: (String, Boolean) -> Unit,
     onUndo: () -> Unit,
     onAdd: () -> Unit,
     onBrowse: () -> Unit,
@@ -206,15 +214,7 @@ private fun MobileDeckListScreen(
     onOpenAccount: () -> Unit,
 ) {
     val deckListState = rememberLazyListState()
-    var collapsedDeckIds by remember { mutableStateOf(emptySet<String>()) }
     val rows = remember(decks, collapsedDeckIds) { deckListRows(decks, collapsedDeckIds) }
-    val toggleCollapsed: (DeckSummary) -> Unit = { deck ->
-        collapsedDeckIds = if (deck.id in collapsedDeckIds) {
-            collapsedDeckIds - deck.id
-        } else {
-            collapsedDeckIds + deck.id
-        }
-    }
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         containerColor = KelmaColors.Background,
@@ -267,7 +267,7 @@ private fun MobileDeckListScreen(
                     depth = row.depth,
                     hasChildren = row.hasChildren,
                     isCollapsed = row.isCollapsed,
-                    onToggleCollapsed = { toggleCollapsed(row.deck) },
+                    onToggleCollapsed = { onDeckCollapsedChange(row.deck.id, !row.isCollapsed) },
                     onClick = { onOpenDeck(row.deck) },
                 )
             }

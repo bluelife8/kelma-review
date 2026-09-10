@@ -144,6 +144,7 @@ class PersistentCollectionStore(
                     studyDayPolicies.clearAccount()
                     schedulerOptimizer.clear()
                     pluginRendererAssignments.clear()
+                    queries.clearCollapsedDeckGroups()
                 }
                 queries.upsertAuth(auth.clientId, auth.endpoint, auth.username)
                 collectionWriter.replace(collection, syncOutbox::reconcileUploadedRows)
@@ -702,6 +703,7 @@ class PersistentCollectionStore(
             schedulerOptimizer.clear()
             plugins.clearAll()
             pluginRendererAssignments.clear()
+            queries.clearCollapsedDeckGroups()
             queries.clearSyncLogEntries()
         }
         mediaAttachments.clearCache()
@@ -887,7 +889,17 @@ class PersistentCollectionStore(
 
     fun uninstallPlugin(pluginId: String) = plugins.uninstall(pluginId)
 
-    fun loadStudyStats(nowMillis: Long = currentEpochMillis()): StudyStats {
+    fun loadCollapsedDeckIds(): Set<String> = queries.selectCollapsedDeckGroups().executeAsList().toSet()
+
+    fun setDeckCollapsed(deckId: String, collapsed: Boolean) {
+        if (collapsed) {
+            queries.insertCollapsedDeckGroup(deckId)
+        } else {
+            queries.deleteCollapsedDeckGroup(deckId)
+        }
+    }
+
+    fun loadStudyStats(nowMillis: Long = currentEpochMillis(), deckName: String? = null): StudyStats {
         val local = loadLocalContent()
         // Only card projections are needed here; loadStudyStatsReviews reads the history separately,
         // so avoid parsing the entire revlog through the full collection load.
@@ -896,12 +908,13 @@ class PersistentCollectionStore(
         val policy = studyDayPolicies.load()
         val reviews = loadLocalReviewSnapshot(queries, nowMillis, policy)
         return calculateStudyStats(
-            reviews = loadStudyStatsReviews(queries, policy),
+            reviews = loadStudyStatsReviews(queries, policy, local.deckOverrides),
             cards = cards,
             schedules = reviews.schedules,
             nowMillis = nowMillis,
             dueDateOverrides = reviews.dueDateOverrides,
             studyDayPolicy = policy,
+            deckName = deckName,
         )
     }
 

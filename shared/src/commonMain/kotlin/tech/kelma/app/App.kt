@@ -79,6 +79,7 @@ fun App(externalPluginsEnabled: Boolean = true) {
     var pluginRendererAssignments by appState.pluginRendererAssignments
     var pluginRenderedCards by appState.pluginRenderedCards
     var studyStats by appState.studyStats
+    var collapsedDeckIds by appState.collapsedDeckIds
     var nowMillis by appState.nowMillis
     var selectedDeck by appState.selectedDeck
     var desktopStudyStarted by appState.desktopStudyStarted
@@ -111,6 +112,7 @@ fun App(externalPluginsEnabled: Boolean = true) {
     }
     LaunchedEffect(store, pendingAccountSignIn) {
         val pending = pendingAccountSignIn
+        collapsedDeckIds = emptySet()
         suspend fun log(progress: SyncProgress) {
             syncLogs = withContext(Dispatchers.Default) { store.appendSyncLog(progress) }
         }
@@ -187,6 +189,7 @@ fun App(externalPluginsEnabled: Boolean = true) {
                 syncMessage = initialized.syncMessage
                 error = initialized.error
             }
+            collapsedDeckIds = withContext(Dispatchers.Default) { store.loadCollapsedDeckIds() }
             if (externalPluginsEnabled) {
                 try {
                     pluginHostState = withContext(Dispatchers.Default) { luaPluginHost.reload() }

@@ -1,6 +1,7 @@
 package tech.kelma.app
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.width
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.ExperimentalTestApi
@@ -48,6 +49,29 @@ class DeckSyncBadgeUiTest {
         }
 
         onNodeWithText("+1 ~2").assertIsDisplayed()
+    }
+
+    @Test
+    fun mobileLeafDeckDoesNotReserveDisclosureControlSpace() = runComposeUiTest {
+        setContent {
+            KelmaTheme {
+                Column(Modifier.width(360.dp)) {
+                    MobileDeckRow(
+                        deck = DeckSummary("Parent", "Parent", emptyList(), 0, 0, 0),
+                        hasChildren = true,
+                        onClick = {},
+                    )
+                    MobileDeckRow(
+                        deck = DeckSummary("Standalone", "Standalone", emptyList(), 0, 0, 0),
+                        onClick = {},
+                    )
+                }
+            }
+        }
+
+        val parentLeft = onNodeWithText("Parent", useUnmergedTree = true).fetchSemanticsNode().boundsInRoot.left
+        val leafLeft = onNodeWithText("Standalone", useUnmergedTree = true).fetchSemanticsNode().boundsInRoot.left
+        assertTrue(leafLeft < parentLeft)
     }
 
     @Test
