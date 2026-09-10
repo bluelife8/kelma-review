@@ -22,8 +22,16 @@ Suspension deployed in order through recovery-only frontend PR 78, KelmaSync PR 
 visible frontend PR 79. Bury Card/Note then deployed through recovery-only frontend PR 81,
 [KelmaSync PR 21](https://github.com/jeretmccoy/kelma_sync_2/pull/21),
 [Fastify PR 44](https://github.com/jeretmccoy/anki_ai_fastify/pull/44), and
-[frontend PR 82](https://github.com/jeretmccoy/anki_ai_frontend/pull/82). Both action families are visible only
-through advertised capabilities; no real operation was submitted solely to verify rollout.
+[frontend PR 82](https://github.com/jeretmccoy/anki_ai_frontend/pull/82).
+
+Set Due Date deployed as one coordinated feature through
+[KelmaSync PR 22](https://github.com/jeretmccoy/kelma_sync_2/pull/22),
+[Fastify PR 45](https://github.com/jeretmccoy/anki_ai_fastify/pull/45), and
+[frontend PR 84](https://github.com/jeretmccoy/anki_ai_frontend/pull/84); recovery-only frontend PR 83 was
+closed unmerged. The stopped-service rolling upgrade applied migration 018 exactly once after a validated
+private backup, retained validated account containment and immutable `SELECT,INSERT`-only receipt grants,
+and deployed the exact merged revisions. All three action families are visible only through advertised
+capabilities; no real review or operation was submitted solely to verify rollout.
 
 ## Non-negotiable ownership boundaries
 
@@ -35,7 +43,7 @@ through advertised capabilities; no real operation was submitted solely to verif
 - Native local writes and their durable outboxes must commit in one SQLite transaction.
 - An administrative action must not append a review, consume New/Review quota, or create a browser `study_days` row.
 - An ambiguous request keeps its original operation ID and exact frozen intent.
-- A browser action must not make the current presentation unanswerable.
+- Before receipt confirmation, a browser action must retain the readable presentation and exact frozen intent while grading stays locked; accepted queue-changing actions may explicitly expire it and continue through authoritative `/next`.
 - Older clients must not erase metadata they do not understand.
 
 ## Current baseline
@@ -48,7 +56,7 @@ through advertised capabilities; no real operation was submitted solely to verif
 | Mark/Unmark Note | Rewrites the case-insensitive `marked` tag through the normal note outbox | Receipt-backed operation rewrites the same canonical tag and checksum | Same representation; concurrent-edit and pull behavior needs validation |
 | Suspend Card/Note | Synchronized `active`/`suspended` card study state | Receipt-backed capability and confirmed UI are live on rolling | Expected to converge through the existing independent study-state model; no synthetic live mutation was used |
 | Bury Card/Note | Device-local for the current synchronized study day | Receipt-backed browser/account-local exclusion through the frozen next study-day boundary | Behaviorally aligned without creating permanent or native-synchronized bury state; cross-client buries remain intentionally independent |
-| Set Due Date | Independent synchronized override | Not implemented | Web capability missing |
+| Set Due Date | Independent synchronized override | Receipt-backed exact UTC-date action is live on rolling and writes the same override | Shared state model is aligned; browser-to-native convergence still needs a disposable cross-client fixture |
 | Reset Card | Synchronized review-history cutoff; immutable history retained | Not implemented | Web capability missing |
 | Edit/Delete/Create Copy | Native transactional note/card outboxes and tombstones | Not implemented in the reviewer | Later typed-operation slices |
 | Card Info and previous history | Available natively | Presentation-scoped, bounded context | Substantially aligned |
@@ -95,15 +103,17 @@ Implement one closed operation kind at a time; do not expose a generic mutation 
    - Uses the synchronized timezone/rollover policy and freezes the next boundary in the immutable receipt.
    - Treats browser buries as account-wide browser/server intent for that study day, independent from native device-local buries.
    - Expires the presentation and filters the card or canonical note siblings without permanent sync metadata, review, or quota writes.
-3. **Set Due Date and Reset Card**
-   - Reuse their independent synchronized state instead of editing FSRS projections.
-   - Reset must advance a monotonic history cutoff and retain immutable reviews.
-   - A later answer must clear the due-date override exactly once.
-4. **Edit, Delete, and Create Copy**
+3. **Set Due Date — deployed on rolling**
+   - Writes the existing independently synchronized exact UTC civil-date override instead of editing FSRS projections or history.
+   - Expires the presentation, skips the card only in that browser session, and requires an immutable receipt echoing the frozen date.
+   - A later accepted answer clears the due-date override under the existing synchronized contract.
+4. **Reset Card**
+   - Must advance a monotonic history cutoff, retain immutable reviews, rebuild as New, and clear the due override without conflating reset with a zero-date sentinel.
+5. **Edit, Delete, and Create Copy**
    - Use presentation-derived identity and typed payloads.
    - Preserve optimistic note checksums, tombstones, media ownership, and exactly-once recovery.
    - Never grant the browser a generic card/note batch authority.
-5. **Undo**
+6. **Undo**
    - Specify separately. Native undo can remove a pending local event, but a browser review may already be accepted immutable history.
    - Do not implement undo by deleting or rewriting an accepted server review without an explicit immutable compensating-event design.
 
@@ -123,7 +133,7 @@ For every durable operation, test:
 - exact-account row containment and cross-account denial;
 - app restart between local commit, upload, acknowledgement, and confirming pull;
 - clear/unmark/unsuspend states, not only positive states;
-- current browser presentation remains answerable;
+- current presentation remains readable but non-answerable while ambiguous, then follows the receipt's explicit current/expired effect;
 - no added review, quota consumption, attempt, or browser study-day write;
 - projection rebuild and mirror cycles preserve accepted metadata;
 - older-client pull/push cycles do not erase the new state.
@@ -136,7 +146,7 @@ Queue parity fixtures should cover New, Learning, Review, Relearning, intraday s
 2. Add database migrations without modifying or rerunning previously applied migration files.
 3. Pass disposable-database integration, scheduler/oracle, mirror compatibility, and all native common tests.
 4. Upgrade the rolling schema only with the required private backup, stopped services, owner validation, account containment, and least-privilege grants.
-5. For a new browser operation kind, deploy a recovery-only Vue build before capability exposure so that build can become the safe rollback image for the later visible UI. Then roll out KelmaSync, account mirror if needed, Fastify, and the visible Vue controls; a version-aligned Kelma Review rolling build follows only when native code changes.
+5. Open complete coordinated Sync, Fastify, and Vue feature PRs together. Deploy the complete capability-gated Vue image first, the strict adapter second, and schema-ready Sync authority last; do not split future work into recovery-only micro-PRs. A version-aligned Kelma Review rolling build follows only when native code changes.
 6. Capture bidirectional convergence evidence across at least two mirror cycles and a native restart.
 7. Keep production promotion separate and explicitly approved.
 8. Roll back application images only; never automatically restore a database or rewrite accepted operations/reviews.
