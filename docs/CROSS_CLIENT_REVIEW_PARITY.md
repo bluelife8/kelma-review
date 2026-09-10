@@ -13,9 +13,15 @@ Parity means that durable user intent and immutable review facts converge predic
 The flags/marked-note slice has merged to rolling through
 [KelmaSync PR 19](https://github.com/jeretmccoy/kelma_sync_2/pull/19),
 [Fastify PR 42](https://github.com/jeretmccoy/anki_ai_fastify/pull/42), and
-[frontend PR 77](https://github.com/jeretmccoy/anki_ai_frontend/pull/77). Its schema-gated Sync deployment remains
-separate. By current product decision, Kelma Review flags stay device-local; cross-client flag convergence is
-not part of the active parity target.
+[frontend PR 77](https://github.com/jeretmccoy/anki_ai_frontend/pull/77). The approved rolling upgrade applied
+migration 017 exactly once, validated immutable receipt containment/grants, and deployed the Sync image, so
+flag/mark operations are active on rolling. By current product decision, Kelma Review flags stay device-local;
+cross-client flag convergence is not part of the active parity target.
+
+Suspension remains staged. Recovery-only
+[frontend PR 78](https://github.com/jeretmccoy/anki_ai_frontend/pull/78) is the verified live rollback image;
+[KelmaSync PR 20](https://github.com/jeretmccoy/kelma_sync_2/pull/20) is ready for user-controlled merge, while
+Fastify PR 43 and visible frontend PR 79 remain drafts for their later rollout steps.
 
 ## Non-negotiable ownership boundaries
 
@@ -38,7 +44,7 @@ not part of the active parity target.
 | Rating previews | Uses non-mutating local scheduler projections | Uses non-mutating authoritative Sync previews | Behaviorally aligned; exact intervals may differ when local profiles intentionally differ |
 | Card flags 0–7 | `local_card_flags`, keyed by local card ID and intentionally not uploaded | Receipt-backed operation changes `cards.scheduling.flags` | Intentional local/server difference for now; no native convergence work planned |
 | Mark/Unmark Note | Rewrites the case-insensitive `marked` tag through the normal note outbox | Receipt-backed operation rewrites the same canonical tag and checksum | Same representation; concurrent-edit and pull behavior needs validation |
-| Suspend Card/Note | Synchronized `active`/`suspended` card study state | Receipt-backed implementation in progress | Expected to converge through the existing independent study-state model |
+| Suspend Card/Note | Synchronized `active`/`suspended` card study state | Recovery is live; Sync implementation is green and awaiting user merge | Expected to converge through the existing independent study-state model |
 | Bury Card/Note | Device-local for the current synchronized study day | Not implemented | Semantics need matching without turning a temporary bury into permanent synchronized state |
 | Set Due Date | Independent synchronized override | Not implemented | Web capability missing |
 | Reset Card | Synchronized review-history cutoff; immutable history retained | Not implemented | Web capability missing |
@@ -81,7 +87,7 @@ Implement one closed operation kind at a time; do not expose a generic mutation 
 
 1. **Suspend Card and Suspend Note**
    - The current browser slice reuses the existing synchronized card study-state model.
-   - Ship a recovery-only Vue revision first. It recognizes frozen suspension intents and receipts but exposes no Suspend control.
+   - The recovery-only Vue revision is live. It recognizes frozen suspension intents and receipts but exposes no Suspend control.
    - Resolve sibling cards server-side for note suspension.
    - Require confirmation because browser Unsuspend is not yet available; direct users to Kelma Review.
    - Expire the browser presentation and exclude suspended cards from authoritative and native queues without changing review history.
