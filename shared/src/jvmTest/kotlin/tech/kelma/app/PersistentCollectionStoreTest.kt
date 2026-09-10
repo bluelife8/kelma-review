@@ -9,6 +9,7 @@ import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
+import kotlin.test.assertNotEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
@@ -147,6 +148,7 @@ class PersistentCollectionStoreTest {
         )
         driver.createLegacyAuthTable()
         driver.createLegacyMediaTable()
+        driver.createLegacyNotesTable()
         KelmaDatabase.Schema.migrate(driver, 1, KelmaDatabase.Schema.version)
         val store = PersistentCollectionStore(KelmaDatabase(driver))
         val change = store.recordReview(
@@ -188,6 +190,7 @@ class PersistentCollectionStoreTest {
         )
         driver.createLegacyAuthTable()
         driver.createLegacyMediaTable()
+        driver.createLegacyNotesTable()
         KelmaDatabase.Schema.migrate(driver, 2, KelmaDatabase.Schema.version)
         val store = PersistentCollectionStore(KelmaDatabase(driver))
 
@@ -358,7 +361,39 @@ class PersistentCollectionStoreTest {
     }
 
     @Test
-    fun noteMarkCopyAndDownloadedDeleteUseTheNormalSyncOutbox() {
+    fun migrationThirtyFourAddsTypedNoteMarkStateAndOutbox() {
+        val driver = JdbcSqliteDriver(JdbcSqliteDriver.IN_MEMORY)
+        driver.createLegacyNotesTable()
+
+        KelmaDatabase.Schema.migrate(driver, 34, KelmaDatabase.Schema.version)
+        val queries = KelmaDatabase(driver).kelmaQueries
+        queries.insertNote(
+            "note",
+            1L,
+            "[\"front\"]",
+            "[\"marked\"]",
+            "checksum",
+            "2026-09-10T20:00:00Z",
+            "2026-09-10T19:00:00Z",
+            "11111111-1111-4111-8111-111111111111",
+            1L,
+            "2026-09-10T20:00:00Z",
+            "2026-09-10T20:00:00Z",
+        )
+        queries.upsertLocalNoteMark(
+            "note",
+            0L,
+            "22222222-2222-4222-8222-222222222222",
+            2_000L,
+        )
+
+        assertEquals("11111111-1111-4111-8111-111111111111", queries.selectNotes().executeAsOne().mark_intent_id)
+        assertEquals("22222222-2222-4222-8222-222222222222", queries.selectLocalNoteMarks().executeAsOne().intent_id)
+        driver.close()
+    }
+
+    @Test
+    fun noteMarkUsesIndependentIntentOutboxAndDeleteClearsIt() {
         val driver = JdbcSqliteDriver(JdbcSqliteDriver.IN_MEMORY)
         KelmaDatabase.Schema.create(driver)
         val database = KelmaDatabase(driver)
@@ -384,10 +419,18 @@ class PersistentCollectionStoreTest {
         )
 
         val marked = store.setNoteMarked(source.guid, true, nowMillis = 2_000L)
-        assertEquals(listOf("source", "marked"), marked.overrides.getValue(source.guid).tags)
-        assertTrue(store.prepareSyncUpload().notes.single { it.guid == source.guid }.body!!.tags.contains("marked"))
-        store.setNoteMarked(source.guid, false, nowMillis = 3_000L)
-        assertFalse(store.prepareSyncUpload().notes.single { it.guid == source.guid }.body!!.tags.contains("marked"))
+        assertTrue(marked.noteMarks.getValue(source.guid).marked)
+        val markedTags = store.load().collection.withLocalContent(marked).notes.getValue(source.guid).tags
+        assertEquals(listOf("source", "marked"), markedTags)
+        val markPlan = store.prepareSyncUpload()
+        assertTrue(markPlan.notes.isEmpty())
+        val firstIntent = markPlan.noteMarks.single()
+        assertTrue(firstIntent.marked)
+        store.setNoteMarked(source.guid, false, nowMillis = 2_000L)
+        val secondIntent = store.prepareSyncUpload().noteMarks.single()
+        assertFalse(secondIntent.marked)
+        assertNotEquals(firstIntent.intentId, secondIntent.intentId)
+        assertEquals(firstIntent.clientModifiedAtMillis + 1L, secondIntent.clientModifiedAtMillis)
 
         val copy = store.createNoteCopy(
             source.guid,
@@ -415,6 +458,57 @@ class PersistentCollectionStoreTest {
         val deletion = plan.notes.single { it.guid == source.guid }
         assertEquals("delete", deletion.operation)
         assertEquals(setOf(51L, 52L), deletion.deleteRequest!!.cards.toSet())
+        assertTrue(plan.noteMarks.isEmpty())
+        driver.close()
+    }
+
+    @Test
+    fun noteMarkOutboxWaitsForAuthoritativeConfirmationAndAdoptsNewerIntent() {
+        val driver = JdbcSqliteDriver(JdbcSqliteDriver.IN_MEMORY)
+        KelmaDatabase.Schema.create(driver)
+        val store = PersistentCollectionStore(KelmaDatabase(driver))
+        val source = SyncNote(
+            guid = "mark-confirmation",
+            fields = listOf("front", "back"),
+            tags = listOf("topic"),
+            checksum = "before",
+        )
+        store.replaceCollection(SyncedCollection(notes = mapOf(source.guid to source)), nowMillis = 1_000L)
+        store.setNoteMarked(source.guid, true, nowMillis = 2_000L)
+        val first = store.prepareSyncUpload().noteMarks.single()
+        store.replaceCollection(SyncedCollection(notes = mapOf(source.guid to source)), nowMillis = 2_050L)
+        assertEquals(first.intentId, store.prepareSyncUpload().noteMarks.single().intentId)
+        store.applySyncPushResult(SyncPushResult(uploadedNoteMarkIntentIds = setOf(first.intentId)))
+        assertTrue(store.prepareSyncUpload().noteMarks.isEmpty())
+        assertTrue(store.loadLocalContent().noteMarks.getValue(source.guid).marked)
+
+        val confirmedMark = SyncNoteMark(
+            marked = true,
+            intentId = first.intentId,
+            modifiedAt = epochMillisToRfc3339(2_100L),
+            clientModifiedAt = epochMillisToRfc3339(first.clientModifiedAtMillis),
+        )
+        val confirmed = source.copy(tags = listOf("topic", "marked"), checksum = "after", mark = confirmedMark)
+        store.replaceCollection(SyncedCollection(notes = mapOf(source.guid to confirmed)), nowMillis = 2_100L)
+        assertTrue(store.loadLocalContent().noteMarks.isEmpty())
+
+        store.setNoteMarked(source.guid, false, nowMillis = 100L)
+        val pending = store.prepareSyncUpload().noteMarks.single()
+        assertEquals(first.clientModifiedAtMillis + 1L, pending.clientModifiedAtMillis)
+        val newer = SyncNoteMark(
+            marked = true,
+            intentId = "ffffffff-ffff-4fff-8fff-ffffffffffff",
+            modifiedAt = epochMillisToRfc3339(4_000L),
+            clientModifiedAt = epochMillisToRfc3339(4_000L),
+        )
+        store.replaceCollection(
+            SyncedCollection(notes = mapOf(source.guid to confirmed.copy(mark = newer))),
+            nowMillis = 4_000L,
+        )
+        assertTrue(store.loadLocalContent().noteMarks.isEmpty())
+        assertTrue(store.load().collection.withLocalContent(store.loadLocalContent())
+            .notes.getValue(source.guid).tags.contains("marked"))
+        assertNotEquals(pending.intentId, newer.intentId)
         driver.close()
     }
 
@@ -1696,6 +1790,18 @@ class PersistentCollectionStoreTest {
         assertTrue(store.loadSyncLog().isEmpty())
         driver.close()
     }
+}
+
+private fun JdbcSqliteDriver.createLegacyNotesTable() {
+    execute(
+        null,
+        """CREATE TABLE sync_notes (
+            guid TEXT PRIMARY KEY, notetype_id INTEGER NOT NULL, fields_json TEXT NOT NULL,
+            tags_json TEXT NOT NULL, checksum TEXT NOT NULL, modified_at TEXT NOT NULL,
+            client_modified_at TEXT NOT NULL
+        )""".trimIndent(),
+        0,
+    )
 }
 
 private fun JdbcSqliteDriver.createLegacyMediaTable() {

@@ -108,6 +108,10 @@ internal class DownloadedCollectionWriter(
             note.checksum,
             note.modifiedAt,
             note.clientModifiedAt,
+            note.mark?.intentId.orEmpty(),
+            if (note.mark?.marked == true) 1L else 0L,
+            note.mark?.modifiedAt.orEmpty(),
+            note.mark?.clientModifiedAt.orEmpty(),
         )
     }
 

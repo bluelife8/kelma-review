@@ -1,0 +1,14 @@
+ALTER TABLE sync_notes ADD COLUMN mark_intent_id TEXT NOT NULL DEFAULT '';
+ALTER TABLE sync_notes ADD COLUMN mark_marked INTEGER NOT NULL DEFAULT 0 CHECK (mark_marked IN (0, 1));
+ALTER TABLE sync_notes ADD COLUMN mark_modified_at TEXT NOT NULL DEFAULT '';
+ALTER TABLE sync_notes ADD COLUMN mark_client_modified_at TEXT NOT NULL DEFAULT '';
+
+CREATE TABLE local_note_mark_outbox (
+    note_guid TEXT NOT NULL PRIMARY KEY,
+    marked INTEGER NOT NULL CHECK (marked IN (0, 1)),
+    intent_id TEXT NOT NULL UNIQUE,
+    client_modified_at_ms INTEGER NOT NULL,
+    upload_state TEXT NOT NULL DEFAULT 'pending' CHECK (upload_state IN ('pending', 'uploaded'))
+);
+
+CREATE INDEX local_note_mark_outbox_upload_idx ON local_note_mark_outbox(upload_state);

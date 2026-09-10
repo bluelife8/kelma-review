@@ -14,7 +14,10 @@
 - [x] Indicate the selected flag in the menu
 - [x] Roll back the UI if persistence fails
 
-Card flags are intentionally device-local under the current design.
+Card flags are intentionally device-local under the current design. Note marks
+are different: each toggle commits a UUID intent and monotonic millisecond clock in
+the same SQLite transaction as its visible overlay. Retries keep that identity;
+ordinary note edits cannot erase the mark.
 
 ## Card actions
 
@@ -28,7 +31,8 @@ Card flags are intentionally device-local under the current design.
 
 ## Note actions
 
-- [x] **Mark/Unmark Note** — toggles the synchronized `marked` tag
+- [x] **Mark/Unmark Note** — toggles the synchronized `marked` tag through an
+  independently versioned, stable-intent outbox
 - [x] **Bury Note** — persists all sibling cards for the current study day
 - [x] **Suspend Note** — durable and synchronized
 - [x] **Create Copy…** — confirms, then creates a synchronized independent note with matching fields, tags, cards, and decks

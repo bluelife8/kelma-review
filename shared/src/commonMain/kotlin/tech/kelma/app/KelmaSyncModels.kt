@@ -60,6 +60,7 @@ data class ManifestEntry(
     @SerialName("due_date_override_ms") val dueDateOverrideMillis: Long = 0,
     @SerialName("due_date_override_modified_at") val dueDateOverrideModifiedAt: String = "",
     @SerialName("due_date_override_client_modified_at") val dueDateOverrideClientModifiedAt: String = "",
+    val mark: SyncNoteMark? = null,
 )
 
 @Serializable
@@ -101,6 +102,14 @@ data class BatchPullResponse(
 )
 
 @Serializable
+data class SyncNoteMark(
+    val marked: Boolean,
+    @SerialName("intent_id") val intentId: String,
+    @SerialName("modified_at") val modifiedAt: String = "",
+    @SerialName("client_modified_at") val clientModifiedAt: String,
+)
+
+@Serializable
 data class SyncNote(
     val guid: String,
     @SerialName("notetype_id") val notetypeId: Long = 0,
@@ -109,6 +118,7 @@ data class SyncNote(
     val checksum: String = "",
     @SerialName("modified_at") val modifiedAt: String = "",
     @SerialName("client_modified_at") val clientModifiedAt: String = "",
+    val mark: SyncNoteMark? = null,
 )
 
 @Serializable

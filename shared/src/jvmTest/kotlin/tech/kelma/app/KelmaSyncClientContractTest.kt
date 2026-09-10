@@ -444,6 +444,82 @@ class KelmaSyncClientContractTest {
     }
 
     @Test
+    fun noteMarkUploadUsesTypedBatchAndStableIntentAcknowledgements() = runBlocking {
+        val timestamp = "2026-09-10T20:00:00.000Z"
+        val intents = listOf(
+            PendingNoteMarkUpload("note-a", true, "11111111-1111-4111-8111-111111111111", 1_789_070_400_000L),
+            PendingNoteMarkUpload("note-b", false, "22222222-2222-4222-8222-222222222222", 1_789_070_400_001L),
+        )
+        val engine = MockEngine { request ->
+            assertEquals("/v2/batch/push", request.url.encodedPath)
+            val body = (request.body as OutgoingContent.ByteArrayContent).bytes().decodeToString()
+            val batch = ContractJson.decodeFromString<BatchPushRequest>(body)
+            assertEquals(intents.map(PendingNoteMarkUpload::intentId), batch.noteMarks.map(NoteMarkPushBody::intentId))
+            respondJson(
+                BatchPushResponse(
+                    accepted = mapOf("note_marks" to 2),
+                    noteMarks = batch.noteMarks.map {
+                        NoteMarkPushResult(
+                            guid = it.guid,
+                            accepted = true,
+                            applied = true,
+                            mark = SyncNoteMark(it.marked, it.intentId, timestamp, it.clientModifiedAt),
+                        )
+                    },
+                ),
+            )
+        }
+        val client = contractClient(engine)
+        val progress = mutableListOf<SyncPushProgress>()
+
+        val result = client.push("token", SyncUploadPlan(noteMarks = intents), progress::add)
+
+        assertEquals(intents.mapTo(mutableSetOf(), PendingNoteMarkUpload::intentId), result.uploadedNoteMarkIntentIds)
+        assertEquals(listOf(0, 2), progress.map(SyncPushProgress::completed))
+        assertTrue(progress.all { it.resource == SyncPushResource.NoteMarks })
+        client.close()
+    }
+
+    @Test
+    fun staleNoteMarkAcknowledgesSubmittedIntentAndAllowsConfirmingPull() = runBlocking {
+        val pending = PendingNoteMarkUpload(
+            "note-a",
+            true,
+            "11111111-1111-4111-8111-111111111111",
+            1_789_070_400_000L,
+        )
+        val engine = MockEngine { request ->
+            val batch = ContractJson.decodeFromString<BatchPushRequest>(
+                (request.body as OutgoingContent.ByteArrayContent).bytes().decodeToString(),
+            )
+            respondJson(
+                BatchPushResponse(
+                    accepted = mapOf("note_marks" to 1),
+                    noteMarks = listOf(
+                        NoteMarkPushResult(
+                            guid = batch.noteMarks.single().guid,
+                            accepted = true,
+                            applied = false,
+                            mark = SyncNoteMark(
+                                marked = false,
+                                intentId = "22222222-2222-4222-8222-222222222222",
+                                modifiedAt = "2026-09-10T20:00:01.000Z",
+                                clientModifiedAt = "2026-09-10T20:00:01.000Z",
+                            ),
+                        ),
+                    ),
+                ),
+            )
+        }
+        val client = contractClient(engine)
+
+        val result = client.push("token", SyncUploadPlan(noteMarks = listOf(pending)))
+
+        assertEquals(setOf(pending.intentId), result.uploadedNoteMarkIntentIds)
+        client.close()
+    }
+
+    @Test
     fun largeContentUploadUsesBoundedBatchesAndAggregateProgress() = runBlocking {
         val responses = listOf(
             "decks" to 1,

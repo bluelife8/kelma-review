@@ -5,6 +5,14 @@ data class LocalNoteOverride(
     val tags: List<String>,
 )
 
+data class LocalNoteMarkIntent(
+    val noteGuid: String,
+    val marked: Boolean,
+    val intentId: String,
+    val clientModifiedAtMillis: Long,
+    val uploadState: String,
+)
+
 data class PendingDeckChanges(
     val addedCardIds: Set<Long> = emptySet(),
     val changedCardIds: Set<Long> = emptySet(),
@@ -33,6 +41,7 @@ data class LocalContentSnapshot(
     val notetypes: Map<Long, SyncNotetype> = emptyMap(),
     val media: Map<String, LocalMediaAttachment> = emptyMap(),
     val overrides: Map<String, LocalNoteOverride> = emptyMap(),
+    val noteMarks: Map<String, LocalNoteMarkIntent> = emptyMap(),
     val deckNames: Set<String> = emptySet(),
     val deckOptions: Map<String, DeckOptions> = emptyMap(),
     val deckPresets: DeckPresetState = DeckPresetState(),
@@ -73,13 +82,16 @@ data class AddedLocalNote(
 
 fun SyncedCollection.withLocalContent(local: LocalContentSnapshot): SyncedCollection {
     val downloaded = withDeckOverrides(local.deckOverrides)
-    val visibleNotes = downloaded.notes
+    val contentNotes = downloaded.notes
         .filterKeys { it !in local.deletedNoteGuids }
         .mapValues { (guid, note) ->
             local.overrides[guid]?.let { override ->
                 note.copy(fields = override.fields, tags = override.tags)
             } ?: note
         } + local.notes
+    val visibleNotes = contentNotes.mapValues { (guid, note) ->
+        local.noteMarks[guid]?.let { intent -> note.copy(tags = note.tags.withMarked(intent.marked)) } ?: note
+    }
     return downloaded.copy(
         notes = visibleNotes,
         cards = (downloaded.cards + local.cards)
@@ -96,6 +108,9 @@ fun SyncedCollection.withLocalContent(local: LocalContentSnapshot): SyncedCollec
         deckNames = downloaded.deckNames + local.deckNames + local.cards.values.map(SyncCard::deckName),
     )
 }
+
+private fun List<String>.withMarked(marked: Boolean): List<String> =
+    filterNot { it.trim().equals("marked", ignoreCase = true) }.let { if (marked) it + "marked" else it }
 
 internal fun SyncedCollection.withDeckOverrides(overrides: Map<String, String?>): SyncedCollection {
     if (overrides.isEmpty()) return this
