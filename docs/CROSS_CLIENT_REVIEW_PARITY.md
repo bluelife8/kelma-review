@@ -18,11 +18,12 @@ migration 017 exactly once, validated immutable receipt containment/grants, and 
 flag/mark operations are active on rolling. By current product decision, Kelma Review flags stay device-local;
 cross-client flag convergence is not part of the active parity target.
 
-Suspension remains staged. Recovery-only
-[frontend PR 78](https://github.com/jeretmccoy/anki_ai_frontend/pull/78) remains the verified rollback image.
-[KelmaSync PR 20](https://github.com/jeretmccoy/kelma_sync_2/pull/20), Fastify PR 43, and frontend PR 79 are now
-deployed in order. Card/Note suspension is visible only through advertised capabilities and focused
-confirmation; no real operation was submitted solely to verify rollout.
+Suspension deployed in order through recovery-only frontend PR 78, KelmaSync PR 20, Fastify PR 43, and
+visible frontend PR 79. Bury Card/Note then deployed through recovery-only frontend PR 81,
+[KelmaSync PR 21](https://github.com/jeretmccoy/kelma_sync_2/pull/21),
+[Fastify PR 44](https://github.com/jeretmccoy/anki_ai_fastify/pull/44), and
+[frontend PR 82](https://github.com/jeretmccoy/anki_ai_frontend/pull/82). Both action families are visible only
+through advertised capabilities; no real operation was submitted solely to verify rollout.
 
 ## Non-negotiable ownership boundaries
 
@@ -46,7 +47,7 @@ confirmation; no real operation was submitted solely to verify rollout.
 | Card flags 0–7 | `local_card_flags`, keyed by local card ID and intentionally not uploaded | Receipt-backed operation changes `cards.scheduling.flags` | Intentional local/server difference for now; no native convergence work planned |
 | Mark/Unmark Note | Rewrites the case-insensitive `marked` tag through the normal note outbox | Receipt-backed operation rewrites the same canonical tag and checksum | Same representation; concurrent-edit and pull behavior needs validation |
 | Suspend Card/Note | Synchronized `active`/`suspended` card study state | Receipt-backed capability and confirmed UI are live on rolling | Expected to converge through the existing independent study-state model; no synthetic live mutation was used |
-| Bury Card/Note | Device-local for the current synchronized study day | Not implemented | Semantics need matching without turning a temporary bury into permanent synchronized state |
+| Bury Card/Note | Device-local for the current synchronized study day | Receipt-backed browser/account-local exclusion through the frozen next study-day boundary | Behaviorally aligned without creating permanent or native-synchronized bury state; cross-client buries remain intentionally independent |
 | Set Due Date | Independent synchronized override | Not implemented | Web capability missing |
 | Reset Card | Synchronized review-history cutoff; immutable history retained | Not implemented | Web capability missing |
 | Edit/Delete/Create Copy | Native transactional note/card outboxes and tombstones | Not implemented in the reviewer | Later typed-operation slices |
@@ -86,17 +87,14 @@ The likely deep seam is a typed note-metadata operation that owns only marked in
 
 Implement one closed operation kind at a time; do not expose a generic mutation endpoint.
 
-1. **Suspend Card and Suspend Note**
-   - The current browser slice reuses the existing synchronized card study-state model.
-   - The recovery-only Vue revision is live. It recognizes frozen suspension intents and receipts but exposes no Suspend control.
-   - Resolve sibling cards server-side for note suspension.
-   - Require confirmation because browser Unsuspend is not yet available; direct users to Kelma Review.
-   - Expire the browser presentation and exclude suspended cards from authoritative and native queues without changing review history.
-   - Expose the Vue controls only after the recovery-only build is the rollback image.
-2. **Bury Card and Bury Note**
-   - Match the synchronized timezone/rollover policy.
-   - Keep burial temporary and day-scoped.
-   - Decide explicitly whether browser buries are session/server-device state or account-wide same-day intent. Do not accidentally turn burial into permanent sync metadata.
+1. **Suspend Card and Suspend Note — deployed on rolling**
+   - Reuses the existing synchronized card study-state model and resolves note siblings server-side.
+   - Requires confirmation because browser Unsuspend is not yet available.
+   - Expires the presentation and excludes suspended cards without changing review history.
+2. **Bury Card and Bury Note — deployed on rolling**
+   - Uses the synchronized timezone/rollover policy and freezes the next boundary in the immutable receipt.
+   - Treats browser buries as account-wide browser/server intent for that study day, independent from native device-local buries.
+   - Expires the presentation and filters the card or canonical note siblings without permanent sync metadata, review, or quota writes.
 3. **Set Due Date and Reset Card**
    - Reuse their independent synchronized state instead of editing FSRS projections.
    - Reset must advance a monotonic history cutoff and retain immutable reviews.
