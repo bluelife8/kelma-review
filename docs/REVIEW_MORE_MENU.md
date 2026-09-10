@@ -14,10 +14,10 @@
 - [x] Indicate the selected flag in the menu
 - [x] Roll back the UI if persistence fails
 
-Card flags are currently device-local. The proposed portable identity, conflict semantics, native outbox,
-and Sync/account-mirror work needed for cross-client convergence is tracked in
-[CROSS_CLIENT_REVIEW_PARITY.md](CROSS_CLIENT_REVIEW_PARITY.md); the browser's interim scheduling payload must
-not become authoritative native scheduling state.
+Card flags intentionally remain device-local in Kelma Review for now. The browser may retain its server-side
+flag behavior, but Kelma Review does not consume that scheduling payload or promise flag convergence. The
+decision and deferred constraints are tracked in
+[CROSS_CLIENT_REVIEW_PARITY.md](CROSS_CLIENT_REVIEW_PARITY.md).
 
 ## Card actions
 

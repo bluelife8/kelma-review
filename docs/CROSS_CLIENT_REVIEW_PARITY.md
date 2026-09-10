@@ -10,12 +10,12 @@ This is a living planning note, not an implementation or production-promotion ap
 
 Parity means that durable user intent and immutable review facts converge predictably. It does **not** mean identical chrome, identical local FSRS projections, or synchronizing temporary UI/session state. Native clients must remain useful offline, while the browser reviewer remains server-authoritative.
 
-The first priority is the flags/marked-note slice currently under review in
+The flags/marked-note slice has merged to rolling through
 [KelmaSync PR 19](https://github.com/jeretmccoy/kelma_sync_2/pull/19),
 [Fastify PR 42](https://github.com/jeretmccoy/anki_ai_fastify/pull/42), and
-[frontend PR 77](https://github.com/jeretmccoy/anki_ai_frontend/pull/77). That rolling implementation is useful
-for validating browser behavior, but its use of `cards.scheduling.flags` is not yet the final native
-convergence contract.
+[frontend PR 77](https://github.com/jeretmccoy/anki_ai_frontend/pull/77). Its schema-gated Sync deployment remains
+separate. By current product decision, Kelma Review flags stay device-local; cross-client flag convergence is
+not part of the active parity target.
 
 ## Non-negotiable ownership boundaries
 
@@ -36,9 +36,9 @@ convergence contract.
 | --- | --- | --- | --- |
 | Rate a card | Appends a local immutable event and advances the local projection; durable outbox uploads later | Sync commits an immutable event and exactly-once answer receipt | Same facts, different online/offline transaction boundaries; end-to-end convergence still needs a shared fixture test |
 | Rating previews | Uses non-mutating local scheduler projections | Uses non-mutating authoritative Sync previews | Behaviorally aligned; exact intervals may differ when local profiles intentionally differ |
-| Card flags 0–7 | `local_card_flags`, keyed by local card ID and intentionally not uploaded | Receipt-backed operation currently changes `cards.scheduling.flags` | **Not convergent** |
+| Card flags 0–7 | `local_card_flags`, keyed by local card ID and intentionally not uploaded | Receipt-backed operation changes `cards.scheduling.flags` | Intentional local/server difference for now; no native convergence work planned |
 | Mark/Unmark Note | Rewrites the case-insensitive `marked` tag through the normal note outbox | Receipt-backed operation rewrites the same canonical tag and checksum | Same representation; concurrent-edit and pull behavior needs validation |
-| Suspend Card/Note | Synchronized `active`/`suspended` card study state | Not implemented | Web capability missing |
+| Suspend Card/Note | Synchronized `active`/`suspended` card study state | Receipt-backed implementation in progress | Expected to converge through the existing independent study-state model |
 | Bury Card/Note | Device-local for the current synchronized study day | Not implemented | Semantics need matching without turning a temporary bury into permanent synchronized state |
 | Set Due Date | Independent synchronized override | Not implemented | Web capability missing |
 | Reset Card | Synchronized review-history cutoff; immutable history retained | Not implemented | Web capability missing |
@@ -47,51 +47,17 @@ convergence contract.
 | Automatic and inline audio | Native hydrated media with lifecycle cancellation | Hydrated account-owned data only with lifecycle cancellation | Behaviorally aligned; platform playback details may differ |
 | New/Learn/Due eligibility and counts | Local projection from pulled facts and synchronized policy | Authoritative server queue/projection | Requires repeatable oracle tests; neither side may borrow the other side's mutable projection |
 
-## P0: define a synchronized card-flag contract
+## Current decision: keep Kelma Review flags local
 
-The native app must not begin trusting the entire opaque `scheduling` object merely to read a flag. Scheduling payloads contain foreign mutable projections that Kelma deliberately ignores. Promote the flag to an independently versioned piece of user intent.
+Kelma Review continues to store flags only in `local_card_flags`. Do not add a native flag outbox, consume
+`cards.scheduling.flags` as native state, or migrate flags to portable identity in the active roadmap. Browser
+and mirrored Anki flags may persist on the server, but Kelma Review makes no convergence promise for them.
+Visual labels and values should remain familiar across clients without implying synchronized state.
 
-Recommended wire model:
-
-```text
-CardFlagState
-  account scope (implicit from authentication)
-  note GUID + card ordinal (portable identity)
-  current source card ID (lookup/compatibility only)
-  flag 0..7 (0 is an explicit clear)
-  client operation ID
-  client modified time
-  server revision/modified time
-```
-
-The exact table and endpoint shape still require design review. Reusing the existing card metadata envelope is acceptable if the flag has its own version and conflict fields; hiding the final contract only inside `scheduling` is not.
-
-Required work:
-
-1. **KelmaSync protocol and storage**
-   - Add independently versioned flag state to manifest/pull responses.
-   - Accept an idempotent typed native flag mutation using portable card identity resolved inside the authenticated account.
-   - Keep browser receipt creation and flag mutation in one transaction.
-   - Materialize the compatibility value into `cards.scheduling.flags` only where the Anki mirror requires it.
-   - Ensure FSRS projection publication cannot reset the flag.
-   - Represent clear (`0`) durably so an older nonzero value cannot reappear.
-2. **Kelma Review persistence**
-   - Migrate `local_card_flags` from local card-ID-only storage to portable note-GUID/card-ordinal state.
-   - Preserve every existing local flag during migration when its card can be resolved.
-   - Add pending/uploaded state, operation ID, and conflict metadata.
-   - Apply pulled state without replacing a newer pending local action.
-   - Keep the local visual update and outbox write atomic; roll back only on a definitive local persistence failure.
-3. **Account mirror compatibility**
-   - Translate Anki's card flag to/from the independent flag state without treating other scheduling fields as Kelma schedule truth.
-   - Prevent feedback loops where materialized compatibility data appears as a new user mutation.
-   - Define deterministic precedence when Anki, an offline native device, and the browser change the same flag concurrently.
-4. **Browser reviewer**
-   - Continue deriving identity from the active presentation.
-   - Return accepted state from the receipt and refresh optional context.
-   - Keep grading locked only while an operation outcome is ambiguous.
-   - Advertise the capability only when the required schema and containment checks pass.
-
-Preferred conflict behavior is deterministic last accepted user intent by independently versioned flag state, not replacement of a whole card scheduling payload. Client wall clocks cannot be the sole ordering authority.
+If this decision is revisited, flags still need an independently versioned user-intent model keyed by note GUID
+plus card ordinal. Clear (`0`) must be durable, conflict order cannot rely only on client clocks, mirror
+materialization must not create feedback loops, and opaque scheduling fields must remain non-authoritative for
+native FSRS. These are deferred design constraints, not approved work.
 
 ## P0: validate and harden Mark/Unmark convergence
 
@@ -114,9 +80,12 @@ The likely deep seam is a typed note-metadata operation that owns only marked in
 Implement one closed operation kind at a time; do not expose a generic mutation endpoint.
 
 1. **Suspend Card and Suspend Note**
-   - Reuse the existing synchronized card study-state model.
+   - The current browser slice reuses the existing synchronized card study-state model.
+   - Ship a recovery-only Vue revision first. It recognizes frozen suspension intents and receipts but exposes no Suspend control.
    - Resolve sibling cards server-side for note suspension.
-   - Exclude suspended cards from authoritative and native queues without changing review history.
+   - Require confirmation because browser Unsuspend is not yet available; direct users to Kelma Review.
+   - Expire the browser presentation and exclude suspended cards from authoritative and native queues without changing review history.
+   - Expose the Vue controls only after the recovery-only build is the rollback image.
 2. **Bury Card and Bury Note**
    - Match the synchronized timezone/rollover policy.
    - Keep burial temporary and day-scoped.
@@ -162,14 +131,14 @@ Queue parity fixtures should cover New, Learning, Review, Relearning, intraday s
 2. Add database migrations without modifying or rerunning previously applied migration files.
 3. Pass disposable-database integration, scheduler/oracle, mirror compatibility, and all native common tests.
 4. Upgrade the rolling schema only with the required private backup, stopped services, owner validation, account containment, and least-privilege grants.
-5. Roll out in dependency order: KelmaSync, account mirror if needed, Fastify, web frontend, then a version-aligned Kelma Review rolling build.
+5. For a new browser operation kind, deploy a recovery-only Vue build before capability exposure so that build can become the safe rollback image for the later visible UI. Then roll out KelmaSync, account mirror if needed, Fastify, and the visible Vue controls; a version-aligned Kelma Review rolling build follows only when native code changes.
 6. Capture bidirectional convergence evidence across at least two mirror cycles and a native restart.
 7. Keep production promotion separate and explicitly approved.
 8. Roll back application images only; never automatically restore a database or rewrite accepted operations/reviews.
 
 ## Definition of parity for a durable action
 
-An action is at parity only when:
+For actions designated as synchronized, parity is reached only when:
 
 - all clients display the same accepted intent after bounded synchronization;
 - offline changes survive restart and eventually converge;
