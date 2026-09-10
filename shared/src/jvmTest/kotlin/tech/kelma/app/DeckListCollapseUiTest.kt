@@ -1,6 +1,10 @@
 package tech.kelma.app
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.onNodeWithContentDescription
@@ -43,6 +47,7 @@ private fun TestDesktopDeckList(
     decks: List<DeckSummary>,
     onOpenDeck: (DeckSummary) -> Unit,
 ) {
+    var collapsedDeckIds by remember { mutableStateOf(emptySet<String>()) }
     DesktopDeckListScreen(
         decks = decks,
         signedIn = false,
@@ -54,6 +59,10 @@ private fun TestDesktopDeckList(
         localCardCount = 0,
         syncedMediaBytes = 0,
         canUndo = false,
+        collapsedDeckIds = collapsedDeckIds,
+        onDeckCollapsedChange = { deckId, collapsed ->
+            collapsedDeckIds = if (collapsed) collapsedDeckIds + deckId else collapsedDeckIds - deckId
+        },
         onUndo = {},
         onAdd = {},
         onCreateDeck = { null },

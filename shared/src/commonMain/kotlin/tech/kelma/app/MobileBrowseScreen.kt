@@ -80,6 +80,11 @@ internal fun MobileBrowseScreen(state: BrowseUiState, actions: BrowseActions) {
                             showBack = false,
                         )
                         MobileBrowseSearch(state, actions)
+                        MobileBrowseDeckPicker(
+                            selectedDeck = selectedBrowseDeck(state.query.text),
+                            decks = state.decks,
+                            onSelectDeck = actions.onSelectDeck,
+                        )
                         MobileBrowseChips(state, actions)
                         MobileBrowseList(state, actions)
                     } else {
@@ -200,12 +205,6 @@ private fun MobileBrowseChips(state: BrowseUiState, actions: BrowseActions) {
         }
         FilterChip("Created · $creationDate", creationFilterActive) {
             creationDateDialogOpen = true
-        }
-        state.decks.take(6).forEach { (deck, _) ->
-            val term = browseQualifier("deck", deck)
-            FilterChip(deck, queryHasTerm(state.query.text, term)) {
-                actions.onApplyTerm(term)
-            }
         }
         state.tags.take(6).forEach { (tag, _) ->
             val term = browseQualifier("tag", tag)

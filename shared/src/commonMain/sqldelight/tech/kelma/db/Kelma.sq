@@ -455,6 +455,10 @@ CREATE TABLE browse_query_terms (
     PRIMARY KEY (query_id, kind, value)
 );
 
+CREATE TABLE collapsed_deck_groups (
+    deck_id TEXT NOT NULL COLLATE NOCASE PRIMARY KEY
+);
+
 selectAuth:
 SELECT client_id, endpoint, username
 FROM sync_auth
@@ -1582,6 +1586,18 @@ DELETE FROM browse_query_terms;
 insertBrowseQueryTerm:
 INSERT OR REPLACE INTO browse_query_terms(query_id, kind, value) VALUES (?, ?, ?);
 
+selectCollapsedDeckGroups:
+SELECT deck_id FROM collapsed_deck_groups ORDER BY deck_id COLLATE NOCASE;
+
+insertCollapsedDeckGroup:
+INSERT OR IGNORE INTO collapsed_deck_groups(deck_id) VALUES (?);
+
+deleteCollapsedDeckGroup:
+DELETE FROM collapsed_deck_groups WHERE deck_id = ?;
+
+clearCollapsedDeckGroups:
+DELETE FROM collapsed_deck_groups;
+
 selectBrowseResultRows:
 WITH browse_rows AS (
     SELECT
@@ -1614,7 +1630,9 @@ WHERE NOT EXISTS (
     SELECT 1 FROM browse_query_terms t
     WHERE t.query_id = :queryId AND (
         (t.kind = 'text' AND instr(i.search_text, t.value) = 0)
-        OR (t.kind = 'deck' AND instr(i.deck_sort, t.value) = 0)
+        OR (t.kind = 'deck'
+            AND i.deck_sort != t.value
+            AND substr(i.deck_sort, 1, length(t.value) + 2) != t.value || '::')
         OR (t.kind = 'notetype' AND instr(i.notetype_sort, t.value) = 0)
         OR (t.kind = 'tag' AND NOT EXISTS (
             SELECT 1 FROM browse_card_tags bt

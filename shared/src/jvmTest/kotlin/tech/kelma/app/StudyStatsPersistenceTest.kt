@@ -23,6 +23,7 @@ class StudyStatsPersistenceTest {
                         reviewId = now - 500,
                         sourceCardId = 1,
                         noteGuid = "note",
+                        deckName = "Deck",
                         ease = 1,
                         takenMillis = 2_000,
                     ),
@@ -40,6 +41,8 @@ class StudyStatsPersistenceTest {
         assertEquals(1, stats.recalledReviews)
         assertEquals(1, stats.forgottenReviews)
         assertEquals(5_000, stats.studiedMillisToday)
+        assertEquals(2, store.loadStudyStats(now, "Deck").totalReviews)
+        assertEquals(0, store.loadStudyStats(now, "Other").totalReviews)
         driver.close()
     }
 }

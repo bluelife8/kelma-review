@@ -32,6 +32,7 @@ internal data class StudyStatsReview(
     val rating: Int,
     val durationMillis: Long,
     val epochDay: Long,
+    val deckName: String,
 )
 
 internal fun calculateStudyStats(
@@ -42,9 +43,16 @@ internal fun calculateStudyStats(
     chartDays: Int = 30,
     dueDateOverrides: Map<Long, Long> = emptyMap(),
     studyDayPolicy: AccountStudyDayPolicy = AccountStudyDayPolicy(dayStartHour = 0),
+    deckName: String? = null,
 ): StudyStats {
+    val scopedReviews = deckName?.let { selected ->
+        reviews.filter { it.deckName.isDeckOrDescendantOf(selected) }
+    } ?: reviews
+    val scopedCards = deckName?.let { selected ->
+        cards.filter { it.deckName.isDeckOrDescendantOf(selected) }
+    } ?: cards
     val today = studyDayAt(nowMillis, studyDayPolicy)
-    val byDay = reviews.groupBy(StudyStatsReview::epochDay)
+    val byDay = scopedReviews.groupBy(StudyStatsReview::epochDay)
     val daily = ((today - chartDays + 1)..today).map { day ->
         val events = byDay[day].orEmpty()
         DailyStudyStats(day, events.size, events.sumOf(StudyStatsReview::durationMillis))
@@ -55,19 +63,19 @@ internal fun calculateStudyStats(
         streak++
         day--
     }
-    val recalled = reviews.count { it.rating in 2..4 }
-    val forgotten = reviews.count { it.rating == 1 }
-    val activeCards = cards.filter { it.studyState == CardStudyState.Active }
+    val recalled = scopedReviews.count { it.rating in 2..4 }
+    val forgotten = scopedReviews.count { it.rating == 1 }
+    val activeCards = scopedCards.filter { it.studyState == CardStudyState.Active }
     val nowSchedules = activeCards.mapNotNull { schedules[it.cardId] }
     return StudyStats(
-        totalReviews = reviews.size,
+        totalReviews = scopedReviews.size,
         reviewsToday = byDay[today].orEmpty().size,
         studiedMillisToday = byDay[today].orEmpty().sumOf(StudyStatsReview::durationMillis),
-        totalStudiedMillis = reviews.sumOf(StudyStatsReview::durationMillis),
+        totalStudiedMillis = scopedReviews.sumOf(StudyStatsReview::durationMillis),
         recalledReviews = recalled,
         forgottenReviews = forgotten,
         currentStreakDays = streak,
-        cards = cards.size,
+        cards = scopedCards.size,
         newCards = activeCards.count { it.cardId !in schedules },
         learningCards = nowSchedules.count { it.phase != ReviewPhase.Review },
         reviewCards = nowSchedules.count { it.phase == ReviewPhase.Review },

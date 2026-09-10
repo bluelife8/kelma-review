@@ -27,7 +27,7 @@ class DeckListHierarchyTest {
 
     @Test
     fun collapsedDeckHidesItsEntireSubtree() {
-        val rows = deckListRows(decks, setOf("Languages"))
+        val rows = deckListRows(decks, setOf("languages"))
 
         assertEquals(listOf("Languages", "Other"), rows.map { it.deck.name })
         assertTrue(rows.first().isCollapsed)

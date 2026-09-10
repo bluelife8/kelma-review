@@ -44,8 +44,30 @@ class StudyStatsTest {
         assertEquals(30, stats.daily.size)
     }
 
-    private fun review(day: Long, rating: Int, duration: Long) =
-        StudyStatsReview(day * MillisPerDay + rating, rating, duration, day)
+    @Test
+    fun deckScopeIncludesTheSelectedDeckAndItsDescendants() {
+        val reviews = listOf(
+            review(today, 3, 10_000, "Languages"),
+            review(today, 1, 20_000, "Languages::French"),
+            review(today, 4, 30_000, "Science"),
+        )
+        val cards = listOf(
+            SyncCard(1, "a", "Languages"),
+            SyncCard(2, "b", "Languages::French"),
+            SyncCard(3, "c", "Science"),
+        )
+
+        val stats = calculateStudyStats(reviews, cards, emptyMap(), now, deckName = "Languages")
+
+        assertEquals(2, stats.totalReviews)
+        assertEquals(30_000, stats.totalStudiedMillis)
+        assertEquals(2, stats.cards)
+        assertEquals(2, stats.newCards)
+        assertEquals(0.5, stats.recallRate)
+    }
+
+    private fun review(day: Long, rating: Int, duration: Long, deckName: String = "Deck") =
+        StudyStatsReview(day * MillisPerDay + rating, rating, duration, day, deckName)
 
     private fun schedule(id: Long, phase: ReviewPhase, days: Int, due: Long) = LocalCardSchedule(
         id, phase, due, 5.0, 5.0, days, 2, 0, now - MillisPerDay,
