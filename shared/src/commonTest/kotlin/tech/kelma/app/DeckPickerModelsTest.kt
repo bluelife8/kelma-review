@@ -23,4 +23,21 @@ class DeckPickerModelsTest {
             deckPickerNames(listOf("Languages::French", "languages")),
         )
     }
+
+    @Test
+    fun tieredPickerKeepsSubdecksOutOfThePrimaryDeckList() {
+        val options = deckPickerOptions(listOf("Solo", "x::y", "x::y::Deep", "x::z"))
+
+        val unselected = deckPickerTiers(options, selectedName = null)
+        assertEquals(listOf("Solo", "x"), unselected.decks.map(DeckPickerOption::name))
+        assertEquals(emptyList(), unselected.subdecks)
+
+        val selected = deckPickerTiers(options, selectedName = "X::Y")
+        assertEquals("x", selected.selectedDeck)
+        assertEquals("x::y", selected.selectedSubdeck)
+        assertEquals(
+            listOf("x::y", "x::y::Deep", "x::z"),
+            selected.subdecks.map(DeckPickerOption::name),
+        )
+    }
 }

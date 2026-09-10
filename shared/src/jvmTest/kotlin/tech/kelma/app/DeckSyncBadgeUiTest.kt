@@ -52,7 +52,7 @@ class DeckSyncBadgeUiTest {
     }
 
     @Test
-    fun mobileLeafDeckDoesNotReserveDisclosureControlSpace() = runComposeUiTest {
+    fun mobileLeafDeckKeepsComfortableHeightWithoutReservingDisclosureSpace() = runComposeUiTest {
         setContent {
             KelmaTheme {
                 Column(Modifier.width(360.dp)) {
@@ -69,6 +69,7 @@ class DeckSyncBadgeUiTest {
             }
         }
 
+        onNodeWithText("Standalone").assertHeightIsEqualTo(48.dp)
         val parentLeft = onNodeWithText("Parent", useUnmergedTree = true).fetchSemanticsNode().boundsInRoot.left
         val leafLeft = onNodeWithText("Standalone", useUnmergedTree = true).fetchSemanticsNode().boundsInRoot.left
         assertTrue(leafLeft < parentLeft)

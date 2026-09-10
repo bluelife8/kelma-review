@@ -64,6 +64,9 @@ private val MobileBrowseStateFlags = listOf(
 internal fun MobileBrowseScreen(state: BrowseUiState, actions: BrowseActions) {
     var confirmDelete by remember { mutableStateOf<BrowseCardRow?>(null) }
     var editingId by remember { mutableStateOf<Long?>(null) }
+    val deckOptions = remember(state.decks) {
+        state.decks.map { (name, count) -> DeckPickerOption(name, deckHierarchyNames(name).lastIndex, count) }
+    }
     LaunchedEffect(state.selected?.cardId) { editingId = null }
 
     Surface(modifier = Modifier.fillMaxSize(), color = KelmaColors.Background) {
@@ -79,12 +82,14 @@ internal fun MobileBrowseScreen(state: BrowseUiState, actions: BrowseActions) {
                             onAction = actions.onSync,
                             showBack = false,
                         )
-                        MobileBrowseSearch(state, actions)
-                        MobileBrowseDeckPicker(
-                            selectedDeck = selectedBrowseDeck(state.query.text),
-                            decks = state.decks,
-                            onSelectDeck = actions.onSelectDeck,
+                        MobileDeckFilterPicker(
+                            options = deckOptions,
+                            selectedName = selectedBrowseDeck(state.query.text),
+                            testTagPrefix = "mobile-browse",
+                            onSelectName = actions.onSelectDeck,
+                            modifier = Modifier.padding(horizontal = 16.dp),
                         )
+                        MobileBrowseSearch(state, actions)
                         MobileBrowseChips(state, actions)
                         MobileBrowseList(state, actions)
                     } else {
