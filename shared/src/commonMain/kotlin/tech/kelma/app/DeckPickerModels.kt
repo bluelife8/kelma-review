@@ -6,6 +6,13 @@ internal data class DeckPickerOption(
     val cardCount: Int,
 )
 
+internal data class DeckPickerTiers(
+    val decks: List<DeckPickerOption>,
+    val selectedDeck: String?,
+    val subdecks: List<DeckPickerOption>,
+    val selectedSubdeck: String?,
+)
+
 /**
  * Produces one selectable row for every deck and hierarchy level. Counts from leaf decks roll up
  * to their ancestors so selecting a superdeck communicates the size of its complete subtree.
@@ -47,3 +54,28 @@ internal fun deckPickerOptions(
 
 internal fun deckPickerNames(deckNames: Iterable<String>): List<String> =
     deckPickerOptions(deckNames).map(DeckPickerOption::name)
+
+internal fun deckPickerTiers(
+    options: List<DeckPickerOption>,
+    selectedName: String?,
+): DeckPickerTiers {
+    val decks = options.filter { it.depth == 0 }
+    val selectedOption = selectedName?.let { name ->
+        options.firstOrNull { it.name.equals(name, ignoreCase = true) }
+    }
+    val selectedDeck = selectedOption?.let { option ->
+        decks.firstOrNull { option.name.isDeckOrDescendantOf(it.name) }
+    }
+    val subdecks = selectedDeck?.let { deck ->
+        options.filter { option ->
+            !option.name.equals(deck.name, ignoreCase = true) && option.name.isDeckOrDescendantOf(deck.name)
+        }
+    }.orEmpty()
+
+    return DeckPickerTiers(
+        decks = decks,
+        selectedDeck = selectedDeck?.name,
+        subdecks = subdecks,
+        selectedSubdeck = selectedOption?.takeIf { it.depth > 0 }?.name,
+    )
+}

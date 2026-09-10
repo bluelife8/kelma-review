@@ -59,7 +59,8 @@ internal fun StatsScreen(
     deckNames: List<String> = emptyList(),
     loadDeckStats: suspend (String) -> StudyStats = { stats },
 ) {
-    val pickerDeckNames = remember(deckNames) { deckPickerNames(deckNames) }
+    val pickerOptions = remember(deckNames) { deckPickerOptions(deckNames) }
+    val pickerDeckNames = remember(pickerOptions) { pickerOptions.map(DeckPickerOption::name) }
     var selectedDeck by remember { mutableStateOf<String?>(null) }
     var displayedStats by remember(stats) { mutableStateOf(stats) }
     var loading by remember { mutableStateOf(false) }
@@ -94,7 +95,7 @@ internal fun StatsScreen(
         DesktopStatsScreen(
             stats = displayedStats,
             syncing = syncing,
-            deckNames = pickerDeckNames,
+            deckOptions = pickerOptions,
             selectedDeck = selectedDeck,
             loading = loading,
             loadError = loadError,
@@ -108,7 +109,7 @@ internal fun StatsScreen(
     } else {
         MobileStatsScreen(
             stats = displayedStats,
-            deckNames = pickerDeckNames,
+            deckOptions = pickerOptions,
             selectedDeck = selectedDeck,
             loading = loading,
             loadError = loadError,
@@ -126,7 +127,7 @@ internal fun StatsScreen(
 private fun DesktopStatsScreen(
     stats: StudyStats,
     syncing: Boolean,
-    deckNames: List<String>,
+    deckOptions: List<DeckPickerOption>,
     selectedDeck: String?,
     loading: Boolean,
     loadError: String?,
@@ -143,7 +144,7 @@ private fun DesktopStatsScreen(
             StatsContent(
                 stats = stats,
                 desktop = true,
-                deckNames = deckNames,
+                deckOptions = deckOptions,
                 selectedDeck = selectedDeck,
                 loading = loading,
                 loadError = loadError,
@@ -156,7 +157,7 @@ private fun DesktopStatsScreen(
 @Composable
 private fun MobileStatsScreen(
     stats: StudyStats,
-    deckNames: List<String>,
+    deckOptions: List<DeckPickerOption>,
     selectedDeck: String?,
     loading: Boolean,
     loadError: String?,
@@ -188,7 +189,7 @@ private fun MobileStatsScreen(
             stats = stats,
             desktop = false,
             modifier = Modifier.padding(padding),
-            deckNames = deckNames,
+            deckOptions = deckOptions,
             selectedDeck = selectedDeck,
             loading = loading,
             loadError = loadError,
@@ -202,7 +203,7 @@ private fun StatsContent(
     stats: StudyStats,
     desktop: Boolean,
     modifier: Modifier = Modifier,
-    deckNames: List<String>,
+    deckOptions: List<DeckPickerOption>,
     selectedDeck: String?,
     loading: Boolean,
     loadError: String?,
@@ -219,12 +220,20 @@ private fun StatsContent(
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         Text("Study history", color = primary, fontSize = if (desktop) 28.sp else 30.sp, fontWeight = FontWeight.Bold)
-        StatsDeckPicker(
-            deckNames = deckNames,
-            selectedDeck = selectedDeck,
-            desktop = desktop,
-            onSelectDeck = onSelectDeck,
-        )
+        if (desktop) {
+            DesktopStatsDeckPicker(
+                deckNames = deckOptions.map(DeckPickerOption::name),
+                selectedDeck = selectedDeck,
+                onSelectDeck = onSelectDeck,
+            )
+        } else {
+            MobileDeckFilterPicker(
+                options = deckOptions,
+                selectedName = selectedDeck,
+                testTagPrefix = "stats",
+                onSelectName = onSelectDeck,
+            )
+        }
         if (loading) {
             LinearProgressIndicator(
                 modifier = Modifier.fillMaxWidth().testTag("stats-loading"),
@@ -263,17 +272,16 @@ private fun StatsContent(
 }
 
 @Composable
-private fun StatsDeckPicker(
+private fun DesktopStatsDeckPicker(
     deckNames: List<String>,
     selectedDeck: String?,
-    desktop: Boolean,
     onSelectDeck: (String?) -> Unit,
 ) {
     var expanded by remember { mutableStateOf(false) }
-    val surface = if (desktop) KelmaDesktopColors.Surface else KelmaColors.Surface
-    val border = if (desktop) KelmaDesktopColors.Border else KelmaColors.SurfaceBorder
-    val primary = if (desktop) KelmaDesktopColors.TextPrimary else KelmaColors.TextPrimary
-    val secondary = if (desktop) KelmaDesktopColors.TextSecondary else KelmaColors.TextSecondary
+    val surface = KelmaDesktopColors.Surface
+    val border = KelmaDesktopColors.Border
+    val primary = KelmaDesktopColors.TextPrimary
+    val secondary = KelmaDesktopColors.TextSecondary
     Column(
         modifier = Modifier.widthIn(max = 420.dp).fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(5.dp),
