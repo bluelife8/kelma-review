@@ -44,6 +44,15 @@ and immutable `SELECT,INSERT`-only receipt grants, and deployed the exact merged
 automatic Sync deployment stopped safely at the migration guard; its post-upgrade retry verified the revision
 unchanged. Zero operation receipts remained, and no real review or operation was submitted for rollout testing.
 
+Create Note Copy is now proposed as a complete coordinated rolling feature through
+[KelmaSync PR 24](https://github.com/jeretmccoy/kelma_sync_2/pull/24),
+[Fastify PR 47](https://github.com/jeretmccoy/anki_ai_fastify/pull/47), and
+[frontend PR 87](https://github.com/jeretmccoy/anki_ai_frontend/pull/87). The empty typed operation derives
+all source identity/content from the owned presentation, atomically clones the canonical note and all sibling
+card ordinal/deck pairs as New, keeps the source presentation gradeable, and uses immutable receipt recovery.
+These PRs are open and unmerged. Migration 020 is not applied, no rolling capability is enabled, and no
+production or native release is authorized.
+
 ## Non-negotiable ownership boundaries
 
 - Immutable review events remain the only review-history truth.
@@ -69,7 +78,8 @@ unchanged. Zero operation receipts remained, and no real review or operation was
 | Bury Card/Note | Device-local for the current synchronized study day | Receipt-backed browser/account-local exclusion through the frozen next study-day boundary | Behaviorally aligned without creating permanent or native-synchronized bury state; cross-client buries remain intentionally independent |
 | Set Due Date | Independent synchronized override | Receipt-backed exact UTC-date action is live on rolling and writes the same override | Shared state model is aligned; browser-to-native convergence still needs a disposable cross-client fixture |
 | Reset Card | Synchronized review-history cutoff; immutable history retained | Receipt-backed empty-intent action is live on rolling and uses the same cutoff/due-clear model | Shared state model is aligned; browser-to-native convergence still needs a disposable cross-client fixture |
-| Edit/Delete/Create Copy | Native transactional note/card outboxes and tombstones | Not implemented in the reviewer | Later typed-operation slices |
+| Create Note Copy | Native transaction clones fields, tags, notetype, and all cards/decks as New | Coordinated empty-intent operation PRs are open | Behavior is aligned by design; merge, disposable mirror fixture, and capability rollout remain pending |
+| Edit/Delete | Native transactional note/card outboxes and tombstones | Not implemented in the reviewer | Later typed-operation slices |
 | Card Info and previous history | Available natively | Presentation-scoped, bounded context | Substantially aligned |
 | Automatic and inline audio | Native hydrated media with lifecycle cancellation | Hydrated account-owned data only with lifecycle cancellation | Behaviorally aligned; platform playback details may differ |
 | New/Learn/Due eligibility and counts | Local projection from pulled facts and synchronized policy | Authoritative server queue/projection | Requires repeatable oracle tests; neither side may borrow the other side's mutable projection |
@@ -134,11 +144,15 @@ Implement one closed operation kind at a time; do not expose a generic mutation 
    - Advances a server-derived account-wide monotonic history cutoff, retains immutable reviews, rebuilds as New, and explicitly clears the due override without accepting a browser sentinel or cutoff.
    - Uses focused confirmation, durable exact-intent recovery, a lossless cutoff receipt, projection replay, and current-session-only exclusion.
    - Migration 019 was applied once under stopped-service backup, containment, and least-privilege grant controls before the exact Sync image enabled the capability.
-5. **Edit, Delete, and Create Copy**
+5. **Create Note Copy — coordinated rolling PRs open**
+   - Uses empty presentation-derived intent; the browser supplies no content, note, card, deck, or schedule identity.
+   - Atomically clones the current canonical notetype, fields, tags, and every card ordinal/deck as New while retaining a gradeable source presentation.
+   - Exactly-once receipt recovery prevents duplicate copies; migration 020 only widens the closed immutable receipt-kind constraint and is not yet applied.
+6. **Edit and Delete**
    - Use presentation-derived identity and typed payloads.
    - Preserve optimistic note checksums, tombstones, media ownership, and exactly-once recovery.
    - Never grant the browser a generic card/note batch authority.
-6. **Undo**
+7. **Undo**
    - Specify separately. Native undo can remove a pending local event, but a browser review may already be accepted immutable history.
    - Do not implement undo by deleting or rewriting an accepted server review without an explicit immutable compensating-event design.
 
