@@ -8,11 +8,16 @@ import androidx.compose.ui.test.assertHeightIsEqualTo
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertWidthIsEqualTo
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.v2.runComposeUiTest
 import androidx.compose.ui.unit.dp
+import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.test.Test
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 
 @OptIn(ExperimentalTestApi::class)
 class DeckSyncBadgeUiTest {
@@ -43,5 +48,29 @@ class DeckSyncBadgeUiTest {
         }
 
         onNodeWithText("+1 ~2").assertIsDisplayed()
+    }
+
+    @Test
+    fun mobileParentDeckHasIndependentCollapseControl() = runComposeUiTest {
+        val collapsed = AtomicBoolean(false)
+        val opened = AtomicBoolean(false)
+        val deck = DeckSummary("Parent", "Parent", emptyList(), 0, 0, 0)
+        setContent {
+            KelmaTheme {
+                Box(Modifier.width(360.dp)) {
+                    MobileDeckRow(
+                        deck = deck,
+                        hasChildren = true,
+                        onToggleCollapsed = { collapsed.set(true) },
+                        onClick = { opened.set(true) },
+                    )
+                }
+            }
+        }
+
+        onNodeWithContentDescription("Collapse deck Parent").performClick()
+
+        assertTrue(collapsed.get())
+        assertFalse(opened.get())
     }
 }

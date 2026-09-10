@@ -1,7 +1,6 @@
 package tech.kelma.app
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -42,12 +41,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-
-private val MobileCountWidth = 48.dp
 
 @Composable
 fun DeckListScreen(
@@ -210,6 +206,15 @@ private fun MobileDeckListScreen(
     onOpenAccount: () -> Unit,
 ) {
     val deckListState = rememberLazyListState()
+    var collapsedDeckIds by remember { mutableStateOf(emptySet<String>()) }
+    val rows = remember(decks, collapsedDeckIds) { deckListRows(decks, collapsedDeckIds) }
+    val toggleCollapsed: (DeckSummary) -> Unit = { deck ->
+        collapsedDeckIds = if (deck.id in collapsedDeckIds) {
+            collapsedDeckIds - deck.id
+        } else {
+            collapsedDeckIds + deck.id
+        }
+    }
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         containerColor = KelmaColors.Background,
@@ -256,8 +261,15 @@ private fun MobileDeckListScreen(
                 }
             }
             item { MobileDeckHeader() }
-            items(decks, key = { it.id }) { deck ->
-                MobileDeckRow(deck) { onOpenDeck(deck) }
+            items(rows, key = { it.deck.id }) { row ->
+                MobileDeckRow(
+                    deck = row.deck,
+                    depth = row.depth,
+                    hasChildren = row.hasChildren,
+                    isCollapsed = row.isCollapsed,
+                    onToggleCollapsed = { toggleCollapsed(row.deck) },
+                    onClick = { onOpenDeck(row.deck) },
+                )
             }
             if (decks.isEmpty()) {
                 item {
@@ -406,44 +418,9 @@ private fun MobileDeckHeader() {
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Spacer(Modifier.weight(1f))
-            MobileColumnLabel("New", KelmaColors.NewCard, MobileCountWidth)
-            MobileColumnLabel("Learn", KelmaColors.Bad, MobileCountWidth)
-            MobileColumnLabel("Due", KelmaColors.Good, MobileCountWidth)
-        }
-        HorizontalDivider(color = KelmaColors.Hairline)
-    }
-}
-
-@Composable
-internal fun MobileDeckRow(deck: DeckSummary, onClick: () -> Unit) {
-    Column {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable(onClick = onClick)
-                .padding(vertical = 16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Row(
-                modifier = Modifier.weight(1f),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                DeckSyncBadgeSlot(deck.pendingChanges)
-                Spacer(Modifier.width(9.dp))
-                Text(
-                    text = deck.name,
-                    modifier = Modifier.weight(1f),
-                    color = KelmaColors.TextPrimary,
-                    fontSize = 14.sp,
-                    lineHeight = 20.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-            }
-            MobileCount(deck.newCount, KelmaColors.NewCard)
-            MobileCount(deck.learningCount, KelmaColors.Bad)
-            MobileCount(deck.dueCount, KelmaColors.Good)
+            MobileColumnLabel("New", KelmaColors.NewCard, MobileDeckCountWidth)
+            MobileColumnLabel("Learn", KelmaColors.Bad, MobileDeckCountWidth)
+            MobileColumnLabel("Due", KelmaColors.Good, MobileDeckCountWidth)
         }
         HorizontalDivider(color = KelmaColors.Hairline)
     }
@@ -458,18 +435,6 @@ private fun MobileColumnLabel(text: String, color: Color, width: Dp) {
         fontSize = 10.sp,
         fontWeight = FontWeight.ExtraBold,
         letterSpacing = 0.6.sp,
-        textAlign = TextAlign.Center,
-    )
-}
-
-@Composable
-private fun MobileCount(value: Int, color: Color) {
-    Text(
-        text = value.toString(),
-        modifier = Modifier.width(MobileCountWidth),
-        color = if (value == 0) KelmaColors.TextMuted else color,
-        fontSize = 17.sp,
-        fontWeight = if (value == 0) FontWeight.Medium else FontWeight.ExtraBold,
         textAlign = TextAlign.Center,
     )
 }
