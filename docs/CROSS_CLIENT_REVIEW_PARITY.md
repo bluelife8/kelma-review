@@ -64,7 +64,7 @@ unchanged. Zero operation receipts remained, and no real review or operation was
 | Rate a card | Appends a local immutable event and advances the local projection; durable outbox uploads later | Sync commits an immutable event and exactly-once answer receipt | Same facts, different online/offline transaction boundaries; end-to-end convergence still needs a shared fixture test |
 | Rating previews | Uses non-mutating local scheduler projections | Uses non-mutating authoritative Sync previews | Behaviorally aligned; exact intervals may differ when local profiles intentionally differ |
 | Card flags 0–7 | `local_card_flags`, keyed by local card ID and intentionally not uploaded | Receipt-backed operation changes `cards.scheduling.flags` | Intentional local/server difference for now; no native convergence work planned |
-| Mark/Unmark Note | Rewrites the case-insensitive `marked` tag through the normal note outbox | Receipt-backed operation rewrites the same canonical tag and checksum | Same representation; concurrent-edit and pull behavior needs validation |
+| Mark/Unmark Note | Rewrites the case-insensitive `marked` tag through the normal note outbox | Receipt-backed operation rewrites the same canonical tag and checksum | Same representation, but whole-note conflict metadata is insufficient; independent typed intent is the approved next seam |
 | Suspend Card/Note | Synchronized `active`/`suspended` card study state | Receipt-backed capability and confirmed UI are live on rolling | Expected to converge through the existing independent study-state model; no synthetic live mutation was used |
 | Bury Card/Note | Device-local for the current synchronized study day | Receipt-backed browser/account-local exclusion through the frozen next study-day boundary | Behaviorally aligned without creating permanent or native-synchronized bury state; cross-client buries remain intentionally independent |
 | Set Due Date | Independent synchronized override | Receipt-backed exact UTC-date action is live on rolling and writes the same override | Shared state model is aligned; browser-to-native convergence still needs a disposable cross-client fixture |
@@ -96,11 +96,23 @@ Before declaring parity:
 - Verify a pull updates the menu immediately and does not duplicate `marked` with different casing.
 - Verify marking changes the note checksum and re-renders the current card without invalidating its answer.
 - Exercise a pending native field/tag edit racing with a browser mark.
-- Decide whether the normal note conflict dialog is sufficient or whether marked intent needs independent version metadata that is materialized into the canonical tag.
-- Ensure Keep this device / Use KelmaSync cannot silently lose a newer explicit mark action.
+- Replace whole-note ownership of marked state with independently versioned typed mark intent materialized into the canonical tag; the normal note conflict dialog is not sufficient because the unattended account mirror resolves whole-note winners without that dialog.
+- Ensure Keep this device / Use KelmaSync cannot silently lose a newer explicit mark action; general note conflict resolution must preserve independently newer mark intent.
 - Verify the account mirror imports and exports exactly one canonical `marked` token.
 
-The likely deep seam is a typed note-metadata operation that owns only marked intent while the note store remains responsible for canonical tag materialization and checksum calculation.
+The approved deep seam is a typed note-mark intent module that owns only `marked`, its durable intent identity,
+and deterministic ordering. Native uses a separate transactional outbox instead of disguising Mark/Unmark as a
+whole-note edit. Sync serializes and applies the intent, while the note store remains solely responsible for
+canonical case-insensitive tag materialization and checksum calculation. General note writes preserve the
+current independent mark unless they carry a typed mark intent. The account mirror compares and forwards that
+intent independently from fields and ordinary tags, preserving its identity so mirror cycles cannot inflate
+versions or create feedback loops. Existing clients that lack typed intent may create initially marked notes but
+must not erase a newer synchronized mark during an unrelated note write.
+
+The implementation must be compatibility-first: deploy optional read/write protocol support to both Sync
+endpoints before changing the standalone mirror, then ship the native outbox/materialization path. Production
+Sync compatibility and any native release remain separately approved; rolling browser work does not authorize
+either deployment.
 
 ## P1: align remaining review actions
 
