@@ -33,13 +33,16 @@ private backup, retained validated account containment and immutable `SELECT,INS
 and deployed the exact merged revisions. All three action families are visible only through advertised
 capabilities; no real review or operation was submitted solely to verify rollout.
 
-Reset Card is implemented, but not merged or deployed, as another complete coordinated feature in
+Reset Card deployed as another complete coordinated feature through
 [KelmaSync PR 23](https://github.com/jeretmccoy/kelma_sync_2/pull/23),
 [Fastify PR 46](https://github.com/jeretmccoy/anki_ai_fastify/pull/46), and
 [frontend PR 85](https://github.com/jeretmccoy/anki_ai_frontend/pull/85). It uses an empty typed intent;
 Sync derives the account-wide monotonic review/reset cutoff, keeps immutable history, clears the synchronized
-due override, and enqueues a New projection atomically with the receipt. Migration 019 only widens the
-receipt-kind constraint and remains unapplied. The Vue control stays hidden until schema-ready Sync advertises it.
+due override, and enqueues a New projection atomically with the receipt. The stopped-service rolling upgrade
+applied migration 019 exactly once after validating a private backup, retained validated account containment
+and immutable `SELECT,INSERT`-only receipt grants, and deployed the exact merged Sync image. The initial
+automatic Sync deployment stopped safely at the migration guard; its post-upgrade retry verified the revision
+unchanged. Zero operation receipts remained, and no real review or operation was submitted for rollout testing.
 
 ## Non-negotiable ownership boundaries
 
@@ -65,7 +68,7 @@ receipt-kind constraint and remains unapplied. The Vue control stays hidden unti
 | Suspend Card/Note | Synchronized `active`/`suspended` card study state | Receipt-backed capability and confirmed UI are live on rolling | Expected to converge through the existing independent study-state model; no synthetic live mutation was used |
 | Bury Card/Note | Device-local for the current synchronized study day | Receipt-backed browser/account-local exclusion through the frozen next study-day boundary | Behaviorally aligned without creating permanent or native-synchronized bury state; cross-client buries remain intentionally independent |
 | Set Due Date | Independent synchronized override | Receipt-backed exact UTC-date action is live on rolling and writes the same override | Shared state model is aligned; browser-to-native convergence still needs a disposable cross-client fixture |
-| Reset Card | Synchronized review-history cutoff; immutable history retained | Complete coordinated PRs use the same cutoff/due-clear model | Awaiting review, migration 019, and capability-gated rolling rollout |
+| Reset Card | Synchronized review-history cutoff; immutable history retained | Receipt-backed empty-intent action is live on rolling and uses the same cutoff/due-clear model | Shared state model is aligned; browser-to-native convergence still needs a disposable cross-client fixture |
 | Edit/Delete/Create Copy | Native transactional note/card outboxes and tombstones | Not implemented in the reviewer | Later typed-operation slices |
 | Card Info and previous history | Available natively | Presentation-scoped, bounded context | Substantially aligned |
 | Automatic and inline audio | Native hydrated media with lifecycle cancellation | Hydrated account-owned data only with lifecycle cancellation | Behaviorally aligned; platform playback details may differ |
@@ -115,10 +118,10 @@ Implement one closed operation kind at a time; do not expose a generic mutation 
    - Writes the existing independently synchronized exact UTC civil-date override instead of editing FSRS projections or history.
    - Expires the presentation, skips the card only in that browser session, and requires an immutable receipt echoing the frozen date.
    - A later accepted answer clears the due-date override under the existing synchronized contract.
-4. **Reset Card — complete coordinated PRs open**
+4. **Reset Card — deployed on rolling**
    - Advances a server-derived account-wide monotonic history cutoff, retains immutable reviews, rebuilds as New, and explicitly clears the due override without accepting a browser sentinel or cutoff.
    - Uses focused confirmation, durable exact-intent recovery, a lossless cutoff receipt, projection replay, and current-session-only exclusion.
-   - Requires migration 019 under the same stopped-service backup/containment/grant controls before Sync can advertise the capability.
+   - Migration 019 was applied once under stopped-service backup, containment, and least-privilege grant controls before the exact Sync image enabled the capability.
 5. **Edit, Delete, and Create Copy**
    - Use presentation-derived identity and typed payloads.
    - Preserve optimistic note checksums, tombstones, media ownership, and exactly-once recovery.
