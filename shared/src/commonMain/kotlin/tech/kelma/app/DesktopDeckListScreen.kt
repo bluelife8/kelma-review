@@ -24,10 +24,12 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material.icons.rounded.Edit
 import androidx.compose.material.icons.rounded.FileUpload
+import androidx.compose.material.icons.rounded.KeyboardArrowDown
 import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material.icons.rounded.Sync
@@ -86,7 +88,9 @@ fun DesktopDeckListScreen(
     onAccount: () -> Unit = {},
 ) {
     val syncAction = if (signedIn) onSync else onSignIn
-    val panelHeight = (70 + decks.size.coerceAtMost(8) * 48).coerceIn(166, 440).dp
+    var collapsedDeckIds by remember { mutableStateOf(emptySet<String>()) }
+    val rows = remember(decks, collapsedDeckIds) { deckListRows(decks, collapsedDeckIds) }
+    val panelHeight = (70 + rows.size.coerceAtMost(8) * 48).coerceIn(166, 440).dp
     var showCreateDeck by remember { mutableStateOf(false) }
     var renameDeck by remember { mutableStateOf<DeckSummary?>(null) }
     var deleteDeck by remember { mutableStateOf<DeckSummary?>(null) }
@@ -139,11 +143,19 @@ fun DesktopDeckListScreen(
                                 }
                             } else {
                                 LazyColumn(modifier = Modifier.weight(1f)) {
-                                    items(decks, key = { it.id }) { deck ->
+                                    items(rows, key = { it.deck.id }) { row ->
+                                        val deck = row.deck
                                         DesktopDeckRow(
                                             deck = deck,
-                                            hasChildren = decks.any {
-                                                it.name.startsWith("${deck.name}::", ignoreCase = true)
+                                            depth = row.depth,
+                                            hasChildren = row.hasChildren,
+                                            isCollapsed = row.isCollapsed,
+                                            onToggleCollapsed = {
+                                                collapsedDeckIds = if (deck.id in collapsedDeckIds) {
+                                                    collapsedDeckIds - deck.id
+                                                } else {
+                                                    collapsedDeckIds + deck.id
+                                                }
                                             },
                                             onOpenDeck = onOpenDeck,
                                             onAddCards = { deckManagement.onAddCards(deck.name) },
@@ -304,7 +316,10 @@ private fun TableLabel(text: String, modifier: Modifier, alignment: TextAlign) {
 @Composable
 private fun DesktopDeckRow(
     deck: DeckSummary,
+    depth: Int,
     hasChildren: Boolean,
+    isCollapsed: Boolean,
+    onToggleCollapsed: () -> Unit,
     onOpenDeck: (DeckSummary) -> Unit,
     onAddCards: () -> Unit,
     onBrowseCards: () -> Unit,
@@ -331,13 +346,21 @@ private fun DesktopDeckRow(
             .testTag("deck-row-${deck.id}"),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Box(modifier = Modifier.width(18.dp), contentAlignment = Alignment.Center) {
+        Spacer(Modifier.width((depth * 16).dp))
+        Box(modifier = Modifier.width(30.dp), contentAlignment = Alignment.Center) {
             if (hasChildren) {
-                Icon(
-                    imageVector = Icons.Rounded.Add,
-                    contentDescription = "Expand deck",
-                    modifier = Modifier.size(16.dp),
-                    tint = KelmaDesktopColors.TextPrimary,
+                DesktopIconButton(
+                    icon = if (isCollapsed) {
+                        Icons.AutoMirrored.Rounded.KeyboardArrowRight
+                    } else {
+                        Icons.Rounded.KeyboardArrowDown
+                    },
+                    contentDescription = if (isCollapsed) {
+                        "Expand deck ${deck.name}"
+                    } else {
+                        "Collapse deck ${deck.name}"
+                    },
+                    onClick = onToggleCollapsed,
                 )
             }
         }
