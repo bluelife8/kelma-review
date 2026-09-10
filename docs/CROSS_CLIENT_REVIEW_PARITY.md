@@ -59,7 +59,7 @@ Typed Mark/Unmark convergence is open for coordinated rolling review through
 [Fastify operator PR 48](https://github.com/jeretmccoy/anki_ai_fastify/pull/48),
 [account-mirror PR 3](https://github.com/bluelife8/kelma-account-mirror/pull/3), and
 [Kelma Review PR 22](https://github.com/bluelife8/kelma-review/pull/22). A separate production-compatible
-Sync candidate is staged at `9f81c17d431174f9dc103dc77d00cd8f4e717dda` with migration 013, but has no
+Sync candidate is staged at `ff2ba0be39979946d007eabaa8ffbb5b7adb4e8f` with migration 013, but has no
 production approval or deployment. Rolling uses migration 021. Compatibility support must reach both approved
 Sync endpoints before the mirror, and native follows only after separately approved release work.
 
