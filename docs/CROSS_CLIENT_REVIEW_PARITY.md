@@ -19,9 +19,10 @@ flag/mark operations are active on rolling. By current product decision, Kelma R
 cross-client flag convergence is not part of the active parity target.
 
 Suspension remains staged. Recovery-only
-[frontend PR 78](https://github.com/jeretmccoy/anki_ai_frontend/pull/78) is the verified live rollback image, and
-[KelmaSync PR 20](https://github.com/jeretmccoy/kelma_sync_2/pull/20) is deployed. Fastify PR 43 is ready for
-user-controlled merge; visible frontend PR 79 remains the final draft rollout step.
+[frontend PR 78](https://github.com/jeretmccoy/anki_ai_frontend/pull/78) remains the verified rollback image.
+[KelmaSync PR 20](https://github.com/jeretmccoy/kelma_sync_2/pull/20), Fastify PR 43, and frontend PR 79 are now
+deployed in order. Card/Note suspension is visible only through advertised capabilities and focused
+confirmation; no real operation was submitted solely to verify rollout.
 
 ## Non-negotiable ownership boundaries
 
@@ -44,7 +45,7 @@ user-controlled merge; visible frontend PR 79 remains the final draft rollout st
 | Rating previews | Uses non-mutating local scheduler projections | Uses non-mutating authoritative Sync previews | Behaviorally aligned; exact intervals may differ when local profiles intentionally differ |
 | Card flags 0–7 | `local_card_flags`, keyed by local card ID and intentionally not uploaded | Receipt-backed operation changes `cards.scheduling.flags` | Intentional local/server difference for now; no native convergence work planned |
 | Mark/Unmark Note | Rewrites the case-insensitive `marked` tag through the normal note outbox | Receipt-backed operation rewrites the same canonical tag and checksum | Same representation; concurrent-edit and pull behavior needs validation |
-| Suspend Card/Note | Synchronized `active`/`suspended` card study state | Recovery and Sync capability are live; Fastify is awaiting user merge | Expected to converge through the existing independent study-state model |
+| Suspend Card/Note | Synchronized `active`/`suspended` card study state | Receipt-backed capability and confirmed UI are live on rolling | Expected to converge through the existing independent study-state model; no synthetic live mutation was used |
 | Bury Card/Note | Device-local for the current synchronized study day | Not implemented | Semantics need matching without turning a temporary bury into permanent synchronized state |
 | Set Due Date | Independent synchronized override | Not implemented | Web capability missing |
 | Reset Card | Synchronized review-history cutoff; immutable history retained | Not implemented | Web capability missing |
