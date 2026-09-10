@@ -44,14 +44,24 @@ and immutable `SELECT,INSERT`-only receipt grants, and deployed the exact merged
 automatic Sync deployment stopped safely at the migration guard; its post-upgrade retry verified the revision
 unchanged. Zero operation receipts remained, and no real review or operation was submitted for rollout testing.
 
-Create Note Copy is now proposed as a complete coordinated rolling feature through
+Create Note Copy deployed as a complete coordinated rolling feature through
 [KelmaSync PR 24](https://github.com/jeretmccoy/kelma_sync_2/pull/24),
 [Fastify PR 47](https://github.com/jeretmccoy/anki_ai_fastify/pull/47), and
-[frontend PR 87](https://github.com/jeretmccoy/anki_ai_frontend/pull/87). The empty typed operation derives
-all source identity/content from the owned presentation, atomically clones the canonical note and all sibling
-card ordinal/deck pairs as New, keeps the source presentation gradeable, and uses immutable receipt recovery.
-These PRs are open and unmerged. Migration 020 is not applied, no rolling capability is enabled, and no
-production or native release is authorized.
+[frontend PR 87](https://github.com/jeretmccoy/anki_ai_frontend/pull/87). The stopped-service upgrade applied
+migration 020 exactly once and retained immutable receipt containment/grants before the reviewed Sync image
+advertised the capability. The empty typed operation derives all source identity/content from the owned
+presentation, atomically clones the canonical note and all sibling card ordinal/deck pairs as New, keeps the
+source presentation gradeable, and uses immutable receipt recovery. Production and native releases remain
+separately authorized.
+
+Typed Mark/Unmark convergence is open for coordinated rolling review through
+[KelmaSync PR 25](https://github.com/jeretmccoy/kelma_sync_2/pull/25),
+[Fastify operator PR 48](https://github.com/jeretmccoy/anki_ai_fastify/pull/48),
+[account-mirror PR 3](https://github.com/bluelife8/kelma-account-mirror/pull/3), and
+[Kelma Review PR 22](https://github.com/bluelife8/kelma-review/pull/22). A separate production-compatible
+Sync candidate is staged at `c59b23e6c5d109fd00ce2b45bf08942aee082c7a` with migration 013, but has no
+production approval or deployment. Rolling uses migration 021. Compatibility support must reach both approved
+Sync endpoints before the mirror, and native follows only after separately approved release work.
 
 ## Non-negotiable ownership boundaries
 
@@ -73,12 +83,12 @@ production or native release is authorized.
 | Rate a card | Appends a local immutable event and advances the local projection; durable outbox uploads later | Sync commits an immutable event and exactly-once answer receipt | Same facts, different online/offline transaction boundaries; end-to-end convergence still needs a shared fixture test |
 | Rating previews | Uses non-mutating local scheduler projections | Uses non-mutating authoritative Sync previews | Behaviorally aligned; exact intervals may differ when local profiles intentionally differ |
 | Card flags 0–7 | `local_card_flags`, keyed by local card ID and intentionally not uploaded | Receipt-backed operation changes `cards.scheduling.flags` | Intentional local/server difference for now; no native convergence work planned |
-| Mark/Unmark Note | Rewrites the case-insensitive `marked` tag through the normal note outbox | Receipt-backed operation rewrites the same canonical tag and checksum | Same representation, but whole-note conflict metadata is insufficient; independent typed intent is the approved next seam |
+| Mark/Unmark Note | Stable UUID intent in an independent transactional outbox with local canonical-tag overlay | Receipt-backed operation records the same typed intent; Sync materializes the canonical tag | Implementation prepared, not deployed; complete cross-client fixtures and compatibility-first rollout remain gates |
 | Suspend Card/Note | Synchronized `active`/`suspended` card study state | Receipt-backed capability and confirmed UI are live on rolling | Expected to converge through the existing independent study-state model; no synthetic live mutation was used |
 | Bury Card/Note | Device-local for the current synchronized study day | Receipt-backed browser/account-local exclusion through the frozen next study-day boundary | Behaviorally aligned without creating permanent or native-synchronized bury state; cross-client buries remain intentionally independent |
 | Set Due Date | Independent synchronized override | Receipt-backed exact UTC-date action is live on rolling and writes the same override | Shared state model is aligned; browser-to-native convergence still needs a disposable cross-client fixture |
 | Reset Card | Synchronized review-history cutoff; immutable history retained | Receipt-backed empty-intent action is live on rolling and uses the same cutoff/due-clear model | Shared state model is aligned; browser-to-native convergence still needs a disposable cross-client fixture |
-| Create Note Copy | Native transaction clones fields, tags, notetype, and all cards/decks as New | Coordinated empty-intent operation PRs are open | Behavior is aligned by design; merge, disposable mirror fixture, and capability rollout remain pending |
+| Create Note Copy | Native transaction clones fields, tags, notetype, and all cards/decks as New | Empty-intent operation is live on rolling | Behavior is aligned; copied-note/card mirror coverage is included in account-mirror PR 3 and awaits CI/review |
 | Edit/Delete | Native transactional note/card outboxes and tombstones | Not implemented in the reviewer | Later typed-operation slices |
 | Card Info and previous history | Available natively | Presentation-scoped, bounded context | Substantially aligned |
 | Automatic and inline audio | Native hydrated media with lifecycle cancellation | Hydrated account-owned data only with lifecycle cancellation | Behaviorally aligned; platform playback details may differ |
@@ -144,10 +154,10 @@ Implement one closed operation kind at a time; do not expose a generic mutation 
    - Advances a server-derived account-wide monotonic history cutoff, retains immutable reviews, rebuilds as New, and explicitly clears the due override without accepting a browser sentinel or cutoff.
    - Uses focused confirmation, durable exact-intent recovery, a lossless cutoff receipt, projection replay, and current-session-only exclusion.
    - Migration 019 was applied once under stopped-service backup, containment, and least-privilege grant controls before the exact Sync image enabled the capability.
-5. **Create Note Copy — coordinated rolling PRs open**
+5. **Create Note Copy — deployed on rolling**
    - Uses empty presentation-derived intent; the browser supplies no content, note, card, deck, or schedule identity.
    - Atomically clones the current canonical notetype, fields, tags, and every card ordinal/deck as New while retaining a gradeable source presentation.
-   - Exactly-once receipt recovery prevents duplicate copies; migration 020 only widens the closed immutable receipt-kind constraint and is not yet applied.
+   - Exactly-once receipt recovery prevents duplicate copies; migration 020 was applied exactly once before the capability was advertised.
 6. **Edit and Delete**
    - Use presentation-derived identity and typed payloads.
    - Preserve optimistic note checksums, tombstones, media ownership, and exactly-once recovery.
@@ -185,7 +195,7 @@ Queue parity fixtures should cover New, Learning, Review, Relearning, intraday s
 2. Add database migrations without modifying or rerunning previously applied migration files.
 3. Pass disposable-database integration, scheduler/oracle, mirror compatibility, and all native common tests.
 4. Upgrade the rolling schema only with the required private backup, stopped services, owner validation, account containment, and least-privilege grants.
-5. Open complete coordinated Sync, Fastify, and Vue feature PRs together. Deploy the complete capability-gated Vue image first, the strict adapter second, and schema-ready Sync authority last; do not split future work into recovery-only micro-PRs. A version-aligned Kelma Review rolling build follows only when native code changes.
+5. Open complete coordinated feature PRs across every affected owner. Browser operations use Sync/Fastify/Vue ordering; typed Mark convergence instead requires optional production+rolling Sync protocol first, then the standalone mirror, then a version-aligned native build. Do not split future work into recovery-only micro-PRs.
 6. Capture bidirectional convergence evidence across at least two mirror cycles and a native restart.
 7. Keep production promotion separate and explicitly approved.
 8. Roll back application images only; never automatically restore a database or rewrite accepted operations/reviews.
