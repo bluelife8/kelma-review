@@ -14,6 +14,14 @@ data class NotePushBody(
 )
 
 @Serializable
+data class NoteMarkPushBody(
+    val guid: String,
+    val marked: Boolean,
+    @SerialName("intent_id") val intentId: String,
+    @SerialName("client_modified_at") val clientModifiedAt: String,
+)
+
+@Serializable
 data class CardPushBody(
     @SerialName("note_guid") val noteGuid: String,
     @SerialName("deck_name") val deckName: String,
@@ -112,6 +120,7 @@ data class BatchDeckPushItem(
 @Serializable
 data class BatchPushRequest(
     val notes: List<BatchNotePushItem> = emptyList(),
+    @SerialName("note_marks") val noteMarks: List<NoteMarkPushBody> = emptyList(),
     val cards: List<BatchCardPushItem> = emptyList(),
     val reviews: List<ReviewPushBody> = emptyList(),
     val notetypes: List<BatchNotetypePushItem> = emptyList(),
@@ -122,6 +131,15 @@ data class BatchPushRequest(
 data class BatchPushResponse(
     val accepted: Map<String, Int> = emptyMap(),
     val conflicts: Map<String, List<SyncPushConflictEntry>> = emptyMap(),
+    @SerialName("note_marks") val noteMarks: List<NoteMarkPushResult> = emptyList(),
+)
+
+@Serializable
+data class NoteMarkPushResult(
+    val guid: String,
+    val accepted: Boolean,
+    val applied: Boolean,
+    val mark: SyncNoteMark,
 )
 
 @Serializable
@@ -170,6 +188,17 @@ data class PendingDeckUpload(
     val forceOverride: Boolean,
 )
 
+data class PendingNoteMarkUpload(
+    val guid: String,
+    val marked: Boolean,
+    val intentId: String,
+    val clientModifiedAtMillis: Long,
+    val requiresNoteUpload: Boolean = false,
+) {
+    val body: NoteMarkPushBody
+        get() = NoteMarkPushBody(guid, marked, intentId, epochMillisToRfc3339(clientModifiedAtMillis))
+}
+
 data class PendingMediaUpload(
     val filename: String,
     val mimeType: String,
@@ -181,6 +210,7 @@ enum class SyncPushResource(val phase: String, val label: String) {
     Reviews("REVIEWS", "reviews"),
     Dependencies("DEPENDENCIES", "dependencies"),
     Notes("NOTES", "notes"),
+    NoteMarks("NOTE MARKS", "note marks"),
     Cards("CARDS", "cards"),
     Decks("DECKS", "deck changes"),
     Media("MEDIA", "media files"),
@@ -215,6 +245,7 @@ data class PendingCardDueDateUpload(
 
 data class SyncUploadPlan(
     val reviews: List<ReviewPushBody> = emptyList(),
+    val noteMarks: List<PendingNoteMarkUpload> = emptyList(),
     val cardStudyStates: List<PendingCardStudyUpload> = emptyList(),
     val cardScheduleResets: List<PendingCardResetUpload> = emptyList(),
     val cardDueDates: List<PendingCardDueDateUpload> = emptyList(),
@@ -224,7 +255,7 @@ data class SyncUploadPlan(
     val schedulerProfile: SchedulerProfileCandidate? = null,
 ) {
     val isEmpty: Boolean
-        get() = reviews.isEmpty() && cardStudyStates.isEmpty() && cardScheduleResets.isEmpty() &&
+        get() = reviews.isEmpty() && noteMarks.isEmpty() && cardStudyStates.isEmpty() && cardScheduleResets.isEmpty() &&
             cardDueDates.isEmpty() && notes.isEmpty() && decks.isEmpty() && media.isEmpty() && schedulerProfile == null
 }
 
@@ -236,6 +267,7 @@ data class SyncUploadConflict(
 
 data class SyncPushResult(
     val uploadedReviewIds: Set<Long> = emptySet(),
+    val uploadedNoteMarkIntentIds: Set<String> = emptySet(),
     val uploadedCardStudyKeys: Set<String> = emptySet(),
     val uploadedCardResetKeys: Set<String> = emptySet(),
     val uploadedCardDueDateKeys: Set<String> = emptySet(),
@@ -246,7 +278,7 @@ data class SyncPushResult(
     val conflicts: List<SyncUploadConflict> = emptyList(),
 ) {
     val uploadedCount: Int
-        get() = uploadedReviewIds.size + uploadedCardStudyKeys.size + uploadedCardResetKeys.size +
+        get() = uploadedReviewIds.size + uploadedNoteMarkIntentIds.size + uploadedCardStudyKeys.size + uploadedCardResetKeys.size +
             uploadedCardDueDateKeys.size + uploadedNoteGuids.size + uploadedDeckSources.size + uploadedMediaFilenames.size +
             if (acknowledgedSchedulerProfile == null) 0 else 1
 }

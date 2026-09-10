@@ -54,6 +54,15 @@ internal class SyncOutboxPersistence(
         val notes = queries.selectPendingLocalNoteSync { guid, operation, base, modified, force ->
             PendingNoteSyncRow(guid, operation, base, modified, force == 1L)
         }.executeAsList()
+        val noteMarks = queries.selectPendingLocalNoteMarks { guid, marked, intentId, modifiedAt ->
+            PendingNoteMarkUpload(
+                guid,
+                marked == 1L,
+                intentId,
+                modifiedAt,
+                requiresNoteUpload = guid !in raw.notes,
+            )
+        }.executeAsList()
         val decks = queries.selectPendingLocalDeckSync { source, operation, target, base, modified, force ->
             PendingDeckSyncRow(source, operation, target, base, modified, force == 1L)
         }.executeAsList()
@@ -139,6 +148,7 @@ internal class SyncOutboxPersistence(
             }
         }
         buildSyncUploadPlan(raw, local, reviews, notes, decks).copy(
+            noteMarks = noteMarks,
             cardStudyStates = cardStudyStates,
             cardScheduleResets = cardScheduleResets,
             cardDueDates = cardDueDates,
@@ -151,6 +161,7 @@ internal class SyncOutboxPersistence(
     fun apply(result: SyncPushResult) {
         database.transaction {
             result.uploadedReviewIds.forEach(queries::markLocalReviewUploaded)
+            result.uploadedNoteMarkIntentIds.forEach(queries::markLocalNoteMarkUploaded)
             result.uploadedCardStudyKeys.forEach { key ->
                 val (noteGuid, ord) = key.splitCardStudyKey()
                 queries.markLocalCardStudyStateUploaded(noteGuid, ord.toLong())
@@ -285,6 +296,7 @@ internal class SyncOutboxPersistence(
                     queries.retryLocalCardDueOverride(localDueDate.noteGuid, localDueDate.cardOrd.toLong())
             }
         }
+        reconcileNoteMarks(downloadedCollection)
         queries.reconcileUploadedLocalReviews()
         queries.retryUnconfirmedLocalReviews()
         queries.reconcileUploadedLocalNoteCards()
@@ -329,6 +341,29 @@ internal class SyncOutboxPersistence(
                     queries.retryUploadedLocalDeckSync(source)
                 }
             }
+    }
+
+    private fun reconcileNoteMarks(downloaded: SyncedCollection) {
+        queries.selectLocalNoteMarks { guid, marked, intentId, modifiedAt, state ->
+            LocalNoteMarkIntent(guid, marked == 1L, intentId, modifiedAt, state)
+        }.executeAsList().forEach { local ->
+            val remoteNote = downloaded.notes[local.noteGuid]
+            val remote = remoteNote?.mark
+            val remoteMillis = remote?.clientModifiedAt?.let(::rfc3339ToEpochMillis)
+            val sameIntent = remote?.intentId == local.intentId
+            val confirmed = remote != null && sameIntent && remote.marked == local.marked &&
+                remoteMillis == local.clientModifiedAtMillis
+            if (sameIntent && !confirmed) error("KelmaSync changed a stable note mark intent")
+            val remoteWins = remoteMillis != null && !sameIntent &&
+                (remoteMillis > local.clientModifiedAtMillis ||
+                    (remoteMillis == local.clientModifiedAtMillis && remote.intentId > local.intentId))
+            when {
+                remoteNote == null && queries.countLocalNote(local.noteGuid).executeAsOne() == 0L ->
+                    queries.deleteLocalNoteMark(local.noteGuid)
+                confirmed || remoteWins -> queries.deleteLocalNoteMark(local.noteGuid)
+                local.uploadState == "uploaded" -> queries.retryLocalNoteMark(local.intentId)
+            }
+        }
     }
 }
 

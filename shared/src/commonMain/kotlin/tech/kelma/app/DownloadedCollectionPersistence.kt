@@ -12,7 +12,9 @@ internal fun loadDownloadedCollection(
     includeReviews: Boolean = true,
 ): SyncedCollection {
     val stringList = ListSerializer(String.serializer())
-    val notes = queries.selectNotes { guid, notetypeId, fields, tags, checksum, modified, clientModified ->
+    val notes = queries.selectNotes {
+            guid, notetypeId, fields, tags, checksum, modified, clientModified,
+            markIntentId, markMarked, markModified, markClientModified ->
         guid to SyncNote(
             guid = guid,
             notetypeId = notetypeId,
@@ -21,6 +23,9 @@ internal fun loadDownloadedCollection(
             checksum = checksum,
             modifiedAt = modified,
             clientModifiedAt = clientModified,
+            mark = markIntentId.takeIf(String::isNotBlank)?.let {
+                SyncNoteMark(markMarked == 1L, it, markModified, markClientModified)
+            },
         )
     }.executeAsList().toMap()
     val cards = queries.selectCards {

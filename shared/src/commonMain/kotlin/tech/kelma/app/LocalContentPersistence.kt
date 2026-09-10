@@ -84,6 +84,9 @@ internal fun loadLocalContentSnapshot(
     val deckOverrides = queries.selectLocalDeckOverrides { source, replacement ->
         source to replacement
     }.executeAsList().toMap()
+    val noteMarks = queries.selectLocalNoteMarks { guid, marked, intentId, modifiedAt, state ->
+        guid to LocalNoteMarkIntent(guid, marked == 1L, intentId, modifiedAt, state)
+    }.executeAsList().toMap()
     val addedByDeck = cards.values.groupBy(SyncCard::deckName)
         .mapValues { (_, deckCards) -> deckCards.mapTo(mutableSetOf(), SyncCard::cardId) }
     val changedByDeck = mutableMapOf<String, MutableSet<Long>>()
@@ -127,6 +130,7 @@ internal fun loadLocalContentSnapshot(
         notetypes = notetypes,
         media = media,
         overrides = overrides,
+        noteMarks = noteMarks,
         deckNames = queries.selectLocalDecks().executeAsList().flatMap(::deckHierarchyNames).toSet(),
         deckOptions = effectiveDeckOptions,
         deckPresets = DeckPresetState(presets, assignments),

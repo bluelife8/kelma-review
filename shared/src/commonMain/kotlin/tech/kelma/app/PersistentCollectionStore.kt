@@ -139,6 +139,7 @@ class PersistentCollectionStore(
                     queries.clearLocalDeckOverrides()
                     queries.clearLocalNoteOverrides()
                     queries.clearLocalNoteSync()
+                    queries.clearLocalNoteMarks()
                     queries.clearLocalDeckSync()
                     schedulerProfiles.clearAccount()
                     studyDayPolicies.clearAccount()
@@ -412,13 +413,7 @@ class PersistentCollectionStore(
         noteGuid: String,
         marked: Boolean,
         nowMillis: Long = currentEpochMillis(),
-    ): LocalContentSnapshot {
-        val note = loadCollection().withLocalContent(loadLocalContent()).notes[noteGuid]
-            ?: error("This note no longer exists")
-        val tags = note.tags.filterNot { it.equals("marked", ignoreCase = true) }
-            .let { if (marked) it + "marked" else it }
-        return updateNoteFields(noteGuid, note.fields, tags, nowMillis)
-    }
+    ): LocalContentSnapshot = localNoteActions.setMarked(noteGuid, marked, nowMillis)
 
     fun createNoteCopy(
         noteGuid: String,
@@ -697,6 +692,7 @@ class PersistentCollectionStore(
             queries.clearLocalDeckOverrides()
             queries.clearLocalNoteOverrides()
             queries.clearLocalNoteSync()
+            queries.clearLocalNoteMarks()
             queries.clearLocalDeckSync()
             schedulerProfiles.clearAccount()
             studyDayPolicies.clearAccount()

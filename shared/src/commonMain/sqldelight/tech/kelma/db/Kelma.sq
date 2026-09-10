@@ -17,7 +17,11 @@ CREATE TABLE sync_notes (
     tags_json TEXT NOT NULL,
     checksum TEXT NOT NULL,
     modified_at TEXT NOT NULL,
-    client_modified_at TEXT NOT NULL
+    client_modified_at TEXT NOT NULL,
+    mark_intent_id TEXT NOT NULL DEFAULT '',
+    mark_marked INTEGER NOT NULL DEFAULT 0 CHECK (mark_marked IN (0, 1)),
+    mark_modified_at TEXT NOT NULL DEFAULT '',
+    mark_client_modified_at TEXT NOT NULL DEFAULT ''
 );
 
 CREATE TABLE sync_cards (
@@ -277,6 +281,16 @@ CREATE TABLE local_note_sync_outbox (
     conflict_json TEXT
 );
 
+CREATE TABLE local_note_mark_outbox (
+    note_guid TEXT NOT NULL PRIMARY KEY,
+    marked INTEGER NOT NULL CHECK (marked IN (0, 1)),
+    intent_id TEXT NOT NULL UNIQUE,
+    client_modified_at_ms INTEGER NOT NULL,
+    upload_state TEXT NOT NULL DEFAULT 'pending' CHECK (upload_state IN ('pending', 'uploaded'))
+);
+
+CREATE INDEX local_note_mark_outbox_upload_idx ON local_note_mark_outbox(upload_state);
+
 CREATE TABLE local_deck_sync_outbox (
     source_name TEXT NOT NULL COLLATE NOCASE PRIMARY KEY,
     operation TEXT NOT NULL,
@@ -478,13 +492,15 @@ upsertServerTime:
 INSERT OR REPLACE INTO sync_state(singleton_id, server_time) VALUES (1, ?);
 
 selectNotes:
-SELECT guid, notetype_id, fields_json, tags_json, checksum, modified_at, client_modified_at
+SELECT guid, notetype_id, fields_json, tags_json, checksum, modified_at, client_modified_at,
+       mark_intent_id, mark_marked, mark_modified_at, mark_client_modified_at
 FROM sync_notes;
 
 insertNote:
 INSERT OR REPLACE INTO sync_notes(
-    guid, notetype_id, fields_json, tags_json, checksum, modified_at, client_modified_at
-) VALUES (?, ?, ?, ?, ?, ?, ?);
+    guid, notetype_id, fields_json, tags_json, checksum, modified_at, client_modified_at,
+    mark_intent_id, mark_marked, mark_modified_at, mark_client_modified_at
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
 
 deleteSyncNote:
 DELETE FROM sync_notes WHERE guid = ?;
@@ -1210,6 +1226,37 @@ DELETE FROM local_note_sync_outbox WHERE note_guid = ?;
 clearLocalNoteSync:
 DELETE FROM local_note_sync_outbox;
 
+upsertLocalNoteMark:
+INSERT OR REPLACE INTO local_note_mark_outbox(
+    note_guid, marked, intent_id, client_modified_at_ms, upload_state
+) VALUES (:noteGuid, :marked, :intentId, :clientModifiedAt, 'pending');
+
+selectLocalNoteMarks:
+SELECT note_guid, marked, intent_id, client_modified_at_ms, upload_state
+FROM local_note_mark_outbox
+ORDER BY client_modified_at_ms, intent_id;
+
+selectPendingLocalNoteMarks:
+SELECT note_guid, marked, intent_id, client_modified_at_ms
+FROM local_note_mark_outbox
+WHERE upload_state = 'pending'
+ORDER BY client_modified_at_ms, intent_id;
+
+selectLocalNoteMarkTime:
+SELECT client_modified_at_ms FROM local_note_mark_outbox WHERE note_guid = ?;
+
+markLocalNoteMarkUploaded:
+UPDATE local_note_mark_outbox SET upload_state = 'uploaded' WHERE intent_id = ?;
+
+retryLocalNoteMark:
+UPDATE local_note_mark_outbox SET upload_state = 'pending' WHERE intent_id = ?;
+
+deleteLocalNoteMark:
+DELETE FROM local_note_mark_outbox WHERE note_guid = ?;
+
+clearLocalNoteMarks:
+DELETE FROM local_note_mark_outbox;
+
 upsertLocalDeckSync:
 INSERT OR REPLACE INTO local_deck_sync_outbox(
     source_name, operation, target_name, base_checksum, modified_at_ms, state, force_override, conflict_json
@@ -1729,6 +1776,8 @@ SELECT count(*) FROM (
     SELECT review_id AS resource_id FROM local_review_events WHERE upload_state = 'uploaded'
     UNION ALL
     SELECT note_guid FROM local_note_sync_outbox WHERE state = 'uploaded'
+    UNION ALL
+    SELECT intent_id FROM local_note_mark_outbox WHERE upload_state = 'uploaded'
     UNION ALL
     SELECT source_name FROM local_deck_sync_outbox WHERE state = 'uploaded'
     UNION ALL

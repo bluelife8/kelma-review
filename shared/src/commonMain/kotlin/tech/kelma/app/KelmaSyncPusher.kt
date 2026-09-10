@@ -33,6 +33,8 @@ internal class KelmaSyncPusher(
         val uploadedReviews = uploadReviews(token, plan.reviews, conflicts, onProgress)
         val uploadedMedia = uploadMedia(token, plan.media, onProgress)
         val notes = uploadNotes(token, plan.notes, conflicts, onProgress)
+        val uploadableMarks = plan.noteMarks.filter { !it.requiresNoteUpload || it.guid in notes.uploadedGuids }
+        val uploadedNoteMarks = uploadNoteMarks(token, uploadableMarks, onProgress)
         val decks = prepareDecks(token, plan.decks, conflicts, onProgress)
         val studyCards = plan.cardStudyStates.map { it.cardId to it.body }
         val resetCards = plan.cardScheduleResets.map { it.cardId to it.body }
@@ -55,6 +57,7 @@ internal class KelmaSyncPusher(
         val profile = uploadSchedulerProfile(token, plan.schedulerProfile, conflicts, onProgress)
         return SyncPushResult(
             uploadedReviewIds = uploadedReviews,
+            uploadedNoteMarkIntentIds = uploadedNoteMarks,
             uploadedCardStudyKeys = uploadedCardStudyKeys,
             uploadedCardResetKeys = uploadedCardResetKeys,
             uploadedCardDueDateKeys = uploadedCardDueDateKeys,
@@ -192,6 +195,45 @@ internal class KelmaSyncPusher(
                 }
             }
         return NoteUploadOutcome(uploaded, cards)
+    }
+
+    private suspend fun uploadNoteMarks(
+        token: String,
+        marks: List<PendingNoteMarkUpload>,
+        progress: suspend (SyncPushProgress) -> Unit,
+    ): Set<String> {
+        if (marks.isEmpty()) return emptySet()
+        progress(SyncPushProgress(SyncPushResource.NoteMarks, 0, marks.size))
+        val uploaded = mutableSetOf<String>()
+        var completed = 0
+        marks.chunked(MaximumBatchPushRecords).forEach { chunk ->
+            val response = postBatch(token, BatchPushRequest(noteMarks = chunk.map(PendingNoteMarkUpload::body)))
+            val conflicts = response.conflicts["note_marks"].orEmpty()
+            requireAcknowledged(response, "note_marks", chunk.size, conflicts.size)
+            if (conflicts.isNotEmpty()) {
+                throw KelmaSyncException("A stable note mark intent conflicted")
+            }
+            val results = response.noteMarks.associateBy(NoteMarkPushResult::guid)
+            val valid = response.noteMarks.size == chunk.size && results.size == chunk.size && chunk.all { pending ->
+                results[pending.guid]?.isValidAcknowledgement(pending) == true
+            }
+            if (!valid) throw KelmaSyncException("KelmaSync returned an invalid note mark acknowledgement")
+            uploaded += chunk.map(PendingNoteMarkUpload::intentId)
+            completed += chunk.size
+            progress(SyncPushProgress(SyncPushResource.NoteMarks, completed, marks.size))
+        }
+        return uploaded
+    }
+
+    private fun NoteMarkPushResult.isValidAcknowledgement(pending: PendingNoteMarkUpload): Boolean {
+        if (!accepted || mark.intentId.isBlank()) return false
+        val winnerMillis = runCatching { rfc3339ToEpochMillis(mark.clientModifiedAt) }.getOrNull() ?: return false
+        val sameIntent = mark.intentId == pending.intentId
+        if (sameIntent) {
+            return mark.marked == pending.marked && winnerMillis == pending.clientModifiedAtMillis
+        }
+        return !applied && (winnerMillis > pending.clientModifiedAtMillis ||
+            (winnerMillis == pending.clientModifiedAtMillis && mark.intentId > pending.intentId))
     }
 
     private suspend fun uploadNoteDependencies(

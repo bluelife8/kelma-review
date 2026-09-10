@@ -55,6 +55,20 @@ internal class LocalNoteActions(
         return AddedLocalNote(localCardId(copyGuid, firstCard.ord), copyGuid, loadLocalContent())
     }
 
+    fun setMarked(noteGuid: String, marked: Boolean, nowMillis: Long): LocalContentSnapshot {
+        requireVisibleNote(noteGuid)
+        val intentId = randomUuidString()
+        val remoteTime = loadCollection().notes[noteGuid]?.mark?.clientModifiedAt
+            ?.let(::rfc3339ToEpochMillis) ?: Long.MIN_VALUE
+        database.transaction {
+            val localTime = queries.selectLocalNoteMarkTime(noteGuid).executeAsOneOrNull() ?: Long.MIN_VALUE
+            val intentTime = maxOf(nowMillis, maxOf(localTime, remoteTime) + 1L)
+            queries.upsertLocalNoteMark(noteGuid, if (marked) 1L else 0L, intentId, intentTime)
+            queries.markBrowseIndexDirty()
+        }
+        return loadLocalContent()
+    }
+
     fun delete(noteGuid: String, nowMillis: Long): LocalContentSnapshot {
         val displayed = requireVisibleNote(noteGuid)
         val cardIds = displayed.cards.values
@@ -85,6 +99,7 @@ internal class LocalNoteActions(
             } else {
                 queries.deleteLocalNoteSync(noteGuid)
             }
+            queries.deleteLocalNoteMark(noteGuid)
             queries.markBrowseIndexDirty()
         }
         return loadLocalContent()

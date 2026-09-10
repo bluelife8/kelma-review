@@ -55,7 +55,7 @@ object CardTemplateRenderer {
             front = front.text.ifBlank { "(empty card)" },
             back = back.text.ifBlank { "(no answer content)" },
             noteGuid = card.noteGuid,
-            noteMarked = note.tags.any { it.equals("marked", ignoreCase = true) },
+            noteMarked = note.tags.any { it.trim().equals("marked", ignoreCase = true) },
             frontAudio = front.audio,
             backAudio = back.audio,
             frontImages = front.images,
