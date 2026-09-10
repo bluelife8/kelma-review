@@ -2,6 +2,8 @@
 
 The integrated FSRS-6 library, explicit local optimization, profile sync, and
 remaining FSRS-5 profile migration are specified in [FSRS_DESIGN.md](FSRS_DESIGN.md).
+Native, browser, Sync, and account-mirror convergence work is tracked separately in
+[CROSS_CLIENT_REVIEW_PARITY.md](CROSS_CLIENT_REVIEW_PARITY.md).
 
 ## Status
 
