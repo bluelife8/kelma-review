@@ -53,11 +53,14 @@ internal class KelmaSyncPusher(
         val uploadedCardDueDateKeys = plan.cardDueDates
             .filter { it.cardId in uploadedCardIds }
             .mapTo(mutableSetOf(), PendingCardDueDateUpload::key)
+        val uploadableFlags = plan.cardFlags.filter { !it.requiresCardUpload || it.cardId in uploadedCardIds }
+        val uploadedCardFlags = uploadCardFlags(token, uploadableFlags, onProgress)
         val uploadedDecks = finishDecks(token, decks, onProgress)
         val profile = uploadSchedulerProfile(token, plan.schedulerProfile, conflicts, onProgress)
         return SyncPushResult(
             uploadedReviewIds = uploadedReviews,
             uploadedNoteMarkIntentIds = uploadedNoteMarks,
+            uploadedCardFlagIntentIds = uploadedCardFlags,
             uploadedCardStudyKeys = uploadedCardStudyKeys,
             uploadedCardResetKeys = uploadedCardResetKeys,
             uploadedCardDueDateKeys = uploadedCardDueDateKeys,
@@ -234,6 +237,45 @@ internal class KelmaSyncPusher(
         }
         return !applied && (winnerMillis > pending.clientModifiedAtMillis ||
             (winnerMillis == pending.clientModifiedAtMillis && mark.intentId > pending.intentId))
+    }
+
+    private suspend fun uploadCardFlags(
+        token: String,
+        flags: List<PendingCardFlagUpload>,
+        progress: suspend (SyncPushProgress) -> Unit,
+    ): Set<String> {
+        if (flags.isEmpty()) return emptySet()
+        progress(SyncPushProgress(SyncPushResource.CardFlags, 0, flags.size))
+        val uploaded = mutableSetOf<String>()
+        var completed = 0
+        flags.chunked(MaximumBatchPushRecords).forEach { chunk ->
+            val response = postBatch(token, BatchPushRequest(cardFlags = chunk.map(PendingCardFlagUpload::body)))
+            val conflicts = response.conflicts["card_flags"].orEmpty()
+            requireAcknowledged(response, "card_flags", chunk.size, conflicts.size)
+            if (conflicts.isNotEmpty()) {
+                throw KelmaSyncException("A stable card flag intent conflicted")
+            }
+            val results = response.cardFlags.associateBy { cardStudyKey(it.noteGuid, it.cardOrd) }
+            val valid = response.cardFlags.size == chunk.size && results.size == chunk.size && chunk.all { pending ->
+                results[pending.key]?.isValidAcknowledgement(pending) == true
+            }
+            if (!valid) throw KelmaSyncException("KelmaSync returned an invalid card flag acknowledgement")
+            uploaded += chunk.map(PendingCardFlagUpload::intentId)
+            completed += chunk.size
+            progress(SyncPushProgress(SyncPushResource.CardFlags, completed, flags.size))
+        }
+        return uploaded
+    }
+
+    private fun CardFlagPushResult.isValidAcknowledgement(pending: PendingCardFlagUpload): Boolean {
+        if (!accepted || flag.intentId.isBlank()) return false
+        val winnerMillis = runCatching { rfc3339ToEpochMillis(flag.clientModifiedAt) }.getOrNull() ?: return false
+        val sameIntent = flag.intentId == pending.intentId
+        if (sameIntent) {
+            return flag.flag == pending.flag && winnerMillis == pending.clientModifiedAtMillis
+        }
+        return !applied && (winnerMillis > pending.clientModifiedAtMillis ||
+            (winnerMillis == pending.clientModifiedAtMillis && flag.intentId > pending.intentId))
     }
 
     private suspend fun uploadNoteDependencies(

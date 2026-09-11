@@ -149,6 +149,7 @@ class PersistentCollectionStoreTest {
         driver.createLegacyAuthTable()
         driver.createLegacyMediaTable()
         driver.createLegacyNotesTable()
+        driver.execute(null, "CREATE TABLE sync_state (singleton_id INTEGER PRIMARY KEY, server_time TEXT)", 0)
         KelmaDatabase.Schema.migrate(driver, 1, KelmaDatabase.Schema.version)
         val store = PersistentCollectionStore(KelmaDatabase(driver))
         val change = store.recordReview(
@@ -191,6 +192,7 @@ class PersistentCollectionStoreTest {
         driver.createLegacyAuthTable()
         driver.createLegacyMediaTable()
         driver.createLegacyNotesTable()
+        driver.execute(null, "CREATE TABLE sync_state (singleton_id INTEGER PRIMARY KEY, server_time TEXT)", 0)
         KelmaDatabase.Schema.migrate(driver, 2, KelmaDatabase.Schema.version)
         val store = PersistentCollectionStore(KelmaDatabase(driver))
 
@@ -292,15 +294,74 @@ class PersistentCollectionStoreTest {
         KelmaDatabase.Schema.create(driver)
         val database = KelmaDatabase(driver)
         val store = PersistentCollectionStore(database)
+        store.replaceCollection(
+            SyncedCollection(
+                notes = mapOf("flag-note" to SyncNote("flag-note")),
+                cards = mapOf(42L to SyncCard(42L, "flag-note", "Deck")),
+            ),
+        )
 
         store.setCardFlag(42L, ReviewFlag.Blue.value)
 
         assertEquals(ReviewFlag.Blue.value, PersistentCollectionStore(database).loadLocalContent().cardFlags[42L])
+        assertTrue(store.prepareSyncUpload().cardFlags.isEmpty())
+        assertEquals(1, database.kelmaQueries.selectLocalCardFlagIntents().executeAsList().size)
+        store.advanceSyncCursor("2026-09-10T20:00:00Z", setOf(CardFlagSyncCapability))
+        assertEquals(ReviewFlag.Blue.value, store.prepareSyncUpload().cardFlags.single().flag)
         store.setCardFlag(42L, ReviewFlag.None.value)
         assertTrue(store.loadLocalContent().cardFlags.isEmpty())
         store.setCardFlag(42L, ReviewFlag.Blue.value)
         store.clearAll()
         assertTrue(store.loadLocalContent().cardFlags.isEmpty())
+        driver.close()
+    }
+
+    @Test
+    fun legacyDeviceLocalFlagBackfillsToAStablePortableIntent() {
+        val driver = JdbcSqliteDriver(JdbcSqliteDriver.IN_MEMORY)
+        KelmaDatabase.Schema.create(driver)
+        val database = KelmaDatabase(driver)
+        val store = PersistentCollectionStore(database)
+        val card = SyncCard(44L, "legacy-flag", "Flags", ord = 2)
+        store.replaceCollection(
+            SyncedCollection(
+                notes = mapOf(card.noteGuid to SyncNote(card.noteGuid)),
+                cards = mapOf(card.cardId to card),
+                capabilities = setOf(CardFlagSyncCapability),
+            ),
+        )
+        database.kelmaQueries.upsertLocalCardFlag(card.cardId, ReviewFlag.Green.value.toLong())
+
+        val first = store.prepareSyncUpload().cardFlags.single()
+        val retry = store.prepareSyncUpload().cardFlags.single()
+
+        assertEquals(cardStudyKey(card.noteGuid, card.ord), first.key)
+        assertEquals(ReviewFlag.Green.value, first.flag)
+        assertEquals(first.intentId, retry.intentId)
+        driver.close()
+    }
+
+    @Test
+    fun cardInfoHistoryLoadsABoundedLocalReviewWithWallClockTime() {
+        val driver = JdbcSqliteDriver(JdbcSqliteDriver.IN_MEMORY)
+        KelmaDatabase.Schema.create(driver)
+        val store = PersistentCollectionStore(KelmaDatabase(driver))
+        val card = SyncCard(43L, "info-note", "Info")
+        store.replaceCollection(
+            SyncedCollection(
+                notes = mapOf(card.noteGuid to SyncNote(card.noteGuid, fields = listOf("front", "back"))),
+                cards = mapOf(card.cardId to card),
+            ),
+        )
+        store.recordReview(card, Rating.Good, reviewedAtMillis = 5_000L, durationMillis = 750L)
+
+        val history = store.loadRecentCardReviewHistory(card)
+
+        assertEquals(1, history.size)
+        assertEquals(5_000L, history.single().reviewedAtMillis)
+        assertEquals(Rating.Good, history.single().rating)
+        assertEquals(750, history.single().takenMillis)
+        assertTrue(history.single().pendingSync)
         driver.close()
     }
 
@@ -364,6 +425,8 @@ class PersistentCollectionStoreTest {
     fun migrationThirtyFourAddsTypedNoteMarkStateAndOutbox() {
         val driver = JdbcSqliteDriver(JdbcSqliteDriver.IN_MEMORY)
         driver.createLegacyNotesTable()
+        driver.execute(null, "CREATE TABLE sync_state (singleton_id INTEGER PRIMARY KEY, server_time TEXT)", 0)
+        driver.execute(null, "CREATE TABLE sync_cards (card_id INTEGER PRIMARY KEY)", 0)
 
         KelmaDatabase.Schema.migrate(driver, 34, KelmaDatabase.Schema.version)
         val queries = KelmaDatabase(driver).kelmaQueries
@@ -389,6 +452,29 @@ class PersistentCollectionStoreTest {
 
         assertEquals("11111111-1111-4111-8111-111111111111", queries.selectNotes().executeAsOne().mark_intent_id)
         assertEquals("22222222-2222-4222-8222-222222222222", queries.selectLocalNoteMarks().executeAsOne().intent_id)
+        driver.close()
+    }
+
+    @Test
+    fun migrationThirtyFiveAddsCardFlagCapabilityStateAndOutbox() {
+        val driver = JdbcSqliteDriver(JdbcSqliteDriver.IN_MEMORY)
+        driver.execute(null, "CREATE TABLE sync_state (singleton_id INTEGER PRIMARY KEY, server_time TEXT)", 0)
+        driver.execute(null, "CREATE TABLE sync_cards (card_id INTEGER PRIMARY KEY)", 0)
+
+        KelmaDatabase.Schema.migrate(driver, 35, KelmaDatabase.Schema.version)
+        val queries = KelmaDatabase(driver).kelmaQueries
+        queries.upsertSyncState("2026-09-10T20:00:00Z", "[\"card_flag_intents_v1\"]")
+        queries.upsertLocalCardFlagIntent(
+            "note",
+            0L,
+            42L,
+            ReviewFlag.Blue.value.toLong(),
+            "33333333-3333-4333-8333-333333333333",
+            2_000L,
+        )
+
+        assertTrue(queries.selectSyncState().executeAsOne().capabilities_json.contains(CardFlagSyncCapability))
+        assertEquals(ReviewFlag.Blue.value.toLong(), queries.selectLocalCardFlagIntents().executeAsOne().flag)
         driver.close()
     }
 
@@ -508,6 +594,60 @@ class PersistentCollectionStoreTest {
         assertTrue(store.loadLocalContent().noteMarks.isEmpty())
         assertTrue(store.load().collection.withLocalContent(store.loadLocalContent())
             .notes.getValue(source.guid).tags.contains("marked"))
+        assertNotEquals(pending.intentId, newer.intentId)
+        driver.close()
+    }
+
+    @Test
+    fun cardFlagOutboxWaitsForConfirmationAndConvergesWithNewerRemoteIntent() {
+        val driver = JdbcSqliteDriver(JdbcSqliteDriver.IN_MEMORY)
+        KelmaDatabase.Schema.create(driver)
+        val store = PersistentCollectionStore(KelmaDatabase(driver))
+        val sourceNote = SyncNote("flag-sync", fields = listOf("front", "back"))
+        val sourceCard = SyncCard(61L, sourceNote.guid, "Flags")
+        val base = SyncedCollection(
+            notes = mapOf(sourceNote.guid to sourceNote),
+            cards = mapOf(sourceCard.cardId to sourceCard),
+            capabilities = setOf(CardFlagSyncCapability),
+        )
+        store.replaceCollection(base, nowMillis = 1_000L)
+
+        store.setCardFlag(sourceCard.cardId, ReviewFlag.Blue.value, nowMillis = 2_000L)
+        val first = store.prepareSyncUpload().cardFlags.single()
+        store.replaceCollection(base, nowMillis = 2_050L)
+        assertEquals(first.intentId, store.prepareSyncUpload().cardFlags.single().intentId)
+        store.applySyncPushResult(SyncPushResult(uploadedCardFlagIntentIds = setOf(first.intentId)))
+        assertTrue(store.prepareSyncUpload().cardFlags.isEmpty())
+        assertEquals(ReviewFlag.Blue.value, store.loadLocalContent().cardFlags[sourceCard.cardId])
+
+        val confirmedFlag = SyncCardFlag(
+            flag = ReviewFlag.Blue.value,
+            intentId = first.intentId,
+            modifiedAt = epochMillisToRfc3339(2_100L),
+            clientModifiedAt = epochMillisToRfc3339(first.clientModifiedAtMillis),
+        )
+        store.replaceCollection(
+            base.copy(cards = mapOf(sourceCard.cardId to sourceCard.copy(flag = confirmedFlag))),
+            nowMillis = 2_100L,
+        )
+        assertTrue(store.prepareSyncUpload().cardFlags.isEmpty())
+        assertEquals(ReviewFlag.Blue.value, store.loadLocalContent().cardFlags[sourceCard.cardId])
+
+        store.setCardFlag(sourceCard.cardId, ReviewFlag.None.value, nowMillis = 100L)
+        val pending = store.prepareSyncUpload().cardFlags.single()
+        assertEquals(first.clientModifiedAtMillis + 1L, pending.clientModifiedAtMillis)
+        val newer = SyncCardFlag(
+            flag = ReviewFlag.Orange.value,
+            intentId = "ffffffff-ffff-4fff-8fff-ffffffffffff",
+            modifiedAt = epochMillisToRfc3339(4_000L),
+            clientModifiedAt = epochMillisToRfc3339(4_000L),
+        )
+        store.replaceCollection(
+            base.copy(cards = mapOf(sourceCard.cardId to sourceCard.copy(flag = newer))),
+            nowMillis = 4_000L,
+        )
+        assertTrue(store.prepareSyncUpload().cardFlags.isEmpty())
+        assertEquals(ReviewFlag.Orange.value, store.loadLocalContent().cardFlags[sourceCard.cardId])
         assertNotEquals(pending.intentId, newer.intentId)
         driver.close()
     }

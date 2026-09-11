@@ -1,0 +1,19 @@
+ALTER TABLE sync_state ADD COLUMN capabilities_json TEXT NOT NULL DEFAULT '[]';
+
+ALTER TABLE sync_cards ADD COLUMN flag_value INTEGER NOT NULL DEFAULT 0 CHECK (flag_value BETWEEN 0 AND 7);
+ALTER TABLE sync_cards ADD COLUMN flag_intent_id TEXT NOT NULL DEFAULT '';
+ALTER TABLE sync_cards ADD COLUMN flag_modified_at TEXT NOT NULL DEFAULT '';
+ALTER TABLE sync_cards ADD COLUMN flag_client_modified_at TEXT NOT NULL DEFAULT '';
+
+CREATE TABLE local_card_flag_outbox (
+    note_guid TEXT NOT NULL,
+    card_ord INTEGER NOT NULL,
+    card_id INTEGER NOT NULL,
+    flag INTEGER NOT NULL CHECK (flag BETWEEN 0 AND 7),
+    intent_id TEXT NOT NULL UNIQUE,
+    client_modified_at_ms INTEGER NOT NULL,
+    upload_state TEXT NOT NULL DEFAULT 'pending' CHECK (upload_state IN ('pending', 'uploaded')),
+    PRIMARY KEY (note_guid, card_ord)
+);
+
+CREATE INDEX local_card_flag_outbox_upload_idx ON local_card_flag_outbox(upload_state);

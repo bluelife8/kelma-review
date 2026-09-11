@@ -14,10 +14,13 @@
 - [x] Indicate the selected flag in the menu
 - [x] Roll back the UI if persistence fails
 
-Card flags are intentionally device-local under the current design. Note marks
-are different: each toggle commits a UUID intent and monotonic millisecond clock in
-the same SQLite transaction as its visible overlay. Retries keep that identity;
-ordinary note edits cannot erase the mark.
+Card flags synchronize when KelmaSync advertises `card_flag_intents_v1`. Each toggle
+commits the visible overlay and a portable note-GUID/template-ordinal outbox row with
+a stable UUID and monotonic millisecond clock in one SQLite transaction. Retries keep
+that identity; remote conflicts converge by `(client_modified_at, intent_id)`, and
+ordinary whole-card uploads cannot erase a typed flag. Older servers leave the local
+intent pending without sacrificing the device overlay. Note marks use the same stable-
+intent principle for canonical `marked` state.
 
 ## Card actions
 
@@ -26,8 +29,8 @@ ordinary note edits cannot erase the mark.
 - [x] **Set Due Date…** — synchronized independently until the card is reviewed or reset
 - [x] **Suspend Card** — durable and synchronized
 - [x] **Options**
-- [x] **Card Info**
-- [x] **Previous Card Info**
+- [x] **Card Info** — schedule/due state, FSRS memory and profile, note metadata, mark/flag state, and recent history
+- [x] **Previous Card Info** — the same bounded detail view for the prior reviewed card
 
 ## Note actions
 

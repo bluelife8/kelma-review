@@ -8,6 +8,7 @@ import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.longOrNull
 
 const val DefaultKelmaSyncEndpoint = "https://sync2.kelma.tech"
+internal const val CardFlagSyncCapability = "card_flag_intents_v1"
 
 @Serializable
 data class LoginRequest(
@@ -30,6 +31,7 @@ data class SyncError(
 
 @Serializable
 data class SyncManifest(
+    val capabilities: Set<String> = emptySet(),
     val notes: List<ManifestEntry> = emptyList(),
     val cards: List<ManifestEntry> = emptyList(),
     val reviews: List<ManifestEntry> = emptyList(),
@@ -61,6 +63,7 @@ data class ManifestEntry(
     @SerialName("due_date_override_modified_at") val dueDateOverrideModifiedAt: String = "",
     @SerialName("due_date_override_client_modified_at") val dueDateOverrideClientModifiedAt: String = "",
     val mark: SyncNoteMark? = null,
+    val flag: SyncCardFlag? = null,
 )
 
 @Serializable
@@ -110,6 +113,14 @@ data class SyncNoteMark(
 )
 
 @Serializable
+data class SyncCardFlag(
+    val flag: Int,
+    @SerialName("intent_id") val intentId: String,
+    @SerialName("modified_at") val modifiedAt: String = "",
+    @SerialName("client_modified_at") val clientModifiedAt: String,
+)
+
+@Serializable
 data class SyncNote(
     val guid: String,
     @SerialName("notetype_id") val notetypeId: Long = 0,
@@ -141,12 +152,18 @@ data class SyncCard(
     @SerialName("modified_at") val modifiedAt: String = "",
     @SerialName("client_modified_at") val clientModifiedAt: String = "",
     @SerialName("created_at") val createdAt: String? = null,
+    val flag: SyncCardFlag? = null,
 )
 
 /**
  * Anki stores a New card's gather position in `due`. It is not a due date and
  * is safe to use only when the source explicitly identifies the card as New.
  */
+internal val SyncCard.synchronizedFlag: Int
+    get() = flag?.flag?.takeIf { it in 0..7 }
+        ?: scheduling["flags"]?.jsonPrimitive?.intOrNull?.takeIf { it in 0..7 }
+        ?: 0
+
 internal val SyncCard.synchronizedNewPosition: Long?
     get() {
         if (scheduling["type"]?.jsonPrimitive?.intOrNull != 0) return null
@@ -225,6 +242,7 @@ data class SyncedCollection(
     val media: Map<String, SyncMediaFile> = emptyMap(),
     val deckNames: Set<String> = emptySet(),
     val serverTime: String? = null,
+    val capabilities: Set<String> = emptySet(),
 ) {
     fun apply(
         manifest: SyncManifest,
@@ -287,6 +305,7 @@ data class SyncedCollection(
             media = nextMedia,
             deckNames = nextDeckNames,
             serverTime = manifest.serverTime,
+            capabilities = manifest.capabilities,
         )
         return PullReport(
             collection = next,

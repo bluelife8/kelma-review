@@ -34,7 +34,8 @@ internal fun SyncUploadPlan.summaryLines(): List<SyncProgress> = buildList {
             phase = "OUTBOX",
             message = "Snapshot: ${reviews.size.syncCount()} reviews · ${notes.size.syncCount()} notes " +
                 "(${noteUpserts.syncCount()} upserts/${noteDeletes.syncCount()} deletes) · " +
-                "${noteMarks.size.syncCount()} note marks · ${cards.syncCount()} cards · " +
+                "${noteMarks.size.syncCount()} note marks · ${cardFlags.size.syncCount()} card flags · " +
+                "${cards.syncCount()} cards · " +
                 "${decks.size.syncCount()} deck changes · ${media.size.syncCount()} media " +
                 "(${formatSyncBytes(mediaBytes)}) · ${if (schedulerProfile == null) 0 else 1} scheduler profile",
         ),

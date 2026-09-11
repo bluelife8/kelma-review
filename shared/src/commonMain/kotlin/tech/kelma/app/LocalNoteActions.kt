@@ -79,6 +79,7 @@ internal class LocalNoteActions(
             queries.deleteLocalCardStudyStatesForNote(noteGuid)
             queries.deleteLocalCardResetsForNote(noteGuid)
             queries.deleteLocalCardDueOverridesForNote(noteGuid)
+            queries.deleteLocalCardFlagIntentsForNote(noteGuid)
             queries.deleteLocalNoteBury(noteGuid)
             cardIds.forEach { cardId ->
                 queries.deleteLocalSchedule(cardId)

@@ -92,7 +92,7 @@ internal fun loadLocalContentSnapshot(
     val changedByDeck = mutableMapOf<String, MutableSet<Long>>()
     val changedNoteGuids = queries.selectAllLocalNoteSyncGuids().executeAsList().toSet() - notes.keys
     if (changedNoteGuids.isNotEmpty() || deckOverrides.isNotEmpty()) {
-        queries.selectCards { cardId, noteGuid, deckName, _, _, _, _, _, _, _, _, _, _, _, _, _, _ ->
+        queries.selectCards { cardId, noteGuid, deckName, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _ ->
             Triple(cardId, noteGuid, deckName)
         }.executeAsList().forEach { (cardId, noteGuid, deckName) ->
             val visibleDeck = deckName.remapDownloadedDeckName(deckOverrides)
@@ -105,10 +105,11 @@ internal fun loadLocalContentSnapshot(
     val pendingCardMetadataIds = (
         queries.selectLocalCardStudyStates { _, _, cardId, _, _, _ -> cardId }.executeAsList() +
             queries.selectLocalCardResets { _, _, cardId, _, _, _ -> cardId }.executeAsList() +
-            queries.selectLocalCardDueOverrides { _, _, cardId, _, _, _ -> cardId }.executeAsList()
+            queries.selectLocalCardDueOverrides { _, _, cardId, _, _, _ -> cardId }.executeAsList() +
+            queries.selectLocalCardFlagIntents { _, _, cardId, _, _, _, _ -> cardId }.executeAsList()
         ).distinct()
     if (pendingCardMetadataIds.isNotEmpty()) {
-        val syncedDeckByCard = queries.selectCards { cardId, _, deckName, _, _, _, _, _, _, _, _, _, _, _, _, _, _ ->
+        val syncedDeckByCard = queries.selectCards { cardId, _, deckName, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _ ->
             cardId to deckName
         }.executeAsList().toMap()
         pendingCardMetadataIds.forEach { cardId ->
@@ -116,6 +117,24 @@ internal fun loadLocalContentSnapshot(
             val visibleDeck = deckName?.remapDownloadedDeckName(deckOverrides)
             if (visibleDeck != null) changedByDeck.getOrPut(visibleDeck, ::mutableSetOf).add(cardId)
         }
+    }
+    val syncFlagRows = queries.selectSyncCardFlagState { cardId, noteGuid, ord, flag ->
+        LocalCardFlagRow(cardId, noteGuid, ord.toInt(), flag.toInt())
+    }.executeAsList()
+    val cardIdsByIdentity = buildMap {
+        syncFlagRows.forEach { put(cardStudyKey(it.noteGuid, it.cardOrd), it.cardId) }
+        cards.values.forEach { put(cardStudyKey(it.noteGuid, it.ord), it.cardId) }
+    }
+    val effectiveCardFlags = syncFlagRows.filter { it.flag != 0 }
+        .associateTo(mutableMapOf()) { it.cardId to it.flag }
+    queries.selectLocalCardFlags { cardId, flag -> cardId to flag.toInt() }
+        .executeAsList().forEach { (cardId, flag) -> effectiveCardFlags[cardId] = flag }
+    queries.selectLocalCardFlagIntents { noteGuid, cardOrd, cardId, flag, _, _, _ ->
+        Triple(cardStudyKey(noteGuid, cardOrd.toInt()), cardId, flag.toInt())
+    }.executeAsList().forEach { (key, storedCardId, flag) ->
+        val effectiveCardId = cardIdsByIdentity[key] ?: storedCardId
+        if (storedCardId != effectiveCardId) effectiveCardFlags.remove(storedCardId)
+        if (flag == 0) effectiveCardFlags.remove(effectiveCardId) else effectiveCardFlags[effectiveCardId] = flag
     }
     val pendingDeckNames = addedByDeck.keys + changedByDeck.keys
     val pendingSyncByDeck = pendingDeckNames.associateWith { deckName ->
@@ -135,8 +154,7 @@ internal fun loadLocalContentSnapshot(
         deckOptions = effectiveDeckOptions,
         deckPresets = DeckPresetState(presets, assignments),
         deckOverrides = deckOverrides,
-        cardFlags = queries.selectLocalCardFlags { cardId, flag -> cardId to flag.toInt() }
-            .executeAsList().toMap(),
+        cardFlags = effectiveCardFlags,
         cardStudyStates = queries.selectLocalCardStudyStates {
                 noteGuid, cardOrd, _, studyState, _, _ ->
             cardStudyKey(noteGuid, cardOrd.toInt()) to studyState.asCardStudyState()
@@ -145,3 +163,10 @@ internal fun loadLocalContentSnapshot(
         pendingSyncByDeck = pendingSyncByDeck,
     )
 }
+
+private data class LocalCardFlagRow(
+    val cardId: Long,
+    val noteGuid: String,
+    val cardOrd: Int,
+    val flag: Int,
+)

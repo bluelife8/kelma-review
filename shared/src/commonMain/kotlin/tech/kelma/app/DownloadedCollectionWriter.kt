@@ -19,7 +19,7 @@ internal class DownloadedCollectionWriter(
     ) {
         queries.backfillLocalReviewPortableIdentities()
         clear(preserveMedia)
-        queries.upsertServerTime(collection.serverTime)
+        writeSyncState(collection)
         writeAll(collection, preserveMedia)
         finish(collection, reconcileOutbox, scheduleChanges = null)
     }
@@ -30,10 +30,17 @@ internal class DownloadedCollectionWriter(
         reconcileOutbox: () -> Unit,
     ) {
         queries.backfillLocalReviewPortableIdentities()
-        queries.upsertServerTime(collection.serverTime)
+        writeSyncState(collection)
         deleteRemoved(previous, collection)
         writeChanged(previous, collection)
         finish(collection, reconcileOutbox, previous.scheduleProjectionChanges(collection))
+    }
+
+    private fun writeSyncState(collection: SyncedCollection) {
+        queries.upsertSyncState(
+            collection.serverTime,
+            json.encodeToString(stringList, collection.capabilities.sorted()),
+        )
     }
 
     private fun writeAll(collection: SyncedCollection, preserveMedia: Boolean) {
@@ -131,6 +138,10 @@ internal class DownloadedCollectionWriter(
             card.dueDateOverrideMillis,
             card.dueDateOverrideModifiedAt,
             card.dueDateOverrideClientModifiedAt,
+            card.synchronizedFlag.toLong(),
+            card.flag?.intentId.orEmpty(),
+            card.flag?.modifiedAt.orEmpty(),
+            card.flag?.clientModifiedAt.orEmpty(),
             card.modifiedAt,
             card.clientModifiedAt,
             card.createdAt.orEmpty(),

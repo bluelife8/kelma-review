@@ -32,7 +32,8 @@ internal fun loadDownloadedCollection(
             cardId, noteGuid, deckName, ord, scheduling, studyState,
             studyStateModified, studyStateClientModified, resetThrough,
             resetModified, resetClientModified, dueOverride, dueModified,
-            dueClientModified, modified, clientModified, createdAt ->
+            dueClientModified, flagValue, flagIntentId, flagModified, flagClientModified,
+            modified, clientModified, createdAt ->
         cardId to SyncCard(
             cardId = cardId,
             noteGuid = noteGuid,
@@ -51,6 +52,9 @@ internal fun loadDownloadedCollection(
             modifiedAt = modified,
             clientModifiedAt = clientModified,
             createdAt = createdAt.ifBlank { null },
+            flag = flagIntentId.takeIf(String::isNotBlank)?.let {
+                SyncCardFlag(flagValue.toInt(), it, flagModified, flagClientModified)
+            },
         )
     }.executeAsList().toMap()
     // The immutable review history (revlog) is the largest table by far. Callers that only
@@ -114,6 +118,8 @@ internal fun loadDownloadedCollection(
     val media = queries.selectMediaMetadata { filename, modified, sizeBytes ->
         filename to SyncMediaFile(filename, modified, byteArrayOf(), sizeBytes)
     }.executeAsList().toMap()
+    val syncState = queries.selectSyncState { serverTime, capabilities -> serverTime to capabilities }
+        .executeAsOneOrNull()
     return SyncedCollection(
         notes = notes,
         cards = cards,
@@ -123,6 +129,9 @@ internal fun loadDownloadedCollection(
         deckRecords = decks,
         media = media,
         deckNames = queries.selectDeckNames().executeAsList().toSet(),
-        serverTime = queries.selectServerTime().executeAsOneOrNull()?.server_time,
+        serverTime = syncState?.first,
+        capabilities = syncState?.second
+            ?.let { json.decodeFromString(stringList, it).toSet() }
+            .orEmpty(),
     )
 }

@@ -7,7 +7,8 @@ CREATE TABLE sync_auth (
 
 CREATE TABLE sync_state (
     singleton_id INTEGER NOT NULL PRIMARY KEY CHECK (singleton_id = 1),
-    server_time TEXT
+    server_time TEXT,
+    capabilities_json TEXT NOT NULL DEFAULT '[]'
 );
 
 CREATE TABLE sync_notes (
@@ -39,6 +40,10 @@ CREATE TABLE sync_cards (
     due_date_override_ms INTEGER NOT NULL DEFAULT 0,
     due_date_override_modified_at TEXT NOT NULL DEFAULT '',
     due_date_override_client_modified_at TEXT NOT NULL DEFAULT '',
+    flag_value INTEGER NOT NULL DEFAULT 0 CHECK (flag_value BETWEEN 0 AND 7),
+    flag_intent_id TEXT NOT NULL DEFAULT '',
+    flag_modified_at TEXT NOT NULL DEFAULT '',
+    flag_client_modified_at TEXT NOT NULL DEFAULT '',
     modified_at TEXT NOT NULL,
     client_modified_at TEXT NOT NULL,
     created_at TEXT NOT NULL DEFAULT ''
@@ -116,6 +121,19 @@ CREATE TABLE local_card_flags (
     card_id INTEGER NOT NULL PRIMARY KEY,
     flag INTEGER NOT NULL CHECK (flag BETWEEN 1 AND 7)
 );
+
+CREATE TABLE local_card_flag_outbox (
+    note_guid TEXT NOT NULL,
+    card_ord INTEGER NOT NULL,
+    card_id INTEGER NOT NULL,
+    flag INTEGER NOT NULL CHECK (flag BETWEEN 0 AND 7),
+    intent_id TEXT NOT NULL UNIQUE,
+    client_modified_at_ms INTEGER NOT NULL,
+    upload_state TEXT NOT NULL DEFAULT 'pending' CHECK (upload_state IN ('pending', 'uploaded')),
+    PRIMARY KEY (note_guid, card_ord)
+);
+
+CREATE INDEX local_card_flag_outbox_upload_idx ON local_card_flag_outbox(upload_state);
 
 CREATE TABLE local_card_buries (
     card_id INTEGER NOT NULL PRIMARY KEY,
@@ -485,11 +503,11 @@ VALUES (1, ?, ?, ?);
 clearAuth:
 DELETE FROM sync_auth;
 
-selectServerTime:
-SELECT server_time FROM sync_state WHERE singleton_id = 1;
+selectSyncState:
+SELECT server_time, capabilities_json FROM sync_state WHERE singleton_id = 1;
 
-upsertServerTime:
-INSERT OR REPLACE INTO sync_state(singleton_id, server_time) VALUES (1, ?);
+upsertSyncState:
+INSERT OR REPLACE INTO sync_state(singleton_id, server_time, capabilities_json) VALUES (1, ?, ?);
 
 selectNotes:
 SELECT guid, notetype_id, fields_json, tags_json, checksum, modified_at, client_modified_at,
@@ -511,6 +529,7 @@ SELECT card_id, note_guid, deck_name, ord, scheduling_json, study_state,
        schedule_reset_through_review_id, schedule_reset_modified_at,
        schedule_reset_client_modified_at, due_date_override_ms,
        due_date_override_modified_at, due_date_override_client_modified_at,
+       flag_value, flag_intent_id, flag_modified_at, flag_client_modified_at,
        modified_at, client_modified_at, created_at
 FROM sync_cards;
 
@@ -521,8 +540,9 @@ INSERT OR REPLACE INTO sync_cards(
     schedule_reset_through_review_id, schedule_reset_modified_at,
     schedule_reset_client_modified_at, due_date_override_ms,
     due_date_override_modified_at, due_date_override_client_modified_at,
+    flag_value, flag_intent_id, flag_modified_at, flag_client_modified_at,
     modified_at, client_modified_at, created_at
-) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
 
 deleteSyncCard:
 DELETE FROM sync_cards WHERE card_id = ?;
@@ -532,6 +552,22 @@ SELECT review_id, source_card_id, note_guid, card_ord, deck_name, ease,
        interval_value, last_interval, factor, taken_millis, review_kind,
        checksum, modified_at
 FROM sync_reviews;
+
+selectRecentSyncReviewsForCard:
+SELECT review_id, ease, interval_value, taken_millis
+FROM sync_reviews
+WHERE (note_guid = :noteGuid AND card_ord = :cardOrd)
+   OR (note_guid = '' AND source_card_id = :cardId)
+ORDER BY review_id DESC
+LIMIT :rowLimit;
+
+selectRecentLocalReviewsForCard:
+SELECT event_id, review_id, rating, reviewed_at_ms, duration_ms, after_json, upload_state
+FROM local_review_events
+WHERE (note_guid = :noteGuid AND card_ord = :cardOrd)
+   OR (note_guid = '' AND card_id = :cardId)
+ORDER BY reviewed_at_ms DESC, event_id DESC
+LIMIT :rowLimit;
 
 insertReview:
 INSERT OR REPLACE INTO sync_reviews(
@@ -981,6 +1017,46 @@ DELETE FROM local_card_flags WHERE card_id = ?;
 
 clearLocalCardFlags:
 DELETE FROM local_card_flags;
+
+selectLocalCardFlagIntents:
+SELECT note_guid, card_ord, card_id, flag, intent_id, client_modified_at_ms, upload_state
+FROM local_card_flag_outbox;
+
+selectPendingLocalCardFlags:
+SELECT note_guid, card_ord, card_id, flag, intent_id, client_modified_at_ms
+FROM local_card_flag_outbox
+WHERE upload_state = 'pending'
+ORDER BY client_modified_at_ms, note_guid, card_ord;
+
+selectLocalCardFlagTime:
+SELECT client_modified_at_ms FROM local_card_flag_outbox
+WHERE note_guid = ? AND card_ord = ?;
+
+upsertLocalCardFlagIntent:
+INSERT OR REPLACE INTO local_card_flag_outbox(
+    note_guid, card_ord, card_id, flag, intent_id, client_modified_at_ms, upload_state
+) VALUES (?, ?, ?, ?, ?, ?, 'pending');
+
+markLocalCardFlagUploaded:
+UPDATE local_card_flag_outbox SET upload_state = 'uploaded' WHERE intent_id = ?;
+
+retryLocalCardFlag:
+UPDATE local_card_flag_outbox SET upload_state = 'pending' WHERE intent_id = ?;
+
+deleteLocalCardFlagIntent:
+DELETE FROM local_card_flag_outbox WHERE note_guid = ? AND card_ord = ?;
+
+deleteLocalCardFlagIntentForCard:
+DELETE FROM local_card_flag_outbox WHERE card_id = ?;
+
+deleteLocalCardFlagIntentsForNote:
+DELETE FROM local_card_flag_outbox WHERE note_guid = ?;
+
+clearLocalCardFlagIntents:
+DELETE FROM local_card_flag_outbox;
+
+selectSyncCardFlagState:
+SELECT card_id, note_guid, ord, flag_value FROM sync_cards;
 
 selectLocalCardBuriesForDay:
 SELECT card_id FROM local_card_buries WHERE buried_on_day = ?;
@@ -1778,6 +1854,8 @@ SELECT count(*) FROM (
     SELECT note_guid FROM local_note_sync_outbox WHERE state = 'uploaded'
     UNION ALL
     SELECT intent_id FROM local_note_mark_outbox WHERE upload_state = 'uploaded'
+    UNION ALL
+    SELECT intent_id FROM local_card_flag_outbox WHERE upload_state = 'uploaded'
     UNION ALL
     SELECT source_name FROM local_deck_sync_outbox WHERE state = 'uploaded'
     UNION ALL
