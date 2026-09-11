@@ -133,6 +133,45 @@ class ReviewScreenUiTest {
     }
 
     @Test
+    fun cardInfoShowsSchedulingFsrsNoteAndHistorySections() = runComposeUiTest {
+        val info = ReviewCardInfo(
+            cardId = 42L,
+            noteGuid = "note-42",
+            deckName = "Languages::French",
+            notetypeName = "Basic",
+            templateOrdinal = 0,
+            createdAtMillis = 1_700_000_000_000L,
+            state = "Review",
+            dueAtMillis = 1_800_000_000_000L,
+            lastReviewAtMillis = 1_700_000_000_000L,
+            scheduledDays = 12,
+            stability = 11.4,
+            difficulty = 5.2,
+            repetitions = 8,
+            lapses = 1,
+            scheduler = "FSRS-6",
+            schedulerProfileVersion = 4L,
+            cloudSchedulerProfileVersion = 3L,
+            schedulerProfileStatus = "Pending upload",
+            desiredRetention = 0.93,
+            flag = ReviewFlag.Blue.value,
+            noteMarked = true,
+            tags = listOf("verbs", "A1"),
+            recentReviews = listOf(
+                ReviewHistoryInfo("review:1", 1_700_000_000_000L, Rating.Good, "12d", 700, false),
+            ),
+        )
+        setContent { KelmaTheme { ReviewCardInfoDialog(info, onDismiss = {}) } }
+
+        onNodeWithText("Card Info").assertIsDisplayed()
+        onNodeWithText("Languages::French").assertIsDisplayed()
+        onNodeWithText("SCHEDULE").assertIsDisplayed()
+        onNodeWithText("FSRS").assertIsDisplayed()
+        onNodeWithText("93%").assertIsDisplayed()
+        onNodeWithText("Flag 4").assertIsDisplayed()
+    }
+
+    @Test
     fun againUsesLearnAheadWhenTheRegularQueueIsEmpty() = runComposeUiTest {
         val card = ReviewCard(10, "repeat front", "repeat back")
         val reviewCount = AtomicInteger()

@@ -69,7 +69,10 @@ suspend fun runSyncCycle(
     val pulledState = withContext(Dispatchers.Default) {
         val studyDayPolicy = store.observeCloudStudyDayPolicy(incoming.studyDayPolicy)
         val reviews = if (incoming.report.downloaded == 0 && incoming.report.removed == 0) {
-            store.advanceSyncCursor(incoming.report.collection.serverTime)
+            store.advanceSyncCursor(
+                incoming.report.collection.serverTime,
+                incoming.report.collection.capabilities,
+            )
         } else {
             store.replaceCollectionIncrementally(
                 previous = current,
@@ -174,7 +177,10 @@ suspend fun runSyncCycle(
     val completed = withContext(Dispatchers.Default) {
         val studyDayPolicy = store.observeCloudStudyDayPolicy(confirming.studyDayPolicy)
         val reviews = if (confirming.report.downloaded == 0 && confirming.report.removed == 0) {
-            store.advanceSyncCursor(confirming.report.collection.serverTime)
+            store.advanceSyncCursor(
+                confirming.report.collection.serverTime,
+                confirming.report.collection.capabilities,
+            )
         } else {
             store.replaceCollectionIncrementally(
                 previous = uploadBase,

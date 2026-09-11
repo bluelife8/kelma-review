@@ -575,6 +575,27 @@ internal fun AppContent(
                 schedules = localReviews.schedules,
                 dueDateOverrides = localReviews.dueDateOverrides,
                 studyDayPolicy = localReviews.studyDayPolicy,
+                loadCardInfo = loadCardInfo@{ cardId ->
+                    val card = displayCollection.cards[cardId] ?: return@loadCardInfo null
+                    val recentReviews = withContext(Dispatchers.Default) {
+                        store.loadRecentCardReviewHistory(card)
+                    }
+                    buildReviewCardInfo(
+                        cardId = cardId,
+                        collection = displayCollection,
+                        localReviews = localReviews,
+                        effectiveFlags = localContent.cardFlags,
+                        options = displayCollection.effectiveDeckOptions(
+                            card.deckName,
+                            localContent.deckOptions,
+                            accountDeckOptions,
+                        ),
+                        schedulerProfileVersion = schedulerProfile.local.version,
+                        cloudSchedulerProfileVersion = schedulerProfile.cloud?.version,
+                        schedulerProfileStatus = schedulerProfile.syncStatus.cardInfoLabel,
+                        recentReviews = recentReviews,
+                    )
+                },
                 loadMedia = store::loadDownloadedMedia,
                 onSync = if (isDesktopApp) openSync else requestSync,
                 onAdd = openAdd,

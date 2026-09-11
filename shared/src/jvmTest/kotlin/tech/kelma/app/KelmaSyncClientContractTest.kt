@@ -520,6 +520,92 @@ class KelmaSyncClientContractTest {
     }
 
     @Test
+    fun cardFlagUploadUsesPortableIdentityAndValidatesWinningIntent() = runBlocking {
+        val pending = PendingCardFlagUpload(
+            key = cardStudyKey("note-a", 2),
+            cardId = 42L,
+            flag = ReviewFlag.Blue.value,
+            intentId = "33333333-3333-4333-8333-333333333333",
+            clientModifiedAtMillis = 1_789_070_400_000L,
+        )
+        val timestamp = "2026-09-10T20:00:00.000Z"
+        val engine = MockEngine { request ->
+            assertEquals("/v2/batch/push", request.url.encodedPath)
+            val batch = ContractJson.decodeFromString<BatchPushRequest>(
+                (request.body as OutgoingContent.ByteArrayContent).bytes().decodeToString(),
+            )
+            val flag = batch.cardFlags.single()
+            assertEquals("note-a", flag.noteGuid)
+            assertEquals(2, flag.cardOrd)
+            respondJson(
+                BatchPushResponse(
+                    accepted = mapOf("card_flags" to 1),
+                    cardFlags = listOf(
+                        CardFlagPushResult(
+                            noteGuid = flag.noteGuid,
+                            cardOrd = flag.cardOrd,
+                            accepted = true,
+                            applied = true,
+                            flag = SyncCardFlag(flag.flag, flag.intentId, timestamp, flag.clientModifiedAt),
+                        ),
+                    ),
+                ),
+            )
+        }
+        val client = contractClient(engine)
+        val progress = mutableListOf<SyncPushProgress>()
+
+        val result = client.push("token", SyncUploadPlan(cardFlags = listOf(pending)), progress::add)
+
+        assertEquals(setOf(pending.intentId), result.uploadedCardFlagIntentIds)
+        assertEquals(listOf(0, 1), progress.map(SyncPushProgress::completed))
+        assertTrue(progress.all { it.resource == SyncPushResource.CardFlags })
+        client.close()
+    }
+
+    @Test
+    fun staleCardFlagAcknowledgementAcceptsTheDeterministicRemoteWinner() = runBlocking {
+        val pending = PendingCardFlagUpload(
+            key = cardStudyKey("note-a", 0),
+            cardId = 42L,
+            flag = ReviewFlag.Blue.value,
+            intentId = "11111111-1111-4111-8111-111111111111",
+            clientModifiedAtMillis = 1_789_070_400_000L,
+        )
+        val engine = MockEngine { request ->
+            val batch = ContractJson.decodeFromString<BatchPushRequest>(
+                (request.body as OutgoingContent.ByteArrayContent).bytes().decodeToString(),
+            )
+            val submitted = batch.cardFlags.single()
+            respondJson(
+                BatchPushResponse(
+                    accepted = mapOf("card_flags" to 1),
+                    cardFlags = listOf(
+                        CardFlagPushResult(
+                            noteGuid = submitted.noteGuid,
+                            cardOrd = submitted.cardOrd,
+                            accepted = true,
+                            applied = false,
+                            flag = SyncCardFlag(
+                                flag = ReviewFlag.Orange.value,
+                                intentId = "22222222-2222-4222-8222-222222222222",
+                                modifiedAt = "2026-09-10T20:00:01.000Z",
+                                clientModifiedAt = "2026-09-10T20:00:01.000Z",
+                            ),
+                        ),
+                    ),
+                ),
+            )
+        }
+        val client = contractClient(engine)
+
+        val result = client.push("token", SyncUploadPlan(cardFlags = listOf(pending)))
+
+        assertEquals(setOf(pending.intentId), result.uploadedCardFlagIntentIds)
+        client.close()
+    }
+
+    @Test
     fun largeContentUploadUsesBoundedBatchesAndAggregateProgress() = runBlocking {
         val responses = listOf(
             "decks" to 1,

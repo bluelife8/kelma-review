@@ -124,6 +124,7 @@ class PersistentCollectionStore(
                 if (existingAccount != null && existingAccount != (auth.endpoint to auth.username)) {
                     queries.clearLocalSchedules()
                     queries.clearLocalCardFlags()
+                    queries.clearLocalCardFlagIntents()
                     queries.clearLocalCardBuries()
                     queries.clearLocalNoteBuries()
                     queries.clearLocalCardDueOverrides()
@@ -209,10 +210,11 @@ class PersistentCollectionStore(
 
     internal fun advanceSyncCursor(
         serverTime: String?,
+        capabilities: Set<String>,
         nowMillis: Long = currentEpochMillis(),
     ): LocalReviewSnapshot {
         database.transaction {
-            queries.upsertServerTime(serverTime)
+            queries.upsertSyncState(serverTime, json.encodeToString(stringList, capabilities.sorted()))
             if (syncOutbox.hasUploadedRows()) {
                 syncOutbox.reconcileUploadedRows()
                 scheduleProjection.rebuild()
@@ -426,11 +428,29 @@ class PersistentCollectionStore(
         nowMillis: Long = currentEpochMillis(),
     ): LocalContentSnapshot = localNoteActions.delete(noteGuid, nowMillis)
 
-    fun setCardFlag(cardId: Long, flag: Int): LocalContentSnapshot {
+    fun setCardFlag(
+        cardId: Long,
+        flag: Int,
+        nowMillis: Long = currentEpochMillis(),
+    ): LocalContentSnapshot {
         require(flag in 0..7) { "Card flag must be between 0 and 7" }
+        val card = loadCollection().cards[cardId] ?: loadLocalContent().cards[cardId]
+            ?: error("Card $cardId no longer exists")
+        val remoteTime = card.flag?.clientModifiedAt?.let(::rfc3339ToEpochMillis) ?: Long.MIN_VALUE
         database.transaction {
-            if (flag == 0) queries.deleteLocalCardFlag(cardId)
-            else queries.upsertLocalCardFlag(cardId, flag.toLong())
+            val localTime = queries.selectLocalCardFlagTime(card.noteGuid, card.ord.toLong())
+                .executeAsOneOrNull() ?: Long.MIN_VALUE
+            val intentTime = maxOf(nowMillis, maxOf(localTime, remoteTime) + 1L)
+            queries.upsertLocalCardFlagIntent(
+                card.noteGuid,
+                card.ord.toLong(),
+                card.cardId,
+                flag.toLong(),
+                randomUuidString(),
+                intentTime,
+            )
+            if (flag == 0) queries.deleteLocalCardFlag(card.cardId)
+            else queries.upsertLocalCardFlag(card.cardId, flag.toLong())
         }
         return loadLocalContent()
     }
@@ -676,6 +696,7 @@ class PersistentCollectionStore(
             collectionWriter.clear()
             queries.clearLocalSchedules()
             queries.clearLocalCardFlags()
+            queries.clearLocalCardFlagIntents()
             queries.clearLocalCardBuries()
             queries.clearLocalNoteBuries()
             queries.clearLocalCardDueOverrides()
@@ -838,6 +859,47 @@ class PersistentCollectionStore(
 
     internal fun loadDownloadedMedia(filename: String): ByteArray? =
         mediaAttachments.loadDownloadedBytes(filename)
+
+    internal fun loadRecentCardReviewHistory(
+        card: SyncCard,
+        limit: Int = 10,
+    ): List<ReviewHistoryInfo> {
+        val boundedLimit = limit.coerceIn(1, 20).toLong()
+        val history = linkedMapOf<String, ReviewHistoryInfo>()
+        queries.selectRecentSyncReviewsForCard(
+            noteGuid = card.noteGuid,
+            cardOrd = card.ord.toLong(),
+            cardId = card.cardId,
+            rowLimit = boundedLimit,
+        ) { reviewId, ease, interval, takenMillis ->
+            val rating = Rating.entries.getOrNull(ease.toInt() - 1) ?: Rating.Good
+            ReviewHistoryInfo(
+                key = "review:$reviewId",
+                reviewedAtMillis = reviewId,
+                rating = rating,
+                interval = formatStoredReviewInterval(interval.toInt()),
+                takenMillis = takenMillis.toInt(),
+                pendingSync = false,
+            )
+        }.executeAsList().forEach { history[it.key] = it }
+        queries.selectRecentLocalReviewsForCard(
+            noteGuid = card.noteGuid,
+            cardOrd = card.ord.toLong(),
+            cardId = card.cardId,
+            rowLimit = boundedLimit,
+        ) { eventId, reviewId, ratingName, reviewedAt, duration, afterJson, _ ->
+            val schedule = runCatching { json.decodeFromString<LocalCardSchedule>(afterJson) }.getOrNull()
+            ReviewHistoryInfo(
+                key = if (reviewId > 0L) "review:$reviewId" else "local:$eventId",
+                reviewedAtMillis = reviewedAt,
+                rating = Rating.entries.firstOrNull { it.name == ratingName } ?: Rating.Good,
+                interval = schedule?.let { formatReviewInterval(it, reviewedAt) } ?: "—",
+                takenMillis = duration.toInt(),
+                pendingSync = true,
+            )
+        }.executeAsList().forEach { history[it.key] = it }
+        return history.values.sortedByDescending(ReviewHistoryInfo::reviewedAtMillis).take(limit)
+    }
 
     internal fun hydrateMediaForExport(collection: SyncedCollection): SyncedCollection = collection.copy(
         media = collection.media.mapValues { (_, file) ->

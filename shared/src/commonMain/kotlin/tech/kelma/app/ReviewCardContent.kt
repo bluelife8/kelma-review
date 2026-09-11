@@ -45,6 +45,7 @@ internal fun CardContent(
     canUndo: Boolean,
     autoplayAudio: Boolean,
     ratingIntervals: Map<Rating, String>,
+    loadCardInfo: suspend (Long) -> ReviewCardInfo? = { null },
     loadMedia: (String) -> ByteArray? = { null },
     audioPlayer: AudioPlayer = remember { createAudioPlayer() },
     voiceRecorder: VoiceRecorder = rememberVoiceRecorder(),
@@ -70,7 +71,8 @@ internal fun CardContent(
     val richReview = shouldUseRichReviewCard()
     var moreMessage by remember(card.id) { mutableStateOf<String?>(null) }
     var moreMenuExpanded by remember(card.id) { mutableStateOf(false) }
-    var infoCard by remember(card.id) { mutableStateOf<ReviewCard?>(null) }
+    var infoCard by remember(card.id) { mutableStateOf<ReviewCardInfo?>(null) }
+    var infoLoading by remember(card.id) { mutableStateOf(false) }
     var resetConfirmationCard by remember(card.id) { mutableStateOf<ReviewCard?>(null) }
     var setDueDateCard by remember(card.id) { mutableStateOf<ReviewCard?>(null) }
     var copyConfirmationCard by remember(card.id) { mutableStateOf<ReviewCard?>(null) }
@@ -109,7 +111,25 @@ internal fun CardContent(
             autoplay?.let(audioPlayer::play)
         }
     }
-    val actionSurfaceOpen = moreMenuExpanded || voiceDialogOpen || infoCard != null ||
+    fun openCardInfo(target: ReviewCard?) {
+        if (target == null) {
+            moreMessage = "There is no previous card in this session."
+            return
+        }
+        infoLoading = true
+        moreMessage = "Loading card info…"
+        scope.launch {
+            try {
+                infoCard = loadCardInfo(target.id)
+                moreMessage = if (infoCard == null) "This card is no longer in the collection." else null
+            } catch (exception: Exception) {
+                moreMessage = exception.message ?: "Could not load card info."
+            } finally {
+                infoLoading = false
+            }
+        }
+    }
+    val actionSurfaceOpen = moreMenuExpanded || voiceDialogOpen || infoCard != null || infoLoading ||
         resetConfirmationCard != null || setDueDateCard != null || copyConfirmationCard != null ||
         deleteConfirmationCard != null
     LaunchedEffect(autoAdvanceEnabled, card.id, session.showingAnswer, savingReview, actionSurfaceOpen) {
@@ -135,11 +155,8 @@ internal fun CardContent(
             ReviewMoreAction.CreateCopy -> copyConfirmationCard = card
             ReviewMoreAction.DeleteNote -> deleteConfirmationCard = card
             ReviewMoreAction.Options -> onOptions()
-            ReviewMoreAction.CardInfo -> infoCard = card
-            ReviewMoreAction.PreviousCardInfo -> {
-                infoCard = session.previousReviewedCard
-                if (infoCard == null) moreMessage = "There is no previous card in this session."
-            }
+            ReviewMoreAction.CardInfo -> openCardInfo(card)
+            ReviewMoreAction.PreviousCardInfo -> openCardInfo(session.previousReviewedCard)
             ReviewMoreAction.ReplayAudio -> {
                 val audio = if (session.showingAnswer) card.backAudio else card.frontAudio
                 audio.firstOrNull()?.let {
@@ -391,21 +408,7 @@ internal fun CardContent(
         )
     }
     infoCard?.let { shownCard ->
-        AlertDialog(
-            onDismissRequest = { infoCard = null },
-            title = { Text("Card Info") },
-            text = {
-                Text(
-                    "Deck: ${deck.name}\n" +
-                        "Card ID: ${shownCard.id}\n" +
-                        "Position: ${session.cards.indexOfFirst { it.id == shownCard.id } + 1} " +
-                        "of ${session.cards.size}",
-                )
-            },
-            confirmButton = {
-                TextButton(onClick = { infoCard = null }) { Text("Close") }
-            },
-        )
+        ReviewCardInfoDialog(shownCard, onDismiss = { infoCard = null })
     }
 }
 

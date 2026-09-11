@@ -134,6 +134,7 @@ private fun SyncUploadPlan.progressTotals(): Map<SyncPushResource, Int> = buildM
     if (reviews.isNotEmpty()) put(SyncPushResource.Reviews, reviews.size)
     if (notes.isNotEmpty()) put(SyncPushResource.Notes, notes.size)
     if (noteMarks.isNotEmpty()) put(SyncPushResource.NoteMarks, noteMarks.size)
+    if (cardFlags.isNotEmpty()) put(SyncPushResource.CardFlags, cardFlags.size)
     val cardCount = cardStudyStates.size + cardScheduleResets.size + cardDueDates.size +
         notes.sumOf { it.cards.size } + decks.sumOf { it.cards.size }
     if (cardCount > 0) put(SyncPushResource.Cards, cardCount)

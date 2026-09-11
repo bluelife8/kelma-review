@@ -63,6 +63,23 @@ internal class SyncOutboxPersistence(
                 requiresNoteUpload = guid !in raw.notes,
             )
         }.executeAsList()
+        backfillLegacyCardFlags(raw, displayed)
+        val remoteCardKeys = raw.cards.values.mapTo(mutableSetOf()) { cardStudyKey(it.noteGuid, it.ord) }
+        val cardFlags = if (CardFlagSyncCapability in raw.capabilities) {
+            queries.selectPendingLocalCardFlags { noteGuid, cardOrd, cardId, flag, intentId, modifiedAt ->
+                val key = cardStudyKey(noteGuid, cardOrd.toInt())
+                PendingCardFlagUpload(
+                    key,
+                    cardId,
+                    flag.toInt(),
+                    intentId,
+                    modifiedAt,
+                    requiresCardUpload = key !in remoteCardKeys,
+                )
+            }.executeAsList()
+        } else {
+            emptyList()
+        }
         val decks = queries.selectPendingLocalDeckSync { source, operation, target, base, modified, force ->
             PendingDeckSyncRow(source, operation, target, base, modified, force == 1L)
         }.executeAsList()
@@ -149,6 +166,7 @@ internal class SyncOutboxPersistence(
         }
         buildSyncUploadPlan(raw, local, reviews, notes, decks).copy(
             noteMarks = noteMarks,
+            cardFlags = cardFlags,
             cardStudyStates = cardStudyStates,
             cardScheduleResets = cardScheduleResets,
             cardDueDates = cardDueDates,
@@ -162,6 +180,7 @@ internal class SyncOutboxPersistence(
         database.transaction {
             result.uploadedReviewIds.forEach(queries::markLocalReviewUploaded)
             result.uploadedNoteMarkIntentIds.forEach(queries::markLocalNoteMarkUploaded)
+            result.uploadedCardFlagIntentIds.forEach(queries::markLocalCardFlagUploaded)
             result.uploadedCardStudyKeys.forEach { key ->
                 val (noteGuid, ord) = key.splitCardStudyKey()
                 queries.markLocalCardStudyStateUploaded(noteGuid, ord.toLong())
@@ -297,6 +316,7 @@ internal class SyncOutboxPersistence(
             }
         }
         reconcileNoteMarks(downloadedCollection)
+        reconcileCardFlags(downloadedCollection)
         queries.reconcileUploadedLocalReviews()
         queries.retryUnconfirmedLocalReviews()
         queries.reconcileUploadedLocalNoteCards()
@@ -341,6 +361,62 @@ internal class SyncOutboxPersistence(
                     queries.retryUploadedLocalDeckSync(source)
                 }
             }
+    }
+
+    private fun backfillLegacyCardFlags(raw: SyncedCollection, displayed: SyncedCollection) {
+        val existingCardIds = queries.selectLocalCardFlagIntents { _, _, cardId, _, _, _, _ -> cardId }
+            .executeAsList().toSet()
+        var intentTime = currentEpochMillis()
+        queries.selectLocalCardFlags { cardId, flag -> cardId to flag.toInt() }
+            .executeAsList()
+            .filterNot { (cardId, _) -> cardId in existingCardIds }
+            .forEach { (cardId, flag) ->
+                val card = displayed.cards[cardId] ?: return@forEach
+                val remoteTime = raw.cards.values
+                    .firstOrNull { it.noteGuid == card.noteGuid && it.ord == card.ord }
+                    ?.flag?.clientModifiedAt?.let(::rfc3339ToEpochMillis) ?: Long.MIN_VALUE
+                intentTime = maxOf(intentTime + 1L, remoteTime + 1L)
+                queries.upsertLocalCardFlagIntent(
+                    card.noteGuid,
+                    card.ord.toLong(),
+                    card.cardId,
+                    flag.toLong(),
+                    randomUuidString(),
+                    intentTime,
+                )
+            }
+    }
+
+    private fun reconcileCardFlags(downloaded: SyncedCollection) {
+        val downloadedByKey = downloaded.cards.values.associateBy { cardStudyKey(it.noteGuid, it.ord) }
+        val localCardKeys = loadLocalContent().cards.values.mapTo(mutableSetOf()) { cardStudyKey(it.noteGuid, it.ord) }
+        queries.selectLocalCardFlagIntents { noteGuid, cardOrd, cardId, flag, intentId, modifiedAt, state ->
+            LocalCardFlagIntent(noteGuid, cardOrd.toInt(), cardId, flag.toInt(), intentId, modifiedAt, state)
+        }.executeAsList().forEach { local ->
+            val key = cardStudyKey(local.noteGuid, local.cardOrd)
+            val remoteCard = downloadedByKey[key]
+            val remote = remoteCard?.flag
+            val remoteMillis = remote?.clientModifiedAt?.let(::rfc3339ToEpochMillis)
+            val sameIntent = remote?.intentId == local.intentId
+            val confirmed = remote != null && sameIntent && remote.flag == local.flag &&
+                remoteMillis == local.clientModifiedAtMillis
+            if (sameIntent && !confirmed) error("KelmaSync changed a stable card flag intent")
+            val remoteWins = remoteMillis != null && !sameIntent &&
+                (remoteMillis > local.clientModifiedAtMillis ||
+                    (remoteMillis == local.clientModifiedAtMillis && remote.intentId > local.intentId))
+            when {
+                remoteCard == null && key !in localCardKeys -> {
+                    queries.deleteLocalCardFlagIntent(local.noteGuid, local.cardOrd.toLong())
+                    queries.deleteLocalCardFlag(local.cardId)
+                }
+                confirmed || remoteWins -> {
+                    queries.deleteLocalCardFlagIntent(local.noteGuid, local.cardOrd.toLong())
+                    queries.deleteLocalCardFlag(local.cardId)
+                    remoteCard.cardId.let(queries::deleteLocalCardFlag)
+                }
+                local.uploadState == "uploaded" -> queries.retryLocalCardFlag(local.intentId)
+            }
+        }
     }
 
     private fun reconcileNoteMarks(downloaded: SyncedCollection) {

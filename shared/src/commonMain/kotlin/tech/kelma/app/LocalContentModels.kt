@@ -13,6 +13,16 @@ data class LocalNoteMarkIntent(
     val uploadState: String,
 )
 
+data class LocalCardFlagIntent(
+    val noteGuid: String,
+    val cardOrd: Int,
+    val cardId: Long,
+    val flag: Int,
+    val intentId: String,
+    val clientModifiedAtMillis: Long,
+    val uploadState: String,
+)
+
 data class PendingDeckChanges(
     val addedCardIds: Set<Long> = emptySet(),
     val changedCardIds: Set<Long> = emptySet(),
