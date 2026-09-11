@@ -7,7 +7,8 @@ internal fun loadStudyStatsReviews(
     studyDayPolicy: AccountStudyDayPolicy,
     deckNameOverrides: Map<String, String?> = emptyMap(),
 ): List<StudyStatsReview> {
-    val confirmed = queries.selectReviews {
+    val allConfirmedIds = queries.selectSyncReviewIds().executeAsList().toSet()
+    val confirmed = queries.selectActiveReviews {
             reviewId, _, _, _, deckName, ease, _, _, _, takenMillis, _, _, _ ->
         StudyStatsReview(
             reviewId = reviewId,
@@ -19,7 +20,7 @@ internal fun loadStudyStatsReviews(
     }.executeAsList()
         .filter { it.rating in 1..4 }
         .withDeckOverrides(deckNameOverrides)
-    val confirmedIds = confirmed.mapTo(mutableSetOf(), StudyStatsReview::reviewId)
+    val confirmedIds = allConfirmedIds
     val pending = queries.selectAllLocalReviewEvents {
             _, _, _, _, deckName, rating, reviewedAt, _, duration, _, _, _, reviewId, _, _ ->
         StudyStatsReview(

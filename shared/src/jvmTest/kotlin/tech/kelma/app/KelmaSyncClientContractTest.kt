@@ -54,6 +54,39 @@ class KelmaSyncClientContractTest {
     }
 
     @Test
+    fun reviewRetractionsArePulledAsCapabilityNegotiatedImmutableIntents() = runBlocking {
+        val retraction = SyncReviewRetraction(
+            reviewId = 2_000L,
+            intentId = "11111111-1111-4111-8111-111111111111",
+            clientModifiedAt = "2026-09-08T12:00:00Z",
+            modifiedAt = "2026-09-08T12:00:01Z",
+        )
+        val engine = MockEngine { request ->
+            when (request.url.encodedPath) {
+                "/v2/sync/manifest" -> respondJson(
+                    SyncManifest(
+                        capabilities = setOf(ReviewRetractionSyncCapability),
+                        reviewRetractions = listOf(retraction),
+                        serverTime = "new-cursor",
+                    ),
+                )
+                "/v2/batch/pull" -> respondJson(
+                    BatchPullResponse(reviewRetractions = listOf(retraction)),
+                )
+                else -> error("Unexpected request ${request.url}")
+            }
+        }
+        val client = contractClient(engine)
+
+        val report = client.pull("token", SyncedCollection(serverTime = "old-cursor"))
+
+        assertEquals(mapOf(retraction.reviewId to retraction), report.collection.reviewRetractions)
+        assertEquals(setOf(ReviewRetractionSyncCapability), report.collection.capabilities)
+        assertEquals(1, report.downloaded)
+        client.close()
+    }
+
+    @Test
     fun failedMediaDownloadFailsTheWholePull() = runBlocking {
         val current = SyncedCollection(serverTime = "old-cursor")
         val engine = MockEngine { request ->
@@ -440,6 +473,74 @@ class KelmaSyncClientContractTest {
             requests,
         )
         assertTrue(result.conflicts.single().serverJson.contains("conflicted-note"))
+        client.close()
+    }
+
+    @Test
+    fun reviewRetractionUploadUsesStableIntentAndExactAcknowledgement() = runBlocking {
+        val pending = PendingReviewRetractionUpload(
+            reviewId = 1_789_070_399_000L,
+            intentId = "11111111-1111-4111-8111-111111111111",
+            clientModifiedAtMillis = 1_789_070_400_000L,
+        )
+        val engine = MockEngine { request ->
+            assertEquals("/v2/batch/push", request.url.encodedPath)
+            val batch = ContractJson.decodeFromString<BatchPushRequest>(
+                (request.body as OutgoingContent.ByteArrayContent).bytes().decodeToString(),
+            )
+            val submitted = batch.reviewRetractions.single()
+            assertEquals(pending.reviewId, submitted.reviewId)
+            respondJson(
+                BatchPushResponse(
+                    accepted = mapOf("review_retractions" to 1),
+                    reviewRetractions = listOf(
+                        ReviewRetractionPushResult(
+                            accepted = true,
+                            applied = true,
+                            retraction = SyncReviewRetraction(
+                                submitted.reviewId,
+                                submitted.intentId,
+                                submitted.clientModifiedAt,
+                                "2026-09-10T20:00:01.000Z",
+                            ),
+                        ),
+                    ),
+                ),
+            )
+        }
+        val client = contractClient(engine)
+        val progress = mutableListOf<SyncPushProgress>()
+
+        val result = client.push("token", SyncUploadPlan(reviewRetractions = listOf(pending)), progress::add)
+
+        assertEquals(setOf(pending.intentId), result.uploadedReviewRetractionIntentIds)
+        assertEquals(listOf(0, 1), progress.map(SyncPushProgress::completed))
+        assertTrue(progress.all { it.resource == SyncPushResource.ReviewRetractions })
+        client.close()
+    }
+
+    @Test
+    fun conflictingReviewRetractionNeverAcknowledgesOrMutatesTheStableIntent() = runBlocking {
+        val pending = PendingReviewRetractionUpload(
+            reviewId = 1_789_070_399_000L,
+            intentId = "11111111-1111-4111-8111-111111111111",
+            clientModifiedAtMillis = 1_789_070_400_000L,
+        )
+        val engine = MockEngine {
+            respondJson(
+                BatchPushResponse(
+                    accepted = mapOf("review_retractions" to 0),
+                    conflicts = mapOf("review_retractions" to listOf(
+                        SyncPushConflictEntry(reviewId = pending.reviewId),
+                    )),
+                ),
+            )
+        }
+        val client = contractClient(engine)
+
+        assertFailsWith<KelmaSyncException> {
+            client.push("token", SyncUploadPlan(reviewRetractions = listOf(pending)))
+        }
         client.close()
     }
 

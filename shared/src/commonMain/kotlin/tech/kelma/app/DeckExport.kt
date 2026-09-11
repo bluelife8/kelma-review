@@ -193,7 +193,10 @@ private fun SyncedCollection.exportKelmaJson(
         cards = selectedCards.map { it.copy(scheduling = JsonObject(emptyMap())) },
         notetypes = selectedNotetypes,
         reviews = if (includeScheduling) {
-            (downloadedReviews + pendingReviews).distinctBy(KelmaJsonReview::reviewId).sortedBy(KelmaJsonReview::reviewId)
+            (downloadedReviews + pendingReviews)
+                .distinctBy(KelmaJsonReview::reviewId)
+                .filterNot { it.reviewId in reviewRetractions }
+                .sortedBy(KelmaJsonReview::reviewId)
         } else {
             emptyList()
         },

@@ -78,6 +78,13 @@ data class ReviewPushBody(
 )
 
 @Serializable
+data class ReviewRetractionPushBody(
+    @SerialName("review_id") val reviewId: Long,
+    @SerialName("intent_id") val intentId: String,
+    @SerialName("client_modified_at") val clientModifiedAt: String,
+)
+
+@Serializable
 data class BatchReviewPushRequest(
     val reviews: List<ReviewPushBody> = emptyList(),
 )
@@ -131,6 +138,7 @@ data class BatchPushRequest(
     val notes: List<BatchNotePushItem> = emptyList(),
     @SerialName("note_marks") val noteMarks: List<NoteMarkPushBody> = emptyList(),
     @SerialName("card_flags") val cardFlags: List<CardFlagPushBody> = emptyList(),
+    @SerialName("review_retractions") val reviewRetractions: List<ReviewRetractionPushBody> = emptyList(),
     val cards: List<BatchCardPushItem> = emptyList(),
     val reviews: List<ReviewPushBody> = emptyList(),
     val notetypes: List<BatchNotetypePushItem> = emptyList(),
@@ -143,6 +151,14 @@ data class BatchPushResponse(
     val conflicts: Map<String, List<SyncPushConflictEntry>> = emptyMap(),
     @SerialName("note_marks") val noteMarks: List<NoteMarkPushResult> = emptyList(),
     @SerialName("card_flags") val cardFlags: List<CardFlagPushResult> = emptyList(),
+    @SerialName("review_retractions") val reviewRetractions: List<ReviewRetractionPushResult> = emptyList(),
+)
+
+@Serializable
+data class ReviewRetractionPushResult(
+    val accepted: Boolean,
+    val applied: Boolean,
+    val retraction: SyncReviewRetraction,
 )
 
 @Serializable
@@ -240,6 +256,15 @@ data class PendingCardFlagUpload(
         }
 }
 
+data class PendingReviewRetractionUpload(
+    val reviewId: Long,
+    val intentId: String,
+    val clientModifiedAtMillis: Long,
+) {
+    val body: ReviewRetractionPushBody
+        get() = ReviewRetractionPushBody(reviewId, intentId, epochMillisToRfc3339(clientModifiedAtMillis))
+}
+
 data class PendingMediaUpload(
     val filename: String,
     val mimeType: String,
@@ -249,6 +274,7 @@ data class PendingMediaUpload(
 
 enum class SyncPushResource(val phase: String, val label: String) {
     Reviews("REVIEWS", "reviews"),
+    ReviewRetractions("REVIEW RETRACTIONS", "review retractions"),
     Dependencies("DEPENDENCIES", "dependencies"),
     Notes("NOTES", "notes"),
     NoteMarks("NOTE MARKS", "note marks"),
@@ -287,6 +313,7 @@ data class PendingCardDueDateUpload(
 
 data class SyncUploadPlan(
     val reviews: List<ReviewPushBody> = emptyList(),
+    val reviewRetractions: List<PendingReviewRetractionUpload> = emptyList(),
     val noteMarks: List<PendingNoteMarkUpload> = emptyList(),
     val cardFlags: List<PendingCardFlagUpload> = emptyList(),
     val cardStudyStates: List<PendingCardStudyUpload> = emptyList(),
@@ -298,7 +325,7 @@ data class SyncUploadPlan(
     val schedulerProfile: SchedulerProfileCandidate? = null,
 ) {
     val isEmpty: Boolean
-        get() = reviews.isEmpty() && noteMarks.isEmpty() && cardFlags.isEmpty() && cardStudyStates.isEmpty() && cardScheduleResets.isEmpty() &&
+        get() = reviews.isEmpty() && reviewRetractions.isEmpty() && noteMarks.isEmpty() && cardFlags.isEmpty() && cardStudyStates.isEmpty() && cardScheduleResets.isEmpty() &&
             cardDueDates.isEmpty() && notes.isEmpty() && decks.isEmpty() && media.isEmpty() && schedulerProfile == null
 }
 
@@ -310,6 +337,7 @@ data class SyncUploadConflict(
 
 data class SyncPushResult(
     val uploadedReviewIds: Set<Long> = emptySet(),
+    val uploadedReviewRetractionIntentIds: Set<String> = emptySet(),
     val uploadedNoteMarkIntentIds: Set<String> = emptySet(),
     val uploadedCardFlagIntentIds: Set<String> = emptySet(),
     val uploadedCardStudyKeys: Set<String> = emptySet(),
@@ -322,7 +350,7 @@ data class SyncPushResult(
     val conflicts: List<SyncUploadConflict> = emptyList(),
 ) {
     val uploadedCount: Int
-        get() = uploadedReviewIds.size + uploadedNoteMarkIntentIds.size + uploadedCardFlagIntentIds.size + uploadedCardStudyKeys.size + uploadedCardResetKeys.size +
+        get() = uploadedReviewIds.size + uploadedReviewRetractionIntentIds.size + uploadedNoteMarkIntentIds.size + uploadedCardFlagIntentIds.size + uploadedCardStudyKeys.size + uploadedCardResetKeys.size +
             uploadedCardDueDateKeys.size + uploadedNoteGuids.size + uploadedDeckSources.size + uploadedMediaFilenames.size +
             if (acknowledgedSchedulerProfile == null) 0 else 1
 }

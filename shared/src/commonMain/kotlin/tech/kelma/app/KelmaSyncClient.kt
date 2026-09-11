@@ -132,6 +132,7 @@ class KelmaSyncClient(
 
 private fun SyncUploadPlan.progressTotals(): Map<SyncPushResource, Int> = buildMap {
     if (reviews.isNotEmpty()) put(SyncPushResource.Reviews, reviews.size)
+    if (reviewRetractions.isNotEmpty()) put(SyncPushResource.ReviewRetractions, reviewRetractions.size)
     if (notes.isNotEmpty()) put(SyncPushResource.Notes, notes.size)
     if (noteMarks.isNotEmpty()) put(SyncPushResource.NoteMarks, noteMarks.size)
     if (cardFlags.isNotEmpty()) put(SyncPushResource.CardFlags, cardFlags.size)

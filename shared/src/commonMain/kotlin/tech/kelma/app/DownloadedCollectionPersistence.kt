@@ -83,6 +83,10 @@ internal fun loadDownloadedCollection(
             )
         }.executeAsList().toMap()
     }
+    val reviewRetractions = queries.selectReviewRetractions {
+            reviewId, intentId, clientModifiedAt, modifiedAt ->
+        reviewId to SyncReviewRetraction(reviewId, intentId, clientModifiedAt, modifiedAt)
+    }.executeAsList().toMap()
     val studyDays = queries.selectStudyDays {
             day, deckName, newStudied, reviewStudied, learningStudied, milliseconds, modified ->
         val value = SyncStudyDay(
@@ -124,6 +128,7 @@ internal fun loadDownloadedCollection(
         notes = notes,
         cards = cards,
         reviews = reviews,
+        reviewRetractions = reviewRetractions,
         studyDays = studyDays,
         notetypes = notetypes,
         deckRecords = decks,

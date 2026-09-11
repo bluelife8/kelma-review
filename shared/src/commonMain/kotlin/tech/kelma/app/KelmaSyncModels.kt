@@ -9,6 +9,7 @@ import kotlinx.serialization.json.longOrNull
 
 const val DefaultKelmaSyncEndpoint = "https://sync2.kelma.tech"
 internal const val CardFlagSyncCapability = "card_flag_intents_v1"
+internal const val ReviewRetractionSyncCapability = "review_retractions_v1"
 
 @Serializable
 data class LoginRequest(
@@ -35,6 +36,7 @@ data class SyncManifest(
     val notes: List<ManifestEntry> = emptyList(),
     val cards: List<ManifestEntry> = emptyList(),
     val reviews: List<ManifestEntry> = emptyList(),
+    @SerialName("review_retractions") val reviewRetractions: List<SyncReviewRetraction> = emptyList(),
     @SerialName("study_days") val studyDays: List<SyncStudyDay> = emptyList(),
     val notetypes: List<ManifestEntry> = emptyList(),
     val decks: List<ManifestEntry> = emptyList(),
@@ -91,6 +93,7 @@ data class BatchPullRequest(
     val notes: List<String> = emptyList(),
     val cards: List<Long> = emptyList(),
     val reviews: List<Long> = emptyList(),
+    @SerialName("review_retractions") val reviewRetractions: List<Long> = emptyList(),
     val notetypes: List<Long> = emptyList(),
     val decks: List<String> = emptyList(),
 )
@@ -100,6 +103,7 @@ data class BatchPullResponse(
     val notes: List<SyncNote> = emptyList(),
     val cards: List<SyncCard> = emptyList(),
     val reviews: List<SyncReview> = emptyList(),
+    @SerialName("review_retractions") val reviewRetractions: List<SyncReviewRetraction> = emptyList(),
     val notetypes: List<SyncNotetype> = emptyList(),
     val decks: List<SyncDeck> = emptyList(),
 )
@@ -188,6 +192,14 @@ data class SyncReview(
 )
 
 @Serializable
+data class SyncReviewRetraction(
+    @SerialName("review_id") val reviewId: Long,
+    @SerialName("intent_id") val intentId: String,
+    @SerialName("client_modified_at") val clientModifiedAt: String,
+    @SerialName("modified_at") val modifiedAt: String,
+)
+
+@Serializable
 data class SyncStudyDay(
     val day: Long,
     @SerialName("deck_name") val deckName: String,
@@ -236,6 +248,7 @@ data class SyncedCollection(
     val notes: Map<String, SyncNote> = emptyMap(),
     val cards: Map<Long, SyncCard> = emptyMap(),
     val reviews: Map<Long, SyncReview> = emptyMap(),
+    val reviewRetractions: Map<Long, SyncReviewRetraction> = emptyMap(),
     val studyDays: Map<String, SyncStudyDay> = emptyMap(),
     val notetypes: Map<Long, SyncNotetype> = emptyMap(),
     val deckRecords: Map<String, SyncDeck> = emptyMap(),
@@ -253,6 +266,7 @@ data class SyncedCollection(
         val nextNotes = notes.toMutableMap()
         val nextCards = cards.toMutableMap()
         val nextReviews = reviews.toMutableMap()
+        val nextReviewRetractions = reviewRetractions.toMutableMap()
         val nextStudyDays = studyDays.toMutableMap()
         val nextNotetypes = notetypes.toMutableMap()
         val nextDeckRecords = deckRecords.toMutableMap()
@@ -287,6 +301,7 @@ data class SyncedCollection(
             nextDeckNames += it.deckName
         }
         pulled.reviews.forEach { nextReviews[it.reviewId] = it }
+        pulled.reviewRetractions.forEach { nextReviewRetractions[it.reviewId] = it }
         manifest.studyDays.forEach { nextStudyDays[it.key()] = it }
         pulled.notetypes.forEach { nextNotetypes[it.notetypeId] = it }
         pulled.decks.forEach {
@@ -299,6 +314,7 @@ data class SyncedCollection(
             notes = nextNotes,
             cards = nextCards,
             reviews = nextReviews,
+            reviewRetractions = nextReviewRetractions,
             studyDays = nextStudyDays,
             notetypes = nextNotetypes,
             deckRecords = nextDeckRecords,
@@ -310,7 +326,8 @@ data class SyncedCollection(
         return PullReport(
             collection = next,
             downloaded = pulled.notes.size + pulled.cards.size + pulled.reviews.size +
-                manifest.studyDays.size + pulled.notetypes.size + pulled.decks.size + downloadedMedia.size,
+                pulled.reviewRetractions.size + manifest.studyDays.size + pulled.notetypes.size +
+                pulled.decks.size + downloadedMedia.size,
             removed = removed,
             remoteMediaMissing = remoteMediaMissing,
             downloadedMediaFilenames = downloadedMedia.keys,

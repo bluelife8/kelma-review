@@ -570,7 +570,7 @@ internal fun AppContent(
             activeDeck != null -> ReviewScreen(
                 deck = activeDeck,
                 syncing = working,
-                canUndo = localReviews.lastReviewDeck == activeDeck.id,
+                canUndo = localReviews.lastReviewDeck?.isDeckOrDescendantOf(activeDeck.id) == true,
                 options = effectiveOptionsByDeck[activeDeck.id] ?: accountDeckOptions,
                 schedules = localReviews.schedules,
                 dueDateOverrides = localReviews.dueDateOverrides,
@@ -793,7 +793,11 @@ internal fun AppContent(
                         }
                     }
                 },
-                onUndo = { undoReview(activeDeck.id) },
+                onUndo = {
+                    localReviews.lastReviewDeck
+                        ?.takeIf { it.isDeckOrDescendantOf(activeDeck.id) }
+                        ?.let { undoReview(it) }
+                },
                 onBack = {
                     selectedDeck = null
                     desktopStudyStarted = false

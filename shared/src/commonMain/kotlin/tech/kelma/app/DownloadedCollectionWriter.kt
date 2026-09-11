@@ -47,6 +47,7 @@ internal class DownloadedCollectionWriter(
         collection.notes.values.forEach(::writeNote)
         collection.cards.values.forEach(::writeCard)
         collection.reviews.values.forEach(::writeReview)
+        collection.reviewRetractions.values.forEach(::writeReviewRetraction)
         collection.studyDays.values.forEach(::writeStudyDay)
         collection.notetypes.values.forEach(::writeNotetype)
         collection.deckRecords.values.forEach(::writeDeck)
@@ -58,6 +59,8 @@ internal class DownloadedCollectionWriter(
         previous.notes.keys.filterNot(collection.notes::containsKey).forEach(queries::deleteSyncNote)
         previous.cards.keys.filterNot(collection.cards::containsKey).forEach(queries::deleteSyncCard)
         previous.reviews.keys.filterNot(collection.reviews::containsKey).forEach(queries::deleteSyncReview)
+        previous.reviewRetractions.keys.filterNot(collection.reviewRetractions::containsKey)
+            .forEach(queries::deleteSyncReviewRetraction)
         previous.studyDays.filterKeys { it !in collection.studyDays }.values.forEach { day ->
             queries.deleteSyncStudyDay(day.day, day.deckName)
         }
@@ -76,6 +79,9 @@ internal class DownloadedCollectionWriter(
         }
         collection.reviews.forEach { (key, value) ->
             if (previous.reviews[key] != value) writeReview(value)
+        }
+        collection.reviewRetractions.forEach { (key, value) ->
+            if (previous.reviewRetractions[key] != value) writeReviewRetraction(value)
         }
         collection.studyDays.forEach { (key, value) ->
             if (previous.studyDays[key] != value) writeStudyDay(value)
@@ -166,6 +172,15 @@ internal class DownloadedCollectionWriter(
         )
     }
 
+    private fun writeReviewRetraction(retraction: SyncReviewRetraction) {
+        queries.insertReviewRetraction(
+            retraction.reviewId,
+            retraction.intentId,
+            retraction.clientModifiedAt,
+            retraction.modifiedAt,
+        )
+    }
+
     private fun writeStudyDay(day: SyncStudyDay) {
         queries.insertStudyDay(
             day.day,
@@ -214,6 +229,7 @@ internal class DownloadedCollectionWriter(
         queries.clearNotes()
         queries.clearCards()
         queries.clearReviews()
+        queries.clearReviewRetractions()
         queries.clearStudyDays()
         queries.clearNotetypes()
         queries.clearDecks()

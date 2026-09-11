@@ -65,6 +65,13 @@ CREATE TABLE sync_reviews (
     modified_at TEXT NOT NULL
 );
 
+CREATE TABLE sync_review_retractions (
+    review_id INTEGER NOT NULL PRIMARY KEY,
+    intent_id TEXT NOT NULL UNIQUE,
+    client_modified_at TEXT NOT NULL,
+    modified_at TEXT NOT NULL
+);
+
 CREATE TABLE sync_study_days (
     day INTEGER NOT NULL,
     deck_name TEXT NOT NULL,
@@ -210,6 +217,14 @@ ON local_review_events(study_day);
 
 CREATE INDEX local_review_events_note_card_idx
 ON local_review_events(note_guid, card_ord);
+
+CREATE TABLE local_review_retraction_outbox (
+    review_id INTEGER NOT NULL PRIMARY KEY,
+    intent_id TEXT NOT NULL UNIQUE,
+    client_modified_at_ms INTEGER NOT NULL,
+    upload_state TEXT NOT NULL DEFAULT 'pending'
+        CHECK (upload_state IN ('pending', 'uploaded'))
+);
 
 CREATE TABLE local_notes (
     guid TEXT NOT NULL PRIMARY KEY,
@@ -553,19 +568,118 @@ SELECT review_id, source_card_id, note_guid, card_ord, deck_name, ease,
        checksum, modified_at
 FROM sync_reviews;
 
+selectActiveReviews:
+SELECT review_id, source_card_id, note_guid, card_ord, deck_name, ease,
+       interval_value, last_interval, factor, taken_millis, review_kind,
+       checksum, modified_at
+FROM sync_reviews review
+WHERE NOT EXISTS (SELECT 1 FROM sync_review_retractions retraction
+                  WHERE retraction.review_id = review.review_id)
+  AND NOT EXISTS (SELECT 1 FROM local_review_retraction_outbox local_retraction
+                  WHERE local_retraction.review_id = review.review_id)
+;
+
+selectSyncReviewIds:
+SELECT review_id FROM sync_reviews;
+
+selectReviewRetractions:
+SELECT review_id, intent_id, client_modified_at, modified_at
+FROM sync_review_retractions;
+
+insertReviewRetraction:
+INSERT OR REPLACE INTO sync_review_retractions(
+    review_id, intent_id, client_modified_at, modified_at
+) VALUES (?, ?, ?, ?);
+
+deleteSyncReviewRetraction:
+DELETE FROM sync_review_retractions WHERE review_id = ?;
+
+clearReviewRetractions:
+DELETE FROM sync_review_retractions;
+
+selectLocalReviewRetractions:
+SELECT review_id, intent_id, client_modified_at_ms, upload_state
+FROM local_review_retraction_outbox
+ORDER BY client_modified_at_ms, review_id;
+
+selectPendingLocalReviewRetractions:
+SELECT review_id, intent_id, client_modified_at_ms
+FROM local_review_retraction_outbox
+WHERE upload_state = 'pending'
+ORDER BY client_modified_at_ms, review_id;
+
+insertLocalReviewRetraction:
+INSERT INTO local_review_retraction_outbox(
+    review_id, intent_id, client_modified_at_ms, upload_state
+) VALUES (?, ?, ?, 'pending');
+
+markLocalReviewRetractionUploaded:
+UPDATE local_review_retraction_outbox SET upload_state = 'uploaded' WHERE intent_id = ?;
+
+retryLocalReviewRetraction:
+UPDATE local_review_retraction_outbox SET upload_state = 'pending' WHERE intent_id = ?;
+
+deleteLocalReviewRetraction:
+DELETE FROM local_review_retraction_outbox WHERE review_id = ?;
+
+clearLocalReviewRetractions:
+DELETE FROM local_review_retraction_outbox;
+
+selectLatestSyncReviewForRetraction:
+SELECT review.review_id, card.card_id
+FROM sync_reviews review
+JOIN sync_cards card ON (review.note_guid != '' AND card.note_guid = review.note_guid AND card.ord = review.card_ord)
+                     OR (review.note_guid = '' AND card.card_id = review.source_card_id)
+WHERE card.deck_name = ? COLLATE NOCASE
+  AND review.ease BETWEEN 1 AND 4
+  AND review.review_id > card.schedule_reset_through_review_id
+  AND review.review_id > COALESCE((
+      SELECT reset.reset_through_review_id FROM local_card_resets reset
+      WHERE reset.note_guid = card.note_guid AND reset.card_ord = card.ord
+  ), 0)
+  AND NOT EXISTS (SELECT 1 FROM sync_review_retractions retraction
+                  WHERE retraction.review_id = review.review_id)
+  AND NOT EXISTS (SELECT 1 FROM local_review_retraction_outbox local_retraction
+                  WHERE local_retraction.review_id = review.review_id)
+ORDER BY review.review_id DESC
+LIMIT 1;
+
+selectLatestSyncReviewDeckForRetraction:
+SELECT card.deck_name
+FROM sync_reviews review
+JOIN sync_cards card ON (review.note_guid != '' AND card.note_guid = review.note_guid AND card.ord = review.card_ord)
+                     OR (review.note_guid = '' AND card.card_id = review.source_card_id)
+WHERE review.ease BETWEEN 1 AND 4
+  AND review.review_id > card.schedule_reset_through_review_id
+  AND review.review_id > COALESCE((
+      SELECT reset.reset_through_review_id FROM local_card_resets reset
+      WHERE reset.note_guid = card.note_guid AND reset.card_ord = card.ord
+  ), 0)
+  AND NOT EXISTS (SELECT 1 FROM sync_review_retractions retraction
+                  WHERE retraction.review_id = review.review_id)
+  AND NOT EXISTS (SELECT 1 FROM local_review_retraction_outbox local_retraction
+                  WHERE local_retraction.review_id = review.review_id)
+ORDER BY review.review_id DESC
+LIMIT 1;
+
 selectRecentSyncReviewsForCard:
 SELECT review_id, ease, interval_value, taken_millis
-FROM sync_reviews
-WHERE (note_guid = :noteGuid AND card_ord = :cardOrd)
-   OR (note_guid = '' AND source_card_id = :cardId)
+FROM sync_reviews review
+WHERE ((note_guid = :noteGuid AND card_ord = :cardOrd)
+   OR (note_guid = '' AND source_card_id = :cardId))
+  AND NOT EXISTS (SELECT 1 FROM sync_review_retractions retraction
+                  WHERE retraction.review_id = review.review_id)
+  AND NOT EXISTS (SELECT 1 FROM local_review_retraction_outbox local_retraction
+                  WHERE local_retraction.review_id = review.review_id)
 ORDER BY review_id DESC
 LIMIT :rowLimit;
 
 selectRecentLocalReviewsForCard:
 SELECT event_id, review_id, rating, reviewed_at_ms, duration_ms, after_json, upload_state
 FROM local_review_events
-WHERE (note_guid = :noteGuid AND card_ord = :cardOrd)
-   OR (note_guid = '' AND card_id = :cardId)
+WHERE ((note_guid = :noteGuid AND card_ord = :cardOrd)
+   OR (note_guid = '' AND card_id = :cardId))
+  AND review_id NOT IN (SELECT review_id FROM local_review_retraction_outbox)
 ORDER BY reviewed_at_ms DESC, event_id DESC
 LIMIT :rowLimit;
 
@@ -992,8 +1106,12 @@ SELECT guid FROM sync_notes;
 
 selectOptimizerConfirmedReviews:
 SELECT review_id, note_guid, card_ord, ease, taken_millis, review_kind, checksum
-FROM sync_reviews
+FROM sync_reviews review
 WHERE ease BETWEEN 1 AND 4 AND note_guid != ''
+  AND NOT EXISTS (SELECT 1 FROM sync_review_retractions retraction
+                  WHERE retraction.review_id = review.review_id)
+  AND NOT EXISTS (SELECT 1 FROM local_review_retraction_outbox local_retraction
+                  WHERE local_retraction.review_id = review.review_id)
 ORDER BY review_id, note_guid, card_ord;
 
 selectOptimizerLocalReviews:
@@ -1001,6 +1119,7 @@ SELECT card_id, note_guid, card_ord, rating, reviewed_at_ms, duration_ms,
        before_json, after_json, was_new, review_id, upload_state
 FROM local_review_events
 WHERE review_id > 0
+  AND review_id NOT IN (SELECT review_id FROM local_review_retraction_outbox)
 ORDER BY review_id, event_id;
 
 clearLocalSchedules:
@@ -1224,6 +1343,9 @@ WHERE NOT EXISTS (
 
 clearLocalReviewEvents:
 DELETE FROM local_review_events;
+
+clearLocalReviewRetractionOutbox:
+DELETE FROM local_review_retraction_outbox;
 
 upsertLocalNoteSync:
 INSERT OR REPLACE INTO local_note_sync_outbox(
@@ -1850,6 +1972,8 @@ LIMIT 12;
 countUploadedSyncRows:
 SELECT count(*) FROM (
     SELECT review_id AS resource_id FROM local_review_events WHERE upload_state = 'uploaded'
+    UNION ALL
+    SELECT review_id FROM local_review_retraction_outbox WHERE upload_state = 'uploaded'
     UNION ALL
     SELECT note_guid FROM local_note_sync_outbox WHERE state = 'uploaded'
     UNION ALL

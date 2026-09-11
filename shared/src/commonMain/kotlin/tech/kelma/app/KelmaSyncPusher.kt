@@ -31,6 +31,7 @@ internal class KelmaSyncPusher(
         if (plan.isEmpty) return SyncPushResult()
         val conflicts = mutableListOf<SyncUploadConflict>()
         val uploadedReviews = uploadReviews(token, plan.reviews, conflicts, onProgress)
+        val uploadedReviewRetractions = uploadReviewRetractions(token, plan.reviewRetractions, onProgress)
         val uploadedMedia = uploadMedia(token, plan.media, onProgress)
         val notes = uploadNotes(token, plan.notes, conflicts, onProgress)
         val uploadableMarks = plan.noteMarks.filter { !it.requiresNoteUpload || it.guid in notes.uploadedGuids }
@@ -59,6 +60,7 @@ internal class KelmaSyncPusher(
         val profile = uploadSchedulerProfile(token, plan.schedulerProfile, conflicts, onProgress)
         return SyncPushResult(
             uploadedReviewIds = uploadedReviews,
+            uploadedReviewRetractionIntentIds = uploadedReviewRetractions,
             uploadedNoteMarkIntentIds = uploadedNoteMarks,
             uploadedCardFlagIntentIds = uploadedCardFlags,
             uploadedCardStudyKeys = uploadedCardStudyKeys,
@@ -101,6 +103,42 @@ internal class KelmaSyncPusher(
         }
         return uploaded
     }
+
+    private suspend fun uploadReviewRetractions(
+        token: String,
+        retractions: List<PendingReviewRetractionUpload>,
+        progress: suspend (SyncPushProgress) -> Unit,
+    ): Set<String> {
+        if (retractions.isEmpty()) return emptySet()
+        progress(SyncPushProgress(SyncPushResource.ReviewRetractions, 0, retractions.size))
+        val uploaded = mutableSetOf<String>()
+        var completed = 0
+        retractions.chunked(MaximumBatchPushRecords).forEach { chunk ->
+            val response = postBatch(
+                token,
+                BatchPushRequest(reviewRetractions = chunk.map(PendingReviewRetractionUpload::body)),
+            )
+            val conflicts = response.conflicts["review_retractions"].orEmpty()
+            requireAcknowledged(response, "review_retractions", chunk.size, conflicts.size)
+            if (conflicts.isNotEmpty()) {
+                throw KelmaSyncException("A stable review retraction intent conflicted")
+            }
+            val results = response.reviewRetractions.associateBy { it.retraction.reviewId }
+            val valid = response.reviewRetractions.size == chunk.size && results.size == chunk.size &&
+                chunk.all { pending -> results[pending.reviewId]?.isValidAcknowledgement(pending) == true }
+            if (!valid) throw KelmaSyncException("KelmaSync returned an invalid review retraction acknowledgement")
+            uploaded += chunk.map(PendingReviewRetractionUpload::intentId)
+            completed += chunk.size
+            progress(SyncPushProgress(SyncPushResource.ReviewRetractions, completed, retractions.size))
+        }
+        return uploaded
+    }
+
+    private fun ReviewRetractionPushResult.isValidAcknowledgement(
+        pending: PendingReviewRetractionUpload,
+    ): Boolean = accepted && retraction.reviewId == pending.reviewId &&
+        retraction.intentId == pending.intentId &&
+        runCatching { rfc3339ToEpochMillis(retraction.clientModifiedAt) }.getOrNull() == pending.clientModifiedAtMillis
 
     private suspend fun uploadMedia(
         token: String,

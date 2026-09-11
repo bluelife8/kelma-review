@@ -86,6 +86,43 @@ class IncrementalCollectionApplyTest {
     }
 
     @Test
+    fun synchronizedReviewRetractionRebuildsOnlyItsCardFromRemainingImmutableHistory() {
+        val driver = JdbcSqliteDriver(JdbcSqliteDriver.IN_MEMORY)
+        KelmaDatabase.Schema.create(driver)
+        val store = PersistentCollectionStore(KelmaDatabase(driver))
+        val card = SyncCard(1L, "note", "Deck")
+        val first = review(1_000L, card)
+        val second = review(2_000L, card)
+        val initial = SyncedCollection(
+            cards = mapOf(card.cardId to card),
+            reviews = mapOf(first.reviewId to first, second.reviewId to second),
+            deckNames = setOf("Deck"),
+            serverTime = "before",
+        )
+        val before = store.replaceCollection(initial, nowMillis = 3_000L)
+        assertEquals(2_000L, before.schedules.getValue(card.cardId).lastReviewAtMillis)
+        val retraction = SyncReviewRetraction(
+            reviewId = second.reviewId,
+            intentId = "11111111-1111-4111-8111-111111111111",
+            clientModifiedAt = "2026-09-08T12:00:00Z",
+            modifiedAt = "2026-09-08T12:00:01Z",
+        )
+        val latest = initial.copy(
+            reviewRetractions = mapOf(second.reviewId to retraction),
+            serverTime = "after",
+        )
+
+        val after = store.replaceCollectionIncrementally(initial, latest, nowMillis = 3_000L)
+        val persisted = store.load(nowMillis = 3_000L).collection
+
+        assertEquals(1_000L, after.schedules.getValue(card.cardId).lastReviewAtMillis)
+        assertEquals(mapOf(second.reviewId to retraction), persisted.reviewRetractions)
+        assertEquals(2, persisted.reviews.size)
+        assertEquals(1, store.loadStudyStats(nowMillis = 3_000L).totalReviews)
+        driver.close()
+    }
+
+    @Test
     fun reviewFreeLoadSkipsRevlogButKeepsContentAndUploadPlanning() {
         val driver = JdbcSqliteDriver(JdbcSqliteDriver.IN_MEMORY)
         KelmaDatabase.Schema.create(driver)

@@ -1,0 +1,14 @@
+CREATE TABLE sync_review_retractions (
+    review_id INTEGER NOT NULL PRIMARY KEY,
+    intent_id TEXT NOT NULL UNIQUE,
+    client_modified_at TEXT NOT NULL,
+    modified_at TEXT NOT NULL
+);
+
+CREATE TABLE local_review_retraction_outbox (
+    review_id INTEGER NOT NULL PRIMARY KEY,
+    intent_id TEXT NOT NULL UNIQUE,
+    client_modified_at_ms INTEGER NOT NULL,
+    upload_state TEXT NOT NULL DEFAULT 'pending'
+        CHECK (upload_state IN ('pending', 'uploaded'))
+);
