@@ -157,6 +157,7 @@ internal class AnkiExportMapper(
         }
         val reviews = (confirmed + localReviews)
             .distinctBy(ImmutableReviewExport::reviewId)
+            .filterNot { it.reviewId in collection.reviewRetractions }
             .filter { portableCardIdentity(it.noteGuid, it.cardOrdinal) in identities }
             .groupBy { portableCardIdentity(it.noteGuid, it.cardOrdinal) }
         return buildList {

@@ -49,6 +49,18 @@ internal fun SyncedCollection.scheduleProjectionChanges(
     next.reviews.forEach { (reviewId, review) ->
         if (reviewId !in reviews) addReview(next, review)
     }
+    reviewRetractions.forEach { (reviewId, retraction) ->
+        if (next.reviewRetractions[reviewId] != retraction) {
+            addReview(this, reviews[reviewId])
+            addReview(next, next.reviews[reviewId])
+        }
+    }
+    next.reviewRetractions.forEach { (reviewId, retraction) ->
+        if (reviewRetractions[reviewId] != retraction) {
+            addReview(this, reviews[reviewId])
+            addReview(next, next.reviews[reviewId])
+        }
+    }
     return ScheduleProjectionChanges(identities, cardIds)
 }
 
@@ -91,6 +103,8 @@ internal class LocalScheduleProjection(
             )
         }
         val confirmedIds = collection.reviews.keys
+        val retractedReviewIds = collection.reviewRetractions.keys +
+            queries.selectLocalReviewRetractions { reviewId, _, _, _ -> reviewId }.executeAsList()
         val accountOptions = queries.selectActiveLocalSchedulerProfile { _, settingsJson, _ ->
             json.decodeFromString<SchedulerProfileSettings>(settingsJson).validated().asDeckOptions()
         }.executeAsOneOrNull() ?: DeckOptions()
@@ -110,6 +124,7 @@ internal class LocalScheduleProjection(
         val localReviewedAtByReviewId = localEvents.associate { it.reviewId to it.reviewedAtMillis }
 
         collection.reviews.values.forEach { review ->
+            if (review.reviewId in retractedReviewIds) return@forEach
             val card = cardsByIdentity[portableIdentity(review.noteGuid, review.cardOrd)]
                 ?: collection.cards[review.sourceCardId]
                 ?: return@forEach
@@ -129,7 +144,8 @@ internal class LocalScheduleProjection(
                 ?: return@forEach
             if (targetIdentities != null && card.portableIdentity() !in targetIdentities) return@forEach
             val resetThrough = resetThroughByIdentity[card.portableIdentity()] ?: Long.MIN_VALUE
-            if (event.reviewId !in confirmedIds && event.rating != null && event.reviewId > resetThrough) {
+            if (event.reviewId !in confirmedIds && event.reviewId !in retractedReviewIds &&
+                event.rating != null && event.reviewId > resetThrough) {
                 eventsByCard.getOrPut(card.cardId, ::mutableListOf) += ProjectionReview(
                     reviewId = event.reviewId,
                     reviewedAtMillis = event.reviewedAtMillis,

@@ -1,7 +1,20 @@
 package tech.kelma.app
 
 import kotlinx.collections.immutable.toPersistentMap
+import kotlinx.serialization.builtins.ListSerializer
+import kotlinx.serialization.builtins.serializer
+import kotlinx.serialization.json.Json
 import tech.kelma.db.KelmaQueries
+
+private val syncCapabilitiesSerializer = ListSerializer(String.serializer())
+
+internal fun reviewRetractionSyncEnabled(queries: KelmaQueries): Boolean {
+    val encoded = queries.selectSyncState { _, capabilities -> capabilities }.executeAsOneOrNull() ?: return false
+    val capabilities = runCatching {
+        Json.decodeFromString(syncCapabilitiesSerializer, encoded)
+    }.getOrDefault(emptyList())
+    return ReviewRetractionSyncCapability in capabilities
+}
 
 internal fun loadLocalReviewSnapshot(
     queries: KelmaQueries,
@@ -47,7 +60,7 @@ internal fun loadLocalReviewSnapshot(
     val buriedNoteGuids = queries.selectLocalNoteBuriesForDay(studyDay).executeAsList().toSet()
     val overrides = queries.selectLocalDeckOverrides { source, replacement -> source to replacement }
         .executeAsList().toMap()
-    val confirmed = queries.selectReviews {
+    val confirmed = queries.selectActiveReviews {
             reviewId, sourceCardId, noteGuid, cardOrd, deckName, _, _, _, _, _, reviewKind, _, _ ->
         val identity = reviewLimitCardKey(noteGuid, cardOrd.toInt(), sourceCardId)
         CountedReview(reviewId, cardOrd.toInt(), noteGuid, identity, deckName, reviewKind.toInt())
@@ -84,7 +97,7 @@ internal fun loadLocalReviewSnapshot(
     }.executeAsList()
     synchronizedCounts.forEach { (deckName, synchronized) -> counts[deckName] = synchronized }
 
-    val confirmedIds = confirmed.mapTo(mutableSetOf(), CountedReview::reviewId)
+    val confirmedIds = queries.selectSyncReviewIds().executeAsList().toSet()
     val localEvents = queries.selectAllLocalReviewEvents {
             _, cardId, noteGuid, cardOrd, deckName, _, reviewedAt, _, _, beforeJson, _, wasNew,
             reviewId, _, consumed ->
@@ -144,7 +157,14 @@ internal fun loadLocalReviewSnapshot(
         },
         studiedCardOrdsByNoteToday = studiedCardsByNote.mapValues { it.value.toSet() },
         reviewLimitConsumedCardKeysToday = reviewLimitConsumedCardKeys,
-        lastReviewDeck = queries.selectLatestLocalReviewDeck().executeAsOneOrNull(),
+        lastReviewDeck = (
+            queries.selectLatestLocalReviewDeck().executeAsOneOrNull()
+                ?: if (reviewRetractionSyncEnabled(queries)) {
+                    queries.selectLatestSyncReviewDeckForRetraction().executeAsOneOrNull()
+                } else {
+                    null
+                }
+            )?.remapDownloadedDeckName(overrides),
         pendingSyncByDeck = changedByDeck.mapValues { (_, cardIds) ->
             PendingDeckChanges(changedCardIds = cardIds)
         },

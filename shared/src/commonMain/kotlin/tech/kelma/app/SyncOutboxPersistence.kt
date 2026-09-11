@@ -29,6 +29,13 @@ internal class SyncOutboxPersistence(
             queries.updateLocalReviewId(reviewId = nextReviewId, eventId = eventId)
         }
         val raw = loadCollection()
+        val reviewRetractions = if (ReviewRetractionSyncCapability in raw.capabilities) {
+            queries.selectPendingLocalReviewRetractions { reviewId, intentId, modifiedAt ->
+                PendingReviewRetractionUpload(reviewId, intentId, modifiedAt)
+            }.executeAsList()
+        } else {
+            emptyList()
+        }
         val local = loadLocalContent()
         val displayed = raw.withLocalContent(local)
         val reviews = queries.selectPendingLocalReviewEvents {
@@ -165,6 +172,7 @@ internal class SyncOutboxPersistence(
             }
         }
         buildSyncUploadPlan(raw, local, reviews, notes, decks).copy(
+            reviewRetractions = reviewRetractions,
             noteMarks = noteMarks,
             cardFlags = cardFlags,
             cardStudyStates = cardStudyStates,
@@ -179,6 +187,7 @@ internal class SyncOutboxPersistence(
     fun apply(result: SyncPushResult) {
         database.transaction {
             result.uploadedReviewIds.forEach(queries::markLocalReviewUploaded)
+            result.uploadedReviewRetractionIntentIds.forEach(queries::markLocalReviewRetractionUploaded)
             result.uploadedNoteMarkIntentIds.forEach(queries::markLocalNoteMarkUploaded)
             result.uploadedCardFlagIntentIds.forEach(queries::markLocalCardFlagUploaded)
             result.uploadedCardStudyKeys.forEach { key ->
@@ -315,6 +324,7 @@ internal class SyncOutboxPersistence(
                     queries.retryLocalCardDueOverride(localDueDate.noteGuid, localDueDate.cardOrd.toLong())
             }
         }
+        reconcileReviewRetractions(downloadedCollection)
         reconcileNoteMarks(downloadedCollection)
         reconcileCardFlags(downloadedCollection)
         queries.reconcileUploadedLocalReviews()
@@ -361,6 +371,23 @@ internal class SyncOutboxPersistence(
                     queries.retryUploadedLocalDeckSync(source)
                 }
             }
+    }
+
+    private fun reconcileReviewRetractions(downloaded: SyncedCollection) {
+        queries.selectLocalReviewRetractions { reviewId, intentId, modifiedAt, uploadState ->
+            LocalReviewRetraction(reviewId, intentId, modifiedAt, uploadState)
+        }.executeAsList().forEach { local ->
+            val remote = downloaded.reviewRetractions[local.reviewId]
+            if (remote != null) {
+                if (remote.intentId == local.intentId &&
+                    rfc3339ToEpochMillis(remote.clientModifiedAt) != local.clientModifiedAtMillis) {
+                    error("KelmaSync changed a stable review retraction intent")
+                }
+                queries.deleteLocalReviewRetraction(local.reviewId)
+            } else if (local.uploadState == "uploaded") {
+                queries.retryLocalReviewRetraction(local.intentId)
+            }
+        }
     }
 
     private fun backfillLegacyCardFlags(raw: SyncedCollection, displayed: SyncedCollection) {
@@ -442,6 +469,13 @@ internal class SyncOutboxPersistence(
         }
     }
 }
+
+private data class LocalReviewRetraction(
+    val reviewId: Long,
+    val intentId: String,
+    val clientModifiedAtMillis: Long,
+    val uploadState: String,
+)
 
 private data class PendingCardDueDateRow(
     val noteGuid: String,

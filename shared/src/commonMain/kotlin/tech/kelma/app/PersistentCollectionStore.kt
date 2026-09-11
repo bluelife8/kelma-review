@@ -130,6 +130,7 @@ class PersistentCollectionStore(
                     queries.clearLocalCardDueOverrides()
                     queries.clearLocalCardResets()
                     queries.clearLocalReviewEvents()
+                    queries.clearLocalReviewRetractionOutbox()
                     queries.clearLocalCards()
                     queries.clearLocalNotes()
                     queries.clearLocalNotetypes()
@@ -277,16 +278,20 @@ class PersistentCollectionStore(
         nowMillis: Long = currentEpochMillis(),
     ): Int = mediaAttachments.queueRemoteRepairs(filenames, nowMillis)
 
-    fun loadLocalReviewExports(): List<ImmutableReviewExport> = queries.selectAllLocalReviewEvents {
-            _, _, noteGuid, cardOrdinal, _, rating, reviewedAt, _, duration, _, _, _, reviewId, _, _ ->
-        ImmutableReviewExport(
-            reviewId = reviewId.takeIf { it > 0L } ?: reviewedAt,
-            noteGuid = noteGuid,
-            cardOrdinal = cardOrdinal.toInt(),
-            rating = Rating.entries.first { it.name == rating },
-            durationMillis = duration,
-        )
-    }.executeAsList()
+    fun loadLocalReviewExports(): List<ImmutableReviewExport> {
+        val retracted = queries.selectLocalReviewRetractions { reviewId, _, _, _ -> reviewId }
+            .executeAsList().toSet()
+        return queries.selectAllLocalReviewEvents {
+                _, _, noteGuid, cardOrdinal, _, rating, reviewedAt, _, duration, _, _, _, reviewId, _, _ ->
+            ImmutableReviewExport(
+                reviewId = reviewId.takeIf { it > 0L } ?: reviewedAt,
+                noteGuid = noteGuid,
+                cardOrdinal = cardOrdinal.toInt(),
+                rating = Rating.entries.first { it.name == rating },
+                durationMillis = duration,
+            )
+        }.executeAsList().filterNot { it.reviewId in retracted }
+    }
 
     fun importCollection(
         plan: CollectionImportPlan,
@@ -657,13 +662,28 @@ class PersistentCollectionStore(
     ): UndoneReview? {
         var undoneCardId: Long? = null
         database.transaction {
-            val event = queries.selectLatestLocalReviewEvent(deckName) { eventId, cardId, beforeJson ->
-                Triple(eventId, cardId, beforeJson)
-            }.executeAsOneOrNull() ?: return@transaction
-            queries.deleteLocalReviewEvent(event.first)
+            val pending = queries.selectLatestLocalReviewEvent(deckName) { eventId, cardId, _ ->
+                eventId to cardId
+            }.executeAsOneOrNull()
+            if (pending != null) {
+                queries.deleteLocalReviewEvent(pending.first)
+                undoneCardId = pending.second
+            } else {
+                if (!reviewRetractionSyncEnabled(queries)) return@transaction
+                val rawDeckName = queries.selectLocalDeckOverrides { source, replacement -> source to replacement }
+                    .executeAsList()
+                    .filter { (_, replacement) -> replacement != null && deckName.isDeckOrDescendantOf(replacement) }
+                    .maxByOrNull { (_, replacement) -> replacement.orEmpty().length }
+                    ?.let { (source, replacement) -> source + deckName.substring(replacement.orEmpty().length) }
+                    ?: deckName
+                val confirmed = queries.selectLatestSyncReviewForRetraction(rawDeckName) { reviewId, cardId ->
+                    reviewId to cardId
+                }.executeAsOneOrNull() ?: return@transaction
+                queries.insertLocalReviewRetraction(confirmed.first, randomUuidString(), nowMillis)
+                undoneCardId = confirmed.second
+            }
             schedulerOptimizer.markHistoryChanged(nowMillis)
             scheduleProjection.rebuild()
-            undoneCardId = event.second
         }
         return undoneCardId?.let { cardId ->
             UndoneReview(cardId, loadLocalReviews(nowMillis))
@@ -703,6 +723,7 @@ class PersistentCollectionStore(
             queries.clearLocalCardResets()
             queries.clearLocalCardStudyStates()
             queries.clearLocalReviewEvents()
+            queries.clearLocalReviewRetractionOutbox()
             queries.clearLocalCards()
             queries.clearLocalNotes()
             queries.clearLocalNotetypes()
@@ -899,6 +920,18 @@ class PersistentCollectionStore(
             )
         }.executeAsList().forEach { history[it.key] = it }
         return history.values.sortedByDescending(ReviewHistoryInfo::reviewedAtMillis).take(limit)
+    }
+
+    internal fun withLocalReviewRetractionsForExport(collection: SyncedCollection): SyncedCollection {
+        val local = queries.selectLocalReviewRetractions { reviewId, intentId, modifiedAt, _ ->
+            reviewId to SyncReviewRetraction(
+                reviewId,
+                intentId,
+                epochMillisToRfc3339(modifiedAt),
+                "",
+            )
+        }.executeAsList().toMap()
+        return collection.copy(reviewRetractions = collection.reviewRetractions + local)
     }
 
     internal fun hydrateMediaForExport(collection: SyncedCollection): SyncedCollection = collection.copy(

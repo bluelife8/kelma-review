@@ -32,7 +32,8 @@ internal fun SyncUploadPlan.summaryLines(): List<SyncProgress> = buildList {
     add(
         SyncProgress(
             phase = "OUTBOX",
-            message = "Snapshot: ${reviews.size.syncCount()} reviews · ${notes.size.syncCount()} notes " +
+            message = "Snapshot: ${reviews.size.syncCount()} reviews · " +
+                "${reviewRetractions.size.syncCount()} review retractions · ${notes.size.syncCount()} notes " +
                 "(${noteUpserts.syncCount()} upserts/${noteDeletes.syncCount()} deletes) · " +
                 "${noteMarks.size.syncCount()} note marks · ${cardFlags.size.syncCount()} card flags · " +
                 "${cards.syncCount()} cards · " +

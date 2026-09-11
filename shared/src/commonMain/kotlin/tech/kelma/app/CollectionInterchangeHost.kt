@@ -66,12 +66,13 @@ internal fun CollectionInterchangeHost(
                         val effectiveDeckOptions = collection.deckNames.associateWith { deckName ->
                             localContent.deckOptions[deckName] ?: defaultDeckOptions
                         } + localContent.deckOptions
+                        val exportCollection = if (options.includeMedia) {
+                            store.hydrateMediaForExport(collection)
+                        } else {
+                            collection
+                        }
                         service.export(
-                            collection = if (options.includeMedia) {
-                                store.hydrateMediaForExport(collection)
-                            } else {
-                                collection
-                            },
+                            collection = store.withLocalReviewRetractionsForExport(exportCollection),
                             options = options,
                             deckOptions = effectiveDeckOptions,
                             presets = localContent.deckPresets,

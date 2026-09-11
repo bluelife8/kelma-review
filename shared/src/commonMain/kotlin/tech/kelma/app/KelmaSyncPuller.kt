@@ -62,7 +62,7 @@ internal class KelmaSyncPuller(
         report(SyncPullProgress(SyncPullResource.Manifest, 1, 1))
         val request = manifest.toBatchRequest()
         val recordCount = request.notes.size + request.cards.size + request.reviews.size +
-            request.notetypes.size + request.decks.size
+            request.reviewRetractions.size + request.notetypes.size + request.decks.size
         val mediaEntries = manifest.media.filter { it.filename.isNotBlank() }.distinctBy(ManifestEntry::filename)
         val mediaCount = mediaEntries.size
         val mediaBytes = mediaEntries.sumOf { it.sizeBytes.coerceAtLeast(0) }
@@ -91,7 +91,8 @@ internal class KelmaSyncPuller(
 
     private suspend fun pullRecords(token: String, request: BatchPullRequest): BatchPullResponse {
         val hasRecords = request.notes.isNotEmpty() || request.cards.isNotEmpty() ||
-            request.reviews.isNotEmpty() || request.notetypes.isNotEmpty() || request.decks.isNotEmpty()
+            request.reviews.isNotEmpty() || request.reviewRetractions.isNotEmpty() ||
+            request.notetypes.isNotEmpty() || request.decks.isNotEmpty()
         if (!hasRecords) return BatchPullResponse()
         val response = httpClient.post("$baseUrl/v2/batch/pull") {
             bearerAuth(token)
@@ -393,6 +394,7 @@ private fun SyncManifest.toBatchRequest(): BatchPullRequest = BatchPullRequest(
     notes = notes.map { it.guid }.filter(String::isNotBlank).distinct(),
     cards = cards.map { it.cardId }.filter { it != 0L }.distinct(),
     reviews = reviews.map { it.reviewId }.filter { it != 0L }.distinct(),
+    reviewRetractions = reviewRetractions.map { it.reviewId }.filter { it != 0L }.distinct(),
     notetypes = notetypes.map { it.notetypeId }.filter { it != 0L }.distinct(),
     decks = decks.map { it.name }.filter(String::isNotBlank).distinct(),
 )
@@ -405,6 +407,8 @@ private fun validateBatch(request: BatchPullRequest, response: BatchPullResponse
         request.cards.filterNotTo(this) { it in cardIds }
         val reviewIds = response.reviews.mapTo(mutableSetOf(), SyncReview::reviewId)
         request.reviews.filterNotTo(this) { it in reviewIds }
+        val retractionIds = response.reviewRetractions.mapTo(mutableSetOf(), SyncReviewRetraction::reviewId)
+        request.reviewRetractions.filterNotTo(this) { it in retractionIds }
         val notetypeIds = response.notetypes.mapTo(mutableSetOf(), SyncNotetype::notetypeId)
         request.notetypes.filterNotTo(this) { it in notetypeIds }
         val deckNames = response.decks.mapTo(mutableSetOf(), SyncDeck::name)

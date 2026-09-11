@@ -26,6 +26,23 @@ class AnkiInterchangeRoundTripTest {
             media = mapOf("picture.png" to SyncMediaFile("picture.png", "", mediaBytes)),
         )
         val reviewedAt = 1_735_689_600_000L
+        val retractedAt = reviewedAt - 1_000L
+        val collectionWithRetraction = collection.copy(
+            reviews = mapOf(retractedAt to SyncReview(
+                reviewId = retractedAt,
+                sourceCardId = 100L,
+                noteGuid = "note-1",
+                cardOrd = 0,
+                deckName = "Languages::Arabic",
+                ease = Rating.Again.ordinal + 1,
+            )),
+            reviewRetractions = mapOf(retractedAt to SyncReviewRetraction(
+                reviewId = retractedAt,
+                intentId = "11111111-1111-4111-8111-111111111111",
+                clientModifiedAt = "2026-09-08T12:00:00Z",
+                modifiedAt = "2026-09-08T12:00:01Z",
+            )),
+        )
         val customOptions = DeckOptions(
             newCardsPerDay = 37,
             desiredRetention = 0.93,
@@ -46,7 +63,7 @@ class AnkiInterchangeRoundTripTest {
 
         listOf(false, true).forEach { legacy ->
             val exported = service.export(
-                collection = collection,
+                collection = collectionWithRetraction,
                 options = CollectionExportOptions(
                     format = CollectionExportFormat.AnkiDeckPackage,
                     deckName = "Languages",

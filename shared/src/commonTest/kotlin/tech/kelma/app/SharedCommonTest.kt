@@ -450,6 +450,20 @@ class SharedCommonTest {
                 "unused.jpg" to SyncMediaFile("unused.jpg", "now", byteArrayOf(3)),
             ),
             deckNames = setOf("Languages", "Languages::German", "Other"),
+            reviews = mapOf(80L to SyncReview(
+                reviewId = 80L,
+                sourceCardId = 1L,
+                noteGuid = "one",
+                cardOrd = 0,
+                deckName = "Languages::German",
+                ease = Rating.Good.ordinal + 1,
+            )),
+            reviewRetractions = mapOf(80L to SyncReviewRetraction(
+                reviewId = 80L,
+                intentId = "11111111-1111-4111-8111-111111111111",
+                clientModifiedAt = "2026-09-08T12:00:00Z",
+                modifiedAt = "2026-09-08T12:00:01Z",
+            )),
         )
         val schedule = LocalCardSchedule(1, ReviewPhase.Review, 10, 2.0, 5.0, 2, 1, 0, 1)
 

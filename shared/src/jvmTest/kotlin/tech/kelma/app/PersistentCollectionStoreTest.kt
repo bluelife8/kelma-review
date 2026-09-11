@@ -1776,6 +1776,106 @@ class PersistentCollectionStoreTest {
     }
 
     @Test
+    fun confirmedReviewUndoUsesDurableSynchronizedRetractionWithoutDeletingHistory() {
+        val driver = JdbcSqliteDriver(JdbcSqliteDriver.IN_MEMORY)
+        KelmaDatabase.Schema.create(driver)
+        val database = KelmaDatabase(driver)
+        val store = PersistentCollectionStore(database)
+        val card = SyncCard(20L, "note-1", "Deck")
+        val firstId = 1_000_000L
+        val secondId = 2_000_000L
+        fun review(id: Long) = SyncReview(
+            reviewId = id,
+            sourceCardId = card.cardId,
+            noteGuid = card.noteGuid,
+            cardOrd = card.ord,
+            deckName = card.deckName,
+            ease = Rating.Good.ordinal + 1,
+        )
+        val collection = SyncedCollection(
+            notes = mapOf(card.noteGuid to SyncNote(card.noteGuid)),
+            cards = mapOf(card.cardId to card),
+            reviews = mapOf(firstId to review(firstId), secondId to review(secondId)),
+            deckNames = setOf("Deck"),
+            capabilities = setOf(ReviewRetractionSyncCapability),
+        )
+        val signedIn = store.saveSignedInState(
+            StoredSyncAuth("token", "client", DefaultKelmaSyncEndpoint, "user"),
+            collection,
+            3_000_000L,
+        )
+        assertEquals("Deck", signedIn.lastReviewDeck)
+
+        val undone = assertNotNull(store.undoLastReview("Deck", 3_000_000L))
+        val firstPlan = store.prepareSyncUpload().reviewRetractions.single()
+        val reopened = PersistentCollectionStore(database)
+        val retry = reopened.prepareSyncUpload().reviewRetractions.single()
+
+        assertEquals(card.cardId, undone.cardId)
+        assertEquals(firstId, undone.snapshot.schedules.getValue(card.cardId).lastReviewAtMillis)
+        assertEquals(secondId, firstPlan.reviewId)
+        assertEquals(firstPlan, retry)
+        assertEquals(1, reopened.loadStudyStats(3_000_000L).totalReviews)
+        assertEquals(2, reopened.load(3_000_000L).collection.reviews.size)
+        val exported = reopened.withLocalReviewRetractionsForExport(collection).exportCollection(
+            localReviews = reopened.loadLocalReviewExports(),
+        )
+        assertEquals(
+            listOf(firstId),
+            Json.decodeFromString<KelmaJsonExport>(exported.content).reviews.map(KelmaJsonReview::reviewId),
+        )
+
+        reopened.applySyncPushResult(
+            SyncPushResult(uploadedReviewRetractionIntentIds = setOf(firstPlan.intentId)),
+        )
+        assertTrue(reopened.prepareSyncUpload().reviewRetractions.isEmpty())
+        val remote = SyncReviewRetraction(
+            reviewId = secondId,
+            intentId = firstPlan.intentId,
+            clientModifiedAt = epochMillisToRfc3339(firstPlan.clientModifiedAtMillis),
+            modifiedAt = "2026-09-08T12:00:00Z",
+        )
+        reopened.replaceCollection(
+            collection.copy(reviewRetractions = mapOf(secondId to remote)),
+            nowMillis = 3_000_000L,
+        )
+        assertTrue(reopened.prepareSyncUpload().reviewRetractions.isEmpty())
+        assertEquals(2, reopened.load(3_000_000L).collection.reviews.size)
+        driver.close()
+    }
+
+    @Test
+    fun confirmedReviewUndoWaitsForRetractionCapability() {
+        val driver = JdbcSqliteDriver(JdbcSqliteDriver.IN_MEMORY)
+        KelmaDatabase.Schema.create(driver)
+        val store = PersistentCollectionStore(KelmaDatabase(driver))
+        val card = SyncCard(20L, "note-1", "Deck")
+        val review = SyncReview(
+            reviewId = 1_000_000L,
+            sourceCardId = card.cardId,
+            noteGuid = card.noteGuid,
+            cardOrd = card.ord,
+            deckName = card.deckName,
+            ease = Rating.Good.ordinal + 1,
+        )
+        val withoutCapability = store.replaceCollection(
+            SyncedCollection(
+                cards = mapOf(card.cardId to card),
+                reviews = mapOf(review.reviewId to review),
+                deckNames = setOf("Deck"),
+            ),
+            2_000_000L,
+        )
+
+        assertNull(withoutCapability.lastReviewDeck)
+        assertNull(store.undoLastReview("Deck", 2_000_000L))
+        assertTrue(store.prepareSyncUpload().reviewRetractions.isEmpty())
+        assertEquals(1_000_000L, store.loadLocalReviews(2_000_000L).schedules
+            .getValue(card.cardId).lastReviewAtMillis)
+        driver.close()
+    }
+
+    @Test
     fun localReviewsAreScopedToTheSignedInAccount() {
         val driver = JdbcSqliteDriver(JdbcSqliteDriver.IN_MEMORY)
         KelmaDatabase.Schema.create(driver)

@@ -35,7 +35,7 @@ internal class SchedulerOptimizerHistoryLoader(
                 checksum,
             )
         }.executeAsList()
-        val confirmedIds = confirmed.asSequence().map { it.reviewId }.toSet()
+        val confirmedIds = queries.selectSyncReviewIds().executeAsList().toSet()
         val allLocal = queries.selectOptimizerLocalReviews {
                 _, noteGuid, cardOrd, rating, reviewedAt, duration, beforeJson,
                 afterJson, wasNew, reviewId, uploadState ->
