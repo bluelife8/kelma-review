@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Protect the distinct, non-production rolling iOS preview channel."""
+"""Protect the non-production rolling preview release channel."""
 
 from __future__ import annotations
 
@@ -52,6 +52,11 @@ def check_source(root: Path) -> None:
         "ASSETCATALOG_COMPILER_APPICON_NAME='AppIcon-Rolling'",
         "CODE_SIGNING_ALLOWED=NO",
         "KelmaReview-Rolling.ipa",
+        "KelmaReview-Rolling-macOS.dmg",
+        "KelmaReview-Rolling-Windows.msi",
+        "KelmaReview-Rolling-Linux.deb",
+        ":desktopApp:packageDistributionForCurrentOS",
+        "needs: [desktop, ios]",
         "--prerelease",
     )
     for value in required:
